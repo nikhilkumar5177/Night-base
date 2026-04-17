@@ -1,0 +1,89 @@
+const { EmbedBuilder } = require('discord.js');
+const storage = require('../../utils/storageManager');
+
+const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+const DOT = '\u25AA';
+
+module.exports = {
+  name: 'warn',
+  aliases: ['w'],
+  description: 'Warn a user',
+  usage: 'warn <user> [reason]',
+  cooldown: 3,
+  enabled: true,
+  staffOnly: true,
+  devOnly: false,
+  execute: async (client, message, args) => {
+    try {
+      if (!message.member.permissions.has('ModerateMembers')) {
+        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ModerateMembers** permission.').setTimestamp()] });
+      }
+      if (!args[0]) {
+        const embed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}warn <@user> [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}warn @User being toxic in chat\n\`\`\`` }, { name: 'Aliases', value: '`w`', inline: true }, { name: 'Cooldown', value: '`3s`', inline: true }, { name: 'Permission', value: '`ModerateMembers`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
+        return message.channel.send({ embeds: [embed] });
+      }
+      const target = message.mentions.members.first() || message.guild.members.cache.get(args[0]);
+      if (!target) {
+        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Could not find the specified user.').setTimestamp()] });
+      }
+      if (target.id === message.author.id) {
+        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You cannot warn yourself.').setTimestamp()] });
+      }
+      if (target.roles.highest.position >= message.member.roles.highest.position) {
+        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
+      }
+
+      const loadEmbed = new EmbedBuilder()
+        .setColor('#EB459E')
+        .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
+        .setDescription(`${SEP}\n{EMOJI_LOADING} **Issuing warning...**\n${SEP}`)
+        .setTimestamp();
+      const sent = await message.channel.send({ embeds: [loadEmbed] });
+
+      const reason = args.slice(1).join(' ') || 'No reason provided';
+      const warns = storage.read('warns.json');
+      if (!warns[target.id]) warns[target.id] = [];
+      const caseId = Date.now().toString(36).toUpperCase();
+      warns[target.id].push({ caseId, moderator: message.author.id, reason, guildId: message.guild.id, timestamp: Date.now() });
+      if (warns[target.id].length > 50) warns[target.id] = warns[target.id].slice(-50);
+      storage.write('warns.json', warns);
+
+      await new Promise(r => setTimeout(r, 400));
+
+      const totalWarns = warns[target.id].length;
+      const warnBar = totalWarns >= 10 ? '\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588' : '\u2588'.repeat(totalWarns) + '\u2591'.repeat(10 - totalWarns);
+      const severity = totalWarns >= 10 ? 'CRITICAL' : totalWarns >= 5 ? 'HIGH' : totalWarns >= 3 ? 'MODERATE' : 'LOW';
+
+      const embed = new EmbedBuilder()
+        .setColor(totalWarns >= 5 ? '#ED4245' : '#57F287')
+        .setAuthor({ name: 'Wild Wolf \u2502 Warning Issued', iconURL: client.user.displayAvatarURL() })
+        .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
+        .setDescription(
+          `${SEP}\n` +
+          `{EMOJI_SUCCESS} **Warning has been recorded.**\n` +
+          `${SEP}`
+        )
+        .addFields(
+          { name: '\u25B8 User', value: `${target.user.tag}\n\`${target.id}\``, inline: true },
+          { name: '\u25B8 Moderator', value: `${message.author.tag}`, inline: true },
+          { name: '\u25B8 Case ID', value: `\`${caseId}\``, inline: true },
+          { name: '\u25B8 Reason', value: reason },
+          { name: `\u25B8 Warn Level [${totalWarns}/10]`, value: `\`${warnBar}\` **${severity}**` }
+        )
+        .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
+        .setTimestamp();
+
+      await sent.edit({ embeds: [embed] });
+
+      const dmEmbed = new EmbedBuilder()
+        .setColor('#FEE75C')
+        .setAuthor({ name: 'Wild Wolf \u2502 Warning Received', iconURL: client.user.displayAvatarURL() })
+        .setDescription(`${SEP}\n{EMOJI_WARN} **You received a warning in ${message.guild.name}**\n${SEP}\n\n${DOT} **Reason:** ${reason}\n${DOT} **Case ID:** \`${caseId}\`\n${DOT} **Total Warnings:** \`${totalWarns}\``)
+        .setFooter({ text: 'Repeated violations may result in further action' })
+        .setTimestamp();
+      target.send({ embeds: [dmEmbed] }).catch(() => {});
+    } catch (error) {
+      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+    }
+  }
+};

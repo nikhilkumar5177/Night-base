@@ -61,7 +61,7 @@ module.exports = {
 
     if (message.author.bot) return;
 
-    if (message.content === '!update') {
+    if (message.content === 'update') {
       if (message.author.id !== process.env.DEV_ID) return
 
       const { exec } = require('child_process')

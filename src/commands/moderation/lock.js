@@ -38,47 +38,56 @@ module.exports = {
         })
       }
 
-      const channel =
-        message.mentions.channels.first() ||
-        message.guild.channels.cache.get(args[0]) ||
-        message.channel
+      const channels = new Set();
+      message.mentions.channels.forEach(c => {
+        if (c.type === ChannelType.GuildText) channels.add(c);
+      });
 
-      if (channel.type !== ChannelType.GuildText) {
-        return message.channel.send({
-          embeds: [
-            new EmbedBuilder()
-              .setColor('#ED4245')
-              .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} Can only lock text channels.')
-              .setTimestamp()
-          ]
-        })
+      for (const arg of args) {
+        if (arg.match(/^\d{17,20}$/) || arg.match(/^<#\d{17,20}>$/)) {
+          const id = arg.replace(/[<#>]/g, '');
+          const channel = message.guild.channels.cache.get(id);
+          if (channel && channel.type === ChannelType.GuildText) channels.add(channel);
+        }
       }
 
-      const reason =
-        channel.id === message.channel.id
-          ? args.join(' ')
-          : args.slice(1).join(' ')
+      if (channels.size === 0) {
+        if (message.channel.type === ChannelType.GuildText) {
+          channels.add(message.channel);
+        } else {
+          return message.channel.send({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#ED4245')
+                .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+                .setDescription('{EMOJI_ERROR} Can only lock text channels.')
+                .setTimestamp()
+            ]
+          })
+        }
+      }
+
+      const channelList = Array.from(channels);
 
       const load = await message.channel.send({
         embeds: [
           new EmbedBuilder()
             .setColor('#EB459E')
             .setAuthor({ name: 'Wild Wolf │ Processing', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`${SEP}\n{EMOJI_LOADING} Locking channel...\n${SEP}`)
+            .setDescription(`${SEP}\n{EMOJI_LOADING} Locking ${channelList.length} channel(s)...\n${SEP}`)
             .setTimestamp()
         ]
       })
 
-      await channel.permissionOverwrites.edit(
-        message.guild.roles.everyone,
-        { SendMessages: false }
-      )
-
-      await new Promise(r => setTimeout(r, 300))
+      for (const channel of channelList) {
+        await channel.permissionOverwrites.edit(
+          message.guild.roles.everyone,
+          { SendMessages: false }
+        ).catch(() => {});
+        await new Promise(r => setTimeout(r, 200));
+      }
 
       await load.delete().catch(() => { })
-
       await message.react('{EMOJI_LOCK}').catch(() => { })
 
     } catch (error) {

@@ -1,11 +1,10 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
-const DOT = '\u25AA';
+const { resolveEmbedEmojis, EMOJI_DOT } = require('../../utils/constants');
 
 module.exports = {
   name: 'kick',
-  aliases: ['k'],
+  aliases: ['k', 'fuckoff'],
   description: 'Kick a user with button confirmation',
   usage: 'kick <user> [reason]',
   cooldown: 5,
@@ -65,9 +64,9 @@ module.exports = {
           `${SEP}\n` +
           `{EMOJI_WARN} **Are you sure you want to kick ${validTargets.length} user(s)?**\n` +
           `${SEP}\n\n` +
-          `${DOT} **Targets:** ${validTargets.map(t => `\`${t.user.tag}\``).join(', ')}\n` +
-          `${DOT} **Reason:** ${reason}\n` +
-          `${DOT} **Moderator:** ${message.author.tag}`
+          `${EMOJI_DOT} **Targets:** ${validTargets.map(t => `\`${t.user.tag}\``).join(', ')}\n` +
+          `${EMOJI_DOT} **Reason:** ${reason}\n` +
+          `${EMOJI_DOT} **Moderator:** ${message.author.tag}`
         )
         .setFooter({ text: 'Wild Wolf \u2022 This action is irreversible' })
         .setTimestamp();
@@ -94,7 +93,7 @@ module.exports = {
 
           for (const target of validTargets) {
             try {
-              await target.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_ERROR} **You have been kicked from ${message.guild.name}**\n\n${DOT} **Reason:** ${reason}\n${DOT} **Moderator:** ${message.author.tag}\n${SEP}`).setTimestamp()] }).catch(() => {});
+              await target.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_ERROR} **You have been kicked from ${message.guild.name}**\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Moderator:** ${message.author.tag}\n${SEP}`).setTimestamp()] }).catch(() => { });
               await target.kick(reason);
               successCount++;
             } catch (err) {
@@ -121,13 +120,13 @@ module.exports = {
             .setDescription(`${SEP}\n{EMOJI_WARN} **Mass kick action cancelled.**\n${SEP}`)
             .setTimestamp();
           await i.update({ embeds: [cancelEmbed], components: [] });
-          setTimeout(() => sent.delete().catch(() => {}), 5000);
+          setTimeout(() => sent.delete().catch(() => { }), 5000);
         }
       });
 
       coll.on('end', (c) => {
         if (c.size === 0) {
-          sent.edit({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **Mass kick confirmation timed out.**\n${SEP}`).setTimestamp()], components: [] }).catch(() => {});
+          sent.edit({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **Mass kick confirmation timed out.**\n${SEP}`).setTimestamp()], components: [] }).catch(() => { });
         }
       });
     } catch (error) {

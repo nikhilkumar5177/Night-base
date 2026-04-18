@@ -1,8 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
-const DOT = '\u25AA';
+const { resolveEmbedEmojis, EMOJI_DOT } = require('../../utils/constants');
 
 module.exports = {
   name: 'mute',
@@ -32,8 +31,28 @@ module.exports = {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
       }
 
-      const duration = parseInt(args[1]) || 10;
-      const durationMs = Math.min(duration * 60 * 1000, 28 * 24 * 60 * 60 * 1000);
+      const timeStr = args[1]?.toLowerCase();
+      let durationMs = 10 * 60 * 1000;
+      let durationLabel = '10 minutes';
+
+      if (timeStr) {
+        const timeMatch = timeStr.match(/^(\d+)(s|m|h|d)$/);
+        if (timeMatch) {
+          const amount = parseInt(timeMatch[1]);
+          const unit = timeMatch[2];
+          const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
+          durationMs = amount * multipliers[unit];
+          durationLabel = `${amount}${unit}`;
+        } else {
+          const amount = parseInt(timeStr);
+          if (!isNaN(amount)) {
+            durationMs = amount * 60 * 1000;
+            durationLabel = `${amount} minutes`;
+          }
+        }
+      }
+
+      durationMs = Math.min(durationMs, 28 * 24 * 60 * 60 * 1000);
       const reason = args.slice(2).join(' ') || 'No reason provided';
 
       const loadEmbed = new EmbedBuilder()
@@ -53,7 +72,7 @@ module.exports = {
         .setDescription(`${SEP}\n{EMOJI_SUCCESS} **User has been timed out.**\n${SEP}`)
         .addFields(
           { name: '\u25B8 User', value: `${target.user.tag}\n\`${target.id}\``, inline: true },
-          { name: '\u25B8 Duration', value: `\`${duration} minutes\``, inline: true },
+          { name: '\u25B8 Duration', value: `\`${durationLabel}\``, inline: true },
           { name: '\u25B8 Moderator', value: message.author.tag, inline: true },
           { name: '\u25B8 Reason', value: reason },
           { name: '\u25B8 Expires', value: `<t:${Math.floor((Date.now() + durationMs) / 1000)}:F> (<t:${Math.floor((Date.now() + durationMs) / 1000)}:R>)` }
@@ -65,7 +84,7 @@ module.exports = {
       const dmEmbed = new EmbedBuilder()
         .setColor('#FEE75C')
         .setAuthor({ name: 'Wild Wolf \u2502 Timeout Notice', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_WARN} **You have been timed out in ${message.guild.name}**\n${SEP}\n\n${DOT} **Duration:** \`${duration} minutes\`\n${DOT} **Reason:** ${reason}\n${DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`)
+        .setDescription(`${SEP}\n{EMOJI_WARN} **You have been timed out in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Duration:** \`${durationLabel}\`\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`)
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => {});
     } catch (error) {

@@ -4,7 +4,7 @@ const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\
 
 module.exports = {
   name: 'lock',
-  aliases: ['lockdown'],
+  aliases: ['lockdown', 'lc'],
   description: 'Lock a channel to prevent messages',
   usage: 'lock [#channel] [reason]',
   cooldown: 3,
@@ -83,7 +83,7 @@ module.exports = {
         await channel.permissionOverwrites.edit(
           message.guild.roles.everyone,
           { SendMessages: false }
-        ).catch(() => {});
+        ).catch(() => { });
         await new Promise(r => setTimeout(r, 200));
       }
 

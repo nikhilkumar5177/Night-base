@@ -1,8 +1,10 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
-const DOT = '\u25AA';
+const { resolveEmbedEmojis, EMOJIS } = require('../../utils/constants');
+
+const EMOJI_DOT = EMOJIS.EMOJI_DOT;
+const EMOJI_ARROW = EMOJIS.EMOJI_ARROW;
 
 module.exports = {
   name: 'userinfo',
@@ -36,19 +38,19 @@ module.exports = {
         .setThumbnail(u.displayAvatarURL({ dynamic: true, size: 512 }))
         .setDescription(
           `${SEP}\n` +
-          `${DOT} **User:** ${u.tag} ${tags.length ? tags.join(' ') : ''}\n` +
-          `${DOT} **ID:** \`${u.id}\`\n` +
-          `${DOT} **Status:** ${statusMap[status] || '\u25CB Offline'}\n` +
+          `${EMOJI_DOT} **User:** ${u.tag} ${tags.length ? tags.join(' ') : ''}\n` +
+          `${EMOJI_DOT} **ID:** \`${u.id}\`\n` +
+          `${EMOJI_DOT} **Status:** ${statusMap[status] || '\u25CB Offline'}\n` +
           `${SEP}`
         )
         .addFields(
-          { name: '\u25B8 Account Created', value: `<t:${Math.floor(u.createdTimestamp / 1000)}:F>\n<t:${Math.floor(u.createdTimestamp / 1000)}:R>`, inline: true },
-          { name: '\u25B8 Joined Server', value: `<t:${Math.floor(target.joinedTimestamp / 1000)}:F>\n<t:${Math.floor(target.joinedTimestamp / 1000)}:R>`, inline: true },
-          { name: '\u25B8 Nickname', value: target.nickname || 'None', inline: true },
-          { name: '\u25B8 Highest Role', value: `${target.roles.highest}`, inline: true },
-          { name: '\u25B8 Display Color', value: `\`${target.displayHexColor}\``, inline: true },
-          { name: '\u25B8 Badges', value: flags, inline: true },
-          { name: `\u25B8 Roles [${roles.size}]`, value: truncRoles }
+          { name: `${EMOJI_ARROW} Account Created`, value: `<t:${Math.floor(u.createdTimestamp / 1000)}:F>\n<t:${Math.floor(u.createdTimestamp / 1000)}:R>`, inline: true },
+          { name: `${EMOJI_ARROW} Joined Server`, value: `<t:${Math.floor(target.joinedTimestamp / 1000)}:F>\n<t:${Math.floor(target.joinedTimestamp / 1000)}:R>`, inline: true },
+          { name: `${EMOJI_ARROW} Nickname`, value: target.nickname || 'None', inline: true },
+          { name: `${EMOJI_ARROW} Highest Role`, value: `${target.roles.highest}`, inline: true },
+          { name: `${EMOJI_ARROW} Display Color`, value: `\`${target.displayHexColor}\``, inline: true },
+          { name: `${EMOJI_ARROW} Badges`, value: flags, inline: true },
+          { name: `${EMOJI_ARROW} Roles [${roles.size}]`, value: truncRoles }
         )
         .setFooter({ text: 'Wild Wolf \u2022 User Analytics', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();

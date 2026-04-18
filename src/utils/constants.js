@@ -9,6 +9,8 @@
 // ══════════════════════════════════════════════
 
 const EMOJIS = {
+  EMOJI_DOP: '',
+  EMOJI_DOT: '<:white_dot:1495092726457438260>',
   EMOJI_SUCCESS: '<a:wolf_success:1425075216014377000>',
   EMOJI_ERROR: '<a:wolf_failed:1425075212646613123>',
   EMOJI_WARN: '<a:wolf_warning:1494831556663972102>',
@@ -28,16 +30,16 @@ const EMOJIS = {
   EMOJI_STAFF: '<:wolf_staff:1494826138613321840>',
   EMOJI_BAN: '<a:wolf_ban:1494826137799622807>',
   EMOJI_ROLE: '<a:LC_Star:1494837936989147237>',
-  EMOJI_VOUCH: '<a:wolf_tick:1425073956523872286>',
+  EMOJI_VOUCH: '<a:wolf_tick:1425073954455945217>',
   EMOJI_SNIPE: '<a:wolf_snipe:1494826129423466607>',
   EMOJI_CONFIG: '<a:wolf_config:1494823882430087188>',
   EMOJI_DEV: '<:wolf_owner:1494822065746743460>',
   EMOJI_UPVOTE: '🔺 ',
-  EMOJI_DOWNVOTE: '🔻'
+  EMOJI_DOWNVOTE: '🔻',
 };
 
-// ── Regex pattern that matches all {EMOJI_*} placeholders ──
-const EMOJI_PATTERN = /\{(EMOJI_\w+)\}/g;
+// ── Regex pattern that matches all {PLACEHOLDER} placeholders ──
+const EMOJI_PATTERN = /\{([a-zA-Z0-9_]+)\}/g;
 
 /**
  * Replace all {EMOJI_*} placeholders in a string with actual emoji values.
@@ -46,7 +48,10 @@ const EMOJI_PATTERN = /\{(EMOJI_\w+)\}/g;
  */
 function resolveEmojis(text) {
   if (!text || typeof text !== 'string') return text;
-  return text.replace(EMOJI_PATTERN, (match, key) => EMOJIS[key] || match);
+  return text.replace(EMOJI_PATTERN, (match, key) => {
+    // Try exact match, then uppercase match
+    return EMOJIS[key] || EMOJIS[key.toUpperCase()] || match;
+  });
 }
 
 /**

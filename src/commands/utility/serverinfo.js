@@ -1,7 +1,9 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
-const DOT = '\u25AA';
+const { resolveEmbedEmojis, EMOJIS } = require('../../utils/constants');
+
+const EMOJI_DOT = EMOJIS.EMOJI_DOT;
+const EMOJI_ARROW = EMOJIS.EMOJI_ARROW;
 
 module.exports = {
   name: 'serverinfo',
@@ -35,17 +37,17 @@ module.exports = {
         .setThumbnail(g.iconURL({ dynamic: true, size: 512 }))
         .setDescription(
           `${SEP}\n` +
-          `${DOT} **Owner:** <@${g.ownerId}>\n` +
-          `${DOT} **Created:** <t:${Math.floor(g.createdTimestamp / 1000)}:R>\n` +
-          `${DOT} **ID:** \`${g.id}\`\n` +
+          `${EMOJI_DOT} **Owner:** <@${g.ownerId}>\n` +
+          `${EMOJI_DOT} **Created:** <t:${Math.floor(g.createdTimestamp / 1000)}:R>\n` +
+          `${EMOJI_DOT} **ID:** \`${g.id}\`\n` +
           `${SEP}`
         )
         .addFields(
-          { name: `\u25B8 Members [${g.memberCount}]`, value: `\`\`\`\nHumans: ${humans}\nBots:   ${bots}\n\`\`\``, inline: true },
-          { name: '\u25B8 Presence', value: `\`\`\`\n\u25CF Online:  ${online}\n\u25CB Idle:    ${idle}\n\u25CF DND:     ${dnd}\n\u25CB Offline: ${offline}\n\`\`\``, inline: true },
+          { name: `${EMOJI_ARROW} Members [${g.memberCount}]`, value: `\`\`\`\nHumans: ${humans}\nBots:   ${bots}\n\`\`\``, inline: true },
+          { name: `${EMOJI_ARROW} Presence`, value: `\`\`\`\n\u25CF Online:  ${online}\n\u25CB Idle:    ${idle}\n\u25CF DND:     ${dnd}\n\u25CB Offline: ${offline}\n\`\`\``, inline: true },
           { name: '\u200b', value: '\u200b', inline: false },
-          { name: `\u25B8 Channels [${g.channels.cache.size}]`, value: `\`\`\`\nText:     ${tCh}\nVoice:    ${vCh}\nCategory: ${catCh}\n\`\`\``, inline: true },
-          { name: '\u25B8 Server Info', value: `\`\`\`\nRoles:       ${g.roles.cache.size}\nEmojis:      ${g.emojis.cache.size}\nStickers:    ${g.stickers.cache.size}\nBoosts:      ${g.premiumSubscriptionCount || 0}\nBoost Tier:  ${boostTier}\nVerify:      ${vLevel}\n\`\`\``, inline: true }
+          { name: `${EMOJI_ARROW} Channels [${g.channels.cache.size}]`, value: `\`\`\`\nText:     ${tCh}\nVoice:    ${vCh}\nCategory: ${catCh}\n\`\`\``, inline: true },
+          { name: `${EMOJI_ARROW} Server Info`, value: `\`\`\`\nRoles:       ${g.roles.cache.size}\nEmojis:      ${g.emojis.cache.size}\nStickers:    ${g.stickers.cache.size}\nBoosts:      ${g.premiumSubscriptionCount || 0}\nBoost Tier:  ${boostTier}\nVerify:      ${vLevel}\n\`\`\``, inline: true }
         )
         .setFooter({ text: 'Wild Wolf \u2022 Server Analytics', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();

@@ -2,8 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
-const DOT = '\u25AA';
+const { resolveEmbedEmojis, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
   name: 'warn',
@@ -65,11 +64,11 @@ module.exports = {
           `${SEP}`
         )
         .addFields(
-          { name: '\u25B8 User', value: `${target.user.tag}\n\`${target.id}\``, inline: true },
-          { name: '\u25B8 Moderator', value: `${message.author.tag}`, inline: true },
-          { name: '\u25B8 Case ID', value: `\`${caseId}\``, inline: true },
-          { name: '\u25B8 Reason', value: reason },
-          { name: `\u25B8 Warn Level [${totalWarns}/10]`, value: `\`${warnBar}\` **${severity}**` }
+          { name: `${EMOJI_ARROW} User`, value: `${target.user.tag}\n\`${target.id}\``, inline: true },
+          { name: `${EMOJI_ARROW} Moderator`, value: `${message.author.tag}`, inline: true },
+          { name: `${EMOJI_ARROW} Case ID`, value: `\`${caseId}\``, inline: true },
+          { name: `${EMOJI_ARROW} Reason`, value: reason },
+          { name: `${EMOJI_ARROW} Warn Level [${totalWarns}/10]`, value: `\`${warnBar}\` **${severity}**` }
         )
         .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
@@ -79,7 +78,7 @@ module.exports = {
       const dmEmbed = new EmbedBuilder()
         .setColor('#FEE75C')
         .setAuthor({ name: 'Wild Wolf \u2502 Warning Received', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_WARN} **You received a warning in ${message.guild.name}**\n${SEP}\n\n${DOT} **Reason:** ${reason}\n${DOT} **Case ID:** \`${caseId}\`\n${DOT} **Total Warnings:** \`${totalWarns}\``)
+        .setDescription(`${SEP}\n{EMOJI_WARN} **You received a warning in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Case ID:** \`${caseId}\`\n${EMOJI_DOT} **Total Warnings:** \`${totalWarns}\``)
         .setFooter({ text: 'Repeated violations may result in further action' })
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => {});

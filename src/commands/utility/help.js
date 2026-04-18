@@ -1,4 +1,9 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
+const { resolveEmbedEmojis, EMOJIS } = require('../../utils/constants');
+
+const EMOJI_DOP = '<a:wolf_Blackdot:1495113162071212183>';
+const EMOJI_DOT = EMOJIS.EMOJI_DOT;
+const EMOJI_ERROR = EMOJIS.EMOJI_ERROR;
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
@@ -22,7 +27,7 @@ module.exports = {
   aliases: ['h', 'commands', 'menu'],
   description: 'Interactive help dashboard with category navigation',
   usage: 'help [command]',
-  cooldown: 3,
+  cooldown: 5,
   enabled: true,
   staffOnly: false,
   devOnly: false,
@@ -33,9 +38,9 @@ module.exports = {
         const cmdName = args[0].toLowerCase();
         const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));
         if (!command) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} No command found with name \`${cmdName}\`.`).setTimestamp()] });
+          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} No command found with name \`${cmdName}\`.`).setTimestamp()] });
         }
-        return message.channel.send({ embeds: [buildCommandEmbed(client, message, command)], components: [buildHomeButton()] });
+        return message.channel.send({ embeds: [resolveEmbedEmojis(buildCommandEmbed(client, message, command).toJSON())], components: [buildHomeButton()] });
       }
 
       // ── Build categories map (cached per invocation) ──
@@ -67,7 +72,7 @@ module.exports = {
         const categoryList = allCatKeys.map(cat => {
           const meta = CATEGORY_META[cat] || { label: cat };
           const count = categories[cat].length;
-          return `${DOT} **${meta.label}** \u2014 \`${count}\` commands`;
+          return `${EMOJI_DOP} **${meta.label}** \u2014 \`${count}\` commands`;
         }).join('\n');
 
         return new EmbedBuilder()
@@ -81,9 +86,9 @@ module.exports = {
             `or type \`${client.config.prefix}help <command>\` for details.\n\n` +
             `${SEP}\n\n` +
             categoryList +
-            `\n\n${DOT} **Total Commands:** \`${totalCmds}\`\n` +
-            `${DOT} **Prefix:** \`${client.config.prefix}\`\n` +
-            `${DOT} **Support:** ${client.config.supportServer}\n\n` +
+            `\n\n${EMOJI_DOT} **Total Commands:** \`${totalCmds}\`\n` +
+            `${EMOJI_DOT} **Prefix:** \`${client.config.prefix}\`\n` +
+            `${EMOJI_DOT} **Support:** ${client.config.supportServer}\n\n` +
             `${SEP}`
           )
           .setFooter({ text: 'Wild Wolf \u2022 Select a category below', iconURL: message.guild.iconURL({ dynamic: true }) })
@@ -96,7 +101,7 @@ module.exports = {
         const meta = CATEGORY_META[catKey] || { label: catKey, desc: '' };
 
         const cmdList = cmds.map(c => {
-          return `\`${client.config.prefix}${c.name}\`\n${DOT} ${c.description || 'No description'}`;
+          return `\`${client.config.prefix}${c.name}\` \n${EMOJI_DOT} ${c.description || 'No description'}`;
         }).join('\n\n');
 
         return new EmbedBuilder()
@@ -137,7 +142,7 @@ module.exports = {
           if (item.header) {
             text += `\n**${ARROW} ${item.label}**\n`;
           } else {
-            text += `${DOT} \`${client.config.prefix}${item.cmd.name}\` \u2014 ${item.cmd.description || 'No description'}\n`;
+            text += `${EMOJI_DOT} \`${client.config.prefix}${item.cmd.name}\` \u2014 ${item.cmd.description || 'No description'}\n`;
           }
         }
 
@@ -199,8 +204,8 @@ module.exports = {
         btns.push(new ButtonBuilder().setCustomId('help_all').setLabel('All Commands').setStyle(view === 'all' ? ButtonStyle.Success : ButtonStyle.Primary));
 
         if (view === 'all' && allPageData) {
-          btns.push(new ButtonBuilder().setCustomId('help_prev').setEmoji('\u25C0').setStyle(ButtonStyle.Secondary).setDisabled(state.page === 0));
-          btns.push(new ButtonBuilder().setCustomId('help_next').setEmoji('\u25B6').setStyle(ButtonStyle.Secondary).setDisabled(state.page >= allPageData.totalPages - 1));
+          btns.push(new ButtonBuilder().setCustomId('help_prev').setEmoji('{EMOJI_ARROW_LEFT}').setStyle(ButtonStyle.Secondary).setDisabled(state.page === 0));
+          btns.push(new ButtonBuilder().setCustomId('help_next').setEmoji('{EMOJI_ARROW_RIGHT}').setStyle(ButtonStyle.Secondary).setDisabled(state.page >= allPageData.totalPages - 1));
         }
 
         btns.push(new ButtonBuilder().setLabel('Support').setStyle(ButtonStyle.Link).setURL(client.config.supportServer));
@@ -247,7 +252,7 @@ module.exports = {
           components.push(buildButtons('command'));
         }
 
-        return { embeds: [embed], components };
+        return { embeds: [resolveEmbedEmojis(embed.toJSON())], components };
       }
 
       // ── SEND INITIAL ──
@@ -355,7 +360,7 @@ function buildCommandEmbed(client, message, command) {
       { name: `${ARROW} Cooldown`, value: `\`${command.cooldown || 0}s\``, inline: true },
       { name: `${ARROW} Category`, value: `\`${(command.category || 'Unknown').charAt(0).toUpperCase() + (command.category || 'unknown').slice(1)}\``, inline: true },
       { name: `${ARROW} Permissions`, value: permStr.join(', ') },
-      { name: `${ARROW} Status`, value: command.enabled ? `${DOT} \`\u25CF Enabled\`` : `${DOT} \`\u25CB Disabled\``, inline: true }
+      { name: `${ARROW} Status`, value: command.enabled ? `${EMOJI_DOT} \`\u25CF Enabled\`` : `${EMOJI_DOT} \`\u25CB Disabled\``, inline: true }
     )
     .setFooter({ text: 'Wild Wolf \u2022 Command Details', iconURL: message.guild.iconURL({ dynamic: true }) })
     .setTimestamp();

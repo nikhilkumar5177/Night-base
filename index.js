@@ -69,6 +69,18 @@ Message.prototype.react = function(emoji) {
   return originalReact.call(this, resolveEmojis(emoji));
 };
 
+const originalDelete = Message.prototype.delete;
+Message.prototype.delete = function() {
+  if (this.client) {
+    if (!this.client.ignoredDeletes) this.client.ignoredDeletes = new Set();
+    this.client.ignoredDeletes.add(this.id);
+    setTimeout(() => {
+      if (this.client.ignoredDeletes) this.client.ignoredDeletes.delete(this.id);
+    }, 15000);
+  }
+  return originalDelete.apply(this, arguments);
+};
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,

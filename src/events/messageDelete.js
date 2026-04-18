@@ -8,6 +8,11 @@ module.exports = {
     if (!message.guild) return;
     if (message.author && message.author.bot) return;
 
+    if (client.ignoredDeletes && client.ignoredDeletes.has(message.id)) {
+      client.ignoredDeletes.delete(message.id);
+      return;
+    }
+
     const channelId = message.channel.id;
 
     if (!client.snipeCache.has(channelId)) {

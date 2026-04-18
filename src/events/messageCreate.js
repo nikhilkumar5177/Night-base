@@ -1,6 +1,6 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {
   name: 'messageCreate',
@@ -161,10 +161,11 @@ module.exports = {
 
     if (command.staffOnly) {
       const staffData = storage.read('staff.json');
-      const memberRoles = message.member.roles.cache.map(r => r.id);
+      const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
       const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
       const isDev = message.author.id === process.env.DEV_ID;
-      if (!isStaff && !isDev) return;
+      const isAdmin = message.member && message.member.permissions.has(PermissionsBitField.Flags.Administrator);
+      if (!isStaff && !isDev && !isAdmin) return;
     }
 
     if (command.devOnly && message.author.id !== process.env.DEV_ID) return;

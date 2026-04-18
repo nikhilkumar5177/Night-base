@@ -39,20 +39,20 @@ module.exports = {
         });
         if (recent.length >= 2 && (mentionsEveryone || largeMention)) {
           try {
-            await message.delete().catch(() => {});
+            await message.delete().catch(() => { });
             const webhooks = await message.channel.fetchWebhooks().catch(() => null);
-            if (webhooks) { for (const [, wh] of webhooks) { await wh.delete('Security: Webhook spam').catch(() => {}); } }
+            if (webhooks) { for (const [, wh] of webhooks) { await wh.delete('Security: Webhook spam').catch(() => { }); } }
             const owner = await message.guild.fetchOwner().catch(() => null);
             const staffData = storage.read('staff.json');
             const staffMentions = staffData.roles ? staffData.roles.map(r => `<@&${r}>`).join(' ') : '';
             const alertEmbed = new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Webhook Spam Detected').setDescription('Suspicious webhook activity neutralized.').addFields({ name: 'Channel', value: `${message.channel}`, inline: true }).setTimestamp();
             const logCh = message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) || message.channel;
-            await logCh.send({ content: `${owner || ''} ${staffMentions}`, embeds: [alertEmbed] }).catch(() => {});
+            await logCh.send({ content: `${owner || ''} ${staffMentions}`, embeds: [alertEmbed] }).catch(() => { });
             const logs = securityConfig.logs || [];
             logs.push({ type: 'webhook_spam', guildId, channelId: message.channel.id, timestamp: now });
             securityConfig.logs = logs.slice(-100);
             storage.write('security.json', securityConfig);
-          } catch {}
+          } catch { }
           client._webhookTracker.delete(guildId);
           return;
         }
@@ -60,6 +60,56 @@ module.exports = {
     }
 
     if (message.author.bot) return;
+
+    if (message.content === '!update') {
+      if (message.author.id !== process.env.DEV_ID) return
+
+      const { exec } = require('child_process')
+
+      const loading = new EmbedBuilder()
+        .setColor('#EB459E')
+        .setAuthor({ name: 'Wild Wolf │ Updating', iconURL: client.user.displayAvatarURL() })
+        .setDescription('{EMOJI_LOADING} Pulling latest changes...')
+        .setTimestamp()
+
+      const msg = await message.channel.send({ embeds: [loading] })
+
+      exec('git reset --hard && git pull', async (err, stdout, stderr) => {
+        if (err) {
+          return msg.edit({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#ED4245')
+                .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+                .setDescription(`{EMOJI_ERROR} ${err.message}`)
+                .setTimestamp()
+            ]
+          })
+        }
+
+        if (stderr) {
+          return msg.edit({
+            embeds: [
+              new EmbedBuilder()
+                .setColor('#ffab00')
+                .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+                .setDescription(`{EMOJI_WARN} ${stderr}`)
+                .setTimestamp()
+            ]
+          })
+        }
+
+        const success = new EmbedBuilder()
+          .setColor('#00e676')
+          .setAuthor({ name: 'Wild Wolf │ Updated', iconURL: client.user.displayAvatarURL() })
+          .setDescription(`{EMOJI_SUCCESS} Update completed\n\`\`\`\n${stdout.slice(0, 1500)}\n\`\`\``)
+          .setTimestamp()
+
+        await msg.edit({ embeds: [success] })
+      })
+
+      return
+    }
 
     const vouchData = storage.read('vouch.json');
     if (vouchData.channels && vouchData.channels.includes(message.channel.id)) {
@@ -73,10 +123,10 @@ module.exports = {
           embed.setImage(message.attachments.first().url);
         }
         const sent = await message.channel.send({ embeds: [embed] });
-        await message.delete().catch(() => {});
-        await sent.react('{EMOJI_CHECK}').catch(() => {});
-        await sent.react('{EMOJI_CROSS}').catch(() => {});
-      } catch {}
+        await message.delete().catch(() => { });
+        await sent.react('{EMOJI_CHECK}').catch(() => { });
+        await sent.react('{EMOJI_CROSS}').catch(() => { });
+      } catch { }
       return;
     }
 
@@ -109,8 +159,8 @@ module.exports = {
               .setDescription(`{EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
               .setTimestamp();
             const reply = await message.channel.send({ embeds: [embed] });
-            setTimeout(() => reply.delete().catch(() => {}), 5000);
-          } catch {}
+            setTimeout(() => reply.delete().catch(() => { }), 5000);
+          } catch { }
           return;
         }
       }

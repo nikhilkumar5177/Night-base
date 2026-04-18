@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['cleardupes', 'clearemojis', 'dedupeemojis'],
   description: 'Scans the server for duplicate custom emojis and removes them.',
   usage: 'dedupe',
-  cooldown: 10,
+  cooldown: 30,
   enabled: true,
   staffOnly: true,
   devOnly: false,

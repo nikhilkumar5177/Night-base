@@ -1,6 +1,7 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { LIMITS } = require('../utils/constants');
 
 module.exports = {
   name: 'messageCreate',
@@ -180,7 +181,8 @@ module.exports = {
       });
     }
 
-    if (command.cooldown) {
+    const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
+    if (cooldownAmount > 0) {
       const key = `${message.author.id}-${command.name}`;
       const now = Date.now();
       if (client.cooldowns.has(key)) {
@@ -196,8 +198,8 @@ module.exports = {
           return;
         }
       }
-      client.cooldowns.set(key, now + (command.cooldown * 1000));
-      setTimeout(() => client.cooldowns.delete(key), command.cooldown * 1000);
+      client.cooldowns.set(key, now + cooldownAmount);
+      setTimeout(() => client.cooldowns.delete(key), cooldownAmount);
     }
 
     try {

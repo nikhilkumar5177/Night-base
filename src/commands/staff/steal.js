@@ -7,7 +7,7 @@ module.exports = {
   aliases: ['emojisteal', 'addemoji'],
   description: 'Steal custom emojis from a message and add them to the server',
   usage: 'steal [emojis] or reply to a message',
-  cooldown: 5,
+  cooldown: 10,
   enabled: true,
   staffOnly: true,
   devOnly: false,

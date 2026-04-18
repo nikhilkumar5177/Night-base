@@ -1,4 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { resolveMember } = require('../../utils/resolver');
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
@@ -7,14 +8,14 @@ module.exports = {
   name: 'userinfo',
   aliases: ['ui', 'whois'],
   description: 'Display user information',
-  usage: 'userinfo [@user]',
+  usage: 'userinfo [@user/id]',
   cooldown: 3,
   enabled: true,
   staffOnly: false,
   devOnly: false,
   execute: async (client, message, args) => {
     try {
-      const target = message.mentions.members.first() || message.guild.members.cache.get(args[0]) || message.member;
+      const target = await resolveMember(message.guild, args[0]) || message.member;
       const u = target.user;
       const flags = u.flags?.toArray().map(f => `\`${f}\``).join(', ') || 'None';
       const roles = target.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== message.guild.id);

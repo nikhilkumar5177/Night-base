@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { resolveMember } = require('../../utils/resolver');
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
@@ -20,7 +21,7 @@ module.exports = {
       if (!message.guild.members.me.permissions.has('ModerateMembers')) {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ModerateMembers** permission.').setTimestamp()] });
       }
-      const target = message.mentions.members.first() || message.guild.members.cache.get(args[0]);
+      const target = await resolveMember(message.guild, args[0]);
       if (!target) {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}mute <@user> [minutes] [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}mute @User 30 spamming\n\`\`\`` }, { name: 'Aliases', value: '`timeout`, `to`', inline: true }, { name: 'Cooldown', value: '`3s`', inline: true }, { name: 'Max', value: '`28 days`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] });
       }

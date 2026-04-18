@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { resolveMember } = require('../../utils/resolver');
 
 module.exports = {
   name: 'nickname',
@@ -17,7 +18,7 @@ module.exports = {
       if (!message.guild.members.me.permissions.has('ManageNicknames')) {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Bot Missing Permissions').setDescription('I need **ManageNicknames** permission.').setTimestamp()] });
       }
-      const target = message.mentions.members.first() || message.guild.members.cache.get(args[0]);
+      const target = await resolveMember(message.guild, args[0]);
       if (!target || args.length < 2) {
         const usageEmbed = new EmbedBuilder()
           .setColor('#8B0000')

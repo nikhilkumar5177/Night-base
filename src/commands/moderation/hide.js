@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { resolveChannel } = require('../../utils/resolver');
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
@@ -16,7 +17,7 @@ module.exports = {
       if (!message.member.permissions.has('ManageChannels')) {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
       }
-      const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[0]) || message.channel;
+      const channel = resolveChannel(message.guild, args[0]) || message.channel;
       await channel.permissionOverwrites.edit(message.guild.roles.everyone, { ViewChannel: false });
 
       const embed = new EmbedBuilder()

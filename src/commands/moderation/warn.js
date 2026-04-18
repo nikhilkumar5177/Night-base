@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
@@ -22,7 +23,7 @@ module.exports = {
         const embed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}warn <@user> [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}warn @User being toxic in chat\n\`\`\`` }, { name: 'Aliases', value: '`w`', inline: true }, { name: 'Cooldown', value: '`3s`', inline: true }, { name: 'Permission', value: '`ModerateMembers`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
         return message.channel.send({ embeds: [embed] });
       }
-      const target = message.mentions.members.first() || message.guild.members.cache.get(args[0]);
+      const target = await resolveMember(message.guild, args[0]);
       if (!target) {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Could not find the specified user.').setTimestamp()] });
       }

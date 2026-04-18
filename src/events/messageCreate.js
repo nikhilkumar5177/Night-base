@@ -168,7 +168,17 @@ module.exports = {
       if (!isStaff && !isDev && !isAdmin) return;
     }
 
-    if (command.devOnly && message.author.id !== process.env.DEV_ID) return;
+    if (command.devOnly && message.author.id !== process.env.DEV_ID) {
+      return message.channel.send({
+        embeds: [
+          new EmbedBuilder()
+            .setColor('#ED4245')
+            .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+            .setDescription('{EMOJI_ERROR} This is an **Owner Command**.')
+            .setTimestamp()
+        ]
+      });
+    }
 
     if (command.cooldown) {
       const key = `${message.author.id}-${command.name}`;

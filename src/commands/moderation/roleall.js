@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { resolveRole } = require('../../utils/resolver');
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const BATCH_SIZE = 50;
@@ -21,7 +22,7 @@ module.exports = {
       if (!message.guild.members.me.permissions.has('ManageRoles')) {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ManageRoles** permission.').setTimestamp()] });
       }
-      const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[0]);
+      const role = resolveRole(message.guild, args[0]);
       if (!role) {
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}roleall <@role>\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}roleall @Members\n\`\`\`` }, { name: 'Aliases', value: '`ra`', inline: true }, { name: 'Cooldown', value: '`30s`', inline: true }, { name: 'Permission', value: '`ManageRoles`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] });
       }

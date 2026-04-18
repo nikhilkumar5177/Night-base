@@ -1,4 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { sendAutoDelete } = require('../../utils/messageHelper');
 
 const { resolveEmbedEmojis, EMOJI_DOT } = require('../../utils/constants');
 
@@ -14,10 +15,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('KickMembers')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **KickMembers** permission.').setTimestamp()] });
+        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **KickMembers** permission.').setTimestamp()] }, 5000);
       }
       if (!message.guild.members.me.permissions.has('KickMembers')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **KickMembers** permission.').setTimestamp()] });
+        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **KickMembers** permission.').setTimestamp()] }, 5000);
       }
 
       const targets = new Set();

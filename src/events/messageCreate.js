@@ -1,7 +1,21 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
-const { LIMITS } = require('../utils/constants');
+const { LIMITS, resolveEmbedEmojis } = require('../utils/constants');
+
+const sendAutoDelete = async (channel, options, ms = LIMITS.AUTO_DELETE_MS || 10000) => {
+  try {
+    if (options.embeds) {
+      options.embeds = options.embeds.map(e => {
+        if (typeof e.toJSON === 'function') return resolveEmbedEmojis(e.toJSON());
+        return resolveEmbedEmojis(e);
+      });
+    }
+    const sent = await channel.send(options);
+    setTimeout(() => sent.delete().catch(() => { }), ms);
+    return sent;
+  } catch (err) { }
+};
 
 module.exports = {
   name: 'messageCreate',
@@ -165,12 +179,22 @@ module.exports = {
       const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
       const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
       const isDev = message.author.id === process.env.DEV_ID;
-      const isAdmin = message.member && message.member.permissions.has(PermissionsBitField.Flags.Administrator);
-      if (!isStaff && !isDev && !isAdmin) return;
+
+      if (!isStaff && !isDev) {
+        return sendAutoDelete(message.channel, {
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#ED4245')
+              .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+              .setDescription('{EMOJI_ERROR} You are not a **Staff member** of this server.')
+              .setTimestamp()
+          ]
+        }, 5000);
+      }
     }
 
     if (command.devOnly && message.author.id !== process.env.DEV_ID) {
-      return message.channel.send({
+      return sendAutoDelete(message.channel, {
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')
@@ -178,7 +202,7 @@ module.exports = {
             .setDescription('{EMOJI_ERROR} This is an **Owner Command**.')
             .setTimestamp()
         ]
-      });
+      }, 5000);
     }
 
     const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
@@ -193,9 +217,7 @@ module.exports = {
             .setColor('#ffab00')
             .setDescription(`{EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`)
             .setTimestamp();
-          const reply = await message.channel.send({ embeds: [embed] });
-          setTimeout(() => reply.delete().catch(() => {}), 5000);
-          return;
+          return sendAutoDelete(message.channel, { embeds: [embed] }, 5000);
         }
       }
       client.cooldowns.set(key, now + cooldownAmount);

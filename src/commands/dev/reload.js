@@ -15,27 +15,46 @@ module.exports = {
     if (message.author.id !== process.env.DEV_ID) return;
     try {
       if (!args[0] || args[0].toLowerCase() === 'all') {
-        const commandsPath = path.join(__dirname, '..');
-        const categories = fs.readdirSync(commandsPath);
-        let count = 0;
-        for (const category of categories) {
-          const categoryPath = path.join(commandsPath, category);
-          if (!fs.statSync(categoryPath).isDirectory()) continue;
-          const files = fs.readdirSync(categoryPath).filter(f => f.endsWith('.js'));
+        const srcPath = path.resolve(__dirname, '..', '..');
+        
+        const sweep = (dir) => {
+          const files = fs.readdirSync(dir);
           for (const file of files) {
-            const filePath = path.join(categoryPath, file);
-            delete require.cache[require.resolve(filePath)];
-            const cmd = require(filePath);
-            cmd.category = category;
-            client.commands.set(cmd.name, cmd);
-            if (cmd.aliases) {
-              for (const alias of cmd.aliases) {
-                client.aliases.set(alias, cmd.name);
-              }
+            const fullPath = path.join(dir, file);
+            if (fs.statSync(fullPath).isDirectory()) {
+              sweep(fullPath);
+            } else if (file.endsWith('.js')) {
+              try {
+                delete require.cache[require.resolve(fullPath)];
+              } catch (e) {}
             }
-            count++;
+          }
+        };
+        sweep(srcPath);
+
+        client.commands.clear();
+        client.aliases.clear();
+
+        const eventsPath = path.join(srcPath, 'events');
+        if (fs.existsSync(eventsPath)) {
+          const eventFiles = fs.readdirSync(eventsPath).filter(f => f.endsWith('.js'));
+          for (const file of eventFiles) {
+            try {
+              const event = require(path.join(eventsPath, file));
+              if (event.name) {
+                client.removeAllListeners(event.name);
+              }
+            } catch (e) {}
           }
         }
+
+        const commandHandler = require('../../handlers/commandHandler');
+        const eventHandler = require('../../handlers/eventHandler');
+
+        commandHandler(client);
+        eventHandler(client);
+
+        const count = client.commands.size;
         return message.channel.send({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} All Commands Reloaded').setDescription(`Reloaded **${count}** commands.`).setTimestamp()] });
       }
       const cmdName = args[0].toLowerCase();

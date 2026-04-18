@@ -2,6 +2,8 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('
 const { resolveMember } = require('../../utils/resolver');
 
 const { resolveEmbedEmojis, EMOJIS } = require('../../utils/constants');
+const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+const DOT = '\u25AA';
 
 const EMOJI_DOT = EMOJIS.EMOJI_DOT;
 const EMOJI_ARROW = EMOJIS.EMOJI_ARROW;
@@ -64,7 +66,7 @@ module.exports = {
       const sent = await message.channel.send({ embeds: [embed], components: [row] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
-        if (i.customId === 'ui_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
+        if (i.customId === 'ui_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
         if (i.customId === 'ui_avatar') {
           const avEmbed = new EmbedBuilder()
             .setColor(target.displayHexColor !== '#000000' ? target.displayHexColor : '#5865F2')
@@ -79,7 +81,7 @@ module.exports = {
           await i.update({ embeds: [avEmbed], components: [bk] });
         }
         if (i.customId === 'ui_banner') {
-          await u.fetch(true).catch(() => {});
+          await u.fetch(true).catch(() => { });
           const bannerUrl = u.bannerURL({ dynamic: true, size: 1024 });
           if (!bannerUrl) {
             await i.reply({ content: '{EMOJI_WARN} This user has no banner.', ephemeral: true });
@@ -101,7 +103,7 @@ module.exports = {
           await i.update({ embeds: [embed], components: [row] });
         }
       });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
       message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }

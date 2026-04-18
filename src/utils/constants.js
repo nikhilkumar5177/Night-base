@@ -36,6 +36,7 @@ const EMOJIS = {
   EMOJI_DEV: '<:wolf_owner:1494822065746743460>',
   EMOJI_UPVOTE: '🔺 ',
   EMOJI_DOWNVOTE: '🔻',
+  EMOJI_ARROW: '<:white_dot:1495092726457438260>',
 };
 
 // ── Regex pattern that matches all {PLACEHOLDER} placeholders ──

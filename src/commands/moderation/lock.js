@@ -1,5 +1,5 @@
 const { EmbedBuilder, ChannelType, PermissionsBitField } = require('discord.js')
-
+const { SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'lock',

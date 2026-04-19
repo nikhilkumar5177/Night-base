@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
+const { SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'nickname',

@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const storage = require('../../utils/storageManager');
+const { SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'aliasrole',

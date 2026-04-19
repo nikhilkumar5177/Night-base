@@ -39,6 +39,8 @@ const EMOJIS = {
   EMOJI_ARROW: '<:white_dot:1495092726457438260>',
 };
 
+const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501'; 
+
 // ── Regex pattern that matches all {PLACEHOLDER} placeholders ──
 const EMOJI_PATTERN = /\{([a-zA-Z0-9_]+)\}/g;
 
@@ -82,6 +84,7 @@ module.exports = {
   EMOJIS,
   resolveEmojis,
   resolveEmbedEmojis,
+  SEP,
 
   COLORS: {
     SUCCESS: '#57F287',

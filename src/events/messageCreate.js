@@ -135,11 +135,13 @@ module.exports = {
     if (runtimeConfig.aliasMode !== false) {
       const aliasData = storage.read('aliases.json');
       const content = message.content.toLowerCase().trim();
+      const parts = content.split(/\s+/);
+      const firstWord = parts[0];
 
       for (const [aliasKey, aliasConfig] of Object.entries(aliasData)) {
         const triggers = [aliasKey, ...(aliasConfig.aliases || [])].map(a => a.toLowerCase());
 
-        if (triggers.includes(content)) {
+        if (triggers.includes(content) || (triggers.includes(firstWord) && message.mentions.members.size > 0)) {
           if (aliasConfig.requiredRole && !message.member.roles.cache.has(aliasConfig.requiredRole)) {
             continue;
           }

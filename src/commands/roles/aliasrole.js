@@ -42,7 +42,7 @@ module.exports = {
         }
         aliasData[alias] = { roleId, requiredRole: args[3] || null, aliases: [], timestamp: Date.now() };
         storage.write('aliases.json', aliasData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} Alias Role Added').setDescription(`Typing \`${alias}\` will now toggle **${role.name}**.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} Alias Role Added').setDescription(`Typing \`${alias}\` or \`${alias} @user\` will now toggle **${role.name}**.`).setTimestamp()] });
       }
       if (action === 'remove') {
         const alias = args[1]?.toLowerCase();

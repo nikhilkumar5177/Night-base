@@ -15,13 +15,13 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageMessages')) {
-        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageMessages** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageMessages** permission.').setTimestamp()] }, 5000);
       }
       if (!message.guild.members.me.permissions.has('ManageMessages')) {
-        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ManageMessages** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ManageMessages** permission.').setTimestamp()] }, 5000);
       }
       if (!args[0]) {
-        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}purge <count | bots | embeds | @user> [count]\n\`\`\`` }, { name: '\u2501\u2501 Examples', value: `\`\`\`\n${client.config.prefix}purge 50\n${client.config.prefix}purge bots\n${client.config.prefix}purge @User 20\n\`\`\`` }, { name: 'Aliases', value: '`clear`, `prune`', inline: true }, { name: 'Cooldown', value: '`5s`', inline: true }, { name: 'Max', value: '`100 msgs`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] }, 15000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}purge <count | bots | embeds | @user> [count]\n\`\`\`` }, { name: '\u2501\u2501 Examples', value: `\`\`\`\n${client.config.prefix}purge 50\n${client.config.prefix}purge bots\n${client.config.prefix}purge @User 20\n\`\`\`` }, { name: 'Aliases', value: '`clear`, `prune`', inline: true }, { name: 'Cooldown', value: '`5s`', inline: true }, { name: 'Max', value: '`100 msgs`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] }, 15000);
       }
 
       let count = Math.min(parseInt(args[0]) || parseInt(args[1]) || 50, LIMITS.MAX_PURGE);

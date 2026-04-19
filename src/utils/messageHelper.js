@@ -9,7 +9,8 @@ const { resolveEmbedEmojis, LIMITS } = require('./constants');
  */
 async function sendAutoDelete(channelOrMessage, options, ms = LIMITS.AUTO_DELETE_MS || 10000) {
     try {
-        const channel = channelOrMessage.channel || channelOrMessage;
+        const isMessage = !!channelOrMessage.reply;
+        const target = isMessage ? channelOrMessage : channelOrMessage;
         
         // Resolve emojis in embeds if present
         if (options.embeds) {
@@ -19,8 +20,8 @@ async function sendAutoDelete(channelOrMessage, options, ms = LIMITS.AUTO_DELETE
             });
         }
 
-        const sent = await channel.send(options);
-        setTimeout(() => sent.delete().catch(() => { }), ms);
+        const sent = isMessage ? await channelOrMessage.reply(options) : await channelOrMessage.send(options);
+        if (ms > 0) setTimeout(() => sent.delete().catch(() => { }), ms);
         return sent;
     } catch (err) {
         console.error('Error in sendAutoDelete:', err);

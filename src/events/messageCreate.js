@@ -160,8 +160,7 @@ module.exports = {
               .setColor('#00e676')
               .setDescription(`{EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
               .setTimestamp();
-            const reply = await message.channel.send({ embeds: [embed] });
-            setTimeout(() => reply.delete().catch(() => { }), 5000);
+            await message.reply({ embeds: [embed] });
           } catch { }
           return;
         }
@@ -233,7 +232,7 @@ module.exports = {
       const isDev = message.author.id === process.env.DEV_ID;
 
       if (!isStaff && !isDev) {
-        return sendAutoDelete(message.channel, {
+        return sendAutoDelete(message, {
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -246,7 +245,7 @@ module.exports = {
     }
 
     if (command.devOnly && message.author.id !== process.env.DEV_ID) {
-      return sendAutoDelete(message.channel, {
+      return sendAutoDelete(message, {
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')
@@ -269,7 +268,7 @@ module.exports = {
             .setColor('#ffab00')
             .setDescription(`{EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`)
             .setTimestamp();
-          return sendAutoDelete(message.channel, { embeds: [embed] }, 5000);
+          return sendAutoDelete(message, { embeds: [embed] }, 5000);
         }
       }
       client.cooldowns.set(key, now + cooldownAmount);

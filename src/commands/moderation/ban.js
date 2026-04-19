@@ -15,10 +15,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('BanMembers')) {
-        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **BanMembers** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **BanMembers** permission.').setTimestamp()] }, 5000);
       }
       if (!message.guild.members.me.permissions.has('BanMembers')) {
-        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **BanMembers** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **BanMembers** permission.').setTimestamp()] }, 5000);
       }
 
       const targets = new Set();
@@ -39,7 +39,7 @@ module.exports = {
 
       if (finalTargets.length === 0) {
         const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}ban <@user(s)> [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}ban @User1 @User2 raiding the server\n\`\`\`` }, { name: 'Aliases', value: '`b`', inline: true }, { name: 'Cooldown', value: '`5s`', inline: true }, { name: 'Permission', value: '`BanMembers`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-        return sendAutoDelete(message.channel, { embeds: [usageEmbed] }, 15000);
+        return sendAutoDelete(message, { embeds: [usageEmbed] }, 15000);
       }
 
       const reason = reasonArgs.join(' ') || 'No reason provided';
@@ -55,7 +55,7 @@ module.exports = {
       }
 
       if (validTargets.length === 0) {
-        return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} I cannot ban any of the specified users (higher roles or unbannable).\n**Invalid:** ${invalidTargets.join(', ')}`).setTimestamp()] }, 10000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} I cannot ban any of the specified users (higher roles or unbannable).\n**Invalid:** ${invalidTargets.join(', ')}`).setTimestamp()] }, 10000);
       }
 
       const confirmEmbed = new EmbedBuilder()

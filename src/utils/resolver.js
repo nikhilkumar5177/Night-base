@@ -40,7 +40,15 @@ module.exports = {
     if (role) return role;
     
     // Try Name (case-insensitive)
-    return guild.roles.cache.find(r => r.name.toLowerCase() === input.toLowerCase());
+    let matched = guild.roles.cache.find(r => r.name.toLowerCase() === input.toLowerCase());
+    if (matched) return matched;
+
+    // Try Starts With
+    matched = guild.roles.cache.find(r => r.name.toLowerCase().startsWith(input.toLowerCase()));
+    if (matched) return matched;
+
+    // Try Includes
+    return guild.roles.cache.find(r => r.name.toLowerCase().includes(input.toLowerCase()));
   },
 
   /**

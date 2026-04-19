@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
 
 module.exports = {
@@ -21,21 +21,21 @@ module.exports = {
         const cmdName = args[0].toLowerCase();
         const data = analytics[cmdName];
         if (!data) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} No analytics data for \`${cmdName}\`.\n${SEP}`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} No analytics data for \`${cmdName}\`.\n${SEP}`).setTimestamp()] });
         }
         const embed = new EmbedBuilder()
           .setColor('#5865F2')
           .setAuthor({ name: `Wild Wolf \u2502 Analytics: ${cmdName}`, iconURL: client.user.displayAvatarURL() })
           .setDescription(`${SEP}\n${DOT} **Command:** \`${client.config.prefix}${cmdName}\`\n${DOT} **Total Uses:** \`${data.uses || 0}\`\n${DOT} **Last Used:** ${data.lastUsed ? `<t:${Math.floor(data.lastUsed / 1000)}:R>` : 'Never'}\n${DOT} **Last User:** ${data.lastUser ? `\`${data.lastUser}\`` : 'Unknown'}\n${SEP}`)
           .setFooter({ text: 'Wild Wolf \u2022 Command Analytics' }).setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       const entries = Object.entries(analytics).sort((a, b) => (b[1].uses || 0) - (a[1].uses || 0));
       const totalUses = entries.reduce((a, [, v]) => a + (v.uses || 0), 0);
 
       if (entries.length === 0) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} No analytics data collected yet.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} No analytics data collected yet.\n${SEP}`).setTimestamp()] });
       }
 
       const perPage = 10;
@@ -75,7 +75,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('an_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.channel.send({ embeds: [buildEmbed()], components: [buildRow()] });
+      const sent = await message.reply({ embeds: [buildEmbed()], components: [buildRow()] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'an_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
@@ -91,7 +91,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

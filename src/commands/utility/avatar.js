@@ -1,6 +1,6 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
 
 module.exports = {
@@ -10,11 +10,19 @@ module.exports = {
   usage: 'avatar [@user]',
   cooldown: 3,
   enabled: true,
+  data: new SlashCommandBuilder()
+    .setName('avatar')
+    .setDescription('View user avatar with format options')
+    .addUserOption(opt => opt.setName('user').setDescription('The user to view avatar of').setRequired(false)),
   staffOnly: false,
   devOnly: false,
   execute: async (client, message, args) => {
+    const isInteraction = !message.author;
     try {
-      const user = message.mentions.users.first() || client.users.cache.get(args[0]) || message.author;
+      const user = isInteraction 
+        ? (message.options.getUser('user') || message.user)
+        : (message.mentions.users.first() || client.users.cache.get(args[0]) || message.author);
+      
       const member = message.guild.members.cache.get(user.id);
       const globalAv = user.displayAvatarURL({ dynamic: true, size: 1024 });
       const serverAv = member?.displayAvatarURL({ dynamic: true, size: 1024 });
@@ -52,8 +60,8 @@ module.exports = {
         ));
       }
 
-      const sent = await message.channel.send({ embeds: [buildEmbed(globalAv, 'Global Avatar')], components });
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
+      const sent = await message.reply({ embeds: [buildEmbed(globalAv, 'Global Avatar')], components });
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'av_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
         if (i.customId === 'av_global') await i.update({ embeds: [buildEmbed(globalAv, 'Global Avatar')] });
@@ -61,7 +69,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

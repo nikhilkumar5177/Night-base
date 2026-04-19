@@ -28,10 +28,10 @@ module.exports = {
         .setDescription('{EMOJI_SUCCESS} **System Cache & Console Cleared!**\n\u25AA Terminal console has been wiped clean.\n\u25AA Command cooldowns have been reset.\n\u25AA Stale message caches have been swept.')
         .setTimestamp();
 
-      await message.channel.send({ embeds: [embed] });
+      await message.reply({ embeds: [embed] });
 
     } catch (error) {
-      message.channel.send({
+      message.reply({
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')

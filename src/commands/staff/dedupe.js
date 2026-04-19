@@ -1,6 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, PermissionsBitField } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'dedupe',
@@ -14,7 +14,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -26,7 +26,7 @@ module.exports = {
       }
 
       if (!message.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -43,7 +43,7 @@ module.exports = {
         .setDescription(`${SEP}\n{EMOJI_LOADING} **Scanning server for duplicate emojis...**\n${SEP}`)
         .setTimestamp();
       
-      const sentMsg = await message.channel.send({ embeds: [loadEmbed] });
+      const sentMsg = await message.reply({ embeds: [loadEmbed] });
 
       const emojis = await message.guild.emojis.fetch();
       
@@ -174,7 +174,7 @@ module.exports = {
       });
 
     } catch (error) {
-      message.channel.send({
+      message.reply({
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')

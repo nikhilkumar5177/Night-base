@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'emoji',
@@ -14,7 +14,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!args.length) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -29,7 +29,7 @@ module.exports = {
       const matches = [...inputStr.matchAll(emojiRegex)];
 
       if (matches.length === 0) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -84,9 +84,9 @@ module.exports = {
         embed.setDescription(desc);
       }
 
-      return message.channel.send({ embeds: [embed] });
+      return message.reply({ embeds: [embed] });
     } catch (error) {
-      return message.channel.send({
+      return message.reply({
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')

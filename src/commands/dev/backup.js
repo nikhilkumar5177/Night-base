@@ -10,7 +10,7 @@ module.exports = {
   staffOnly: false,
   devOnly: true,
   execute: async (client, message) => {
-    const reply = await message.channel.send({
+    const reply = await message.reply({
       embeds: [
         new EmbedBuilder()
           .setColor('#EB459E')

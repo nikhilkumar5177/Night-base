@@ -1,6 +1,6 @@
 const { EmbedBuilder, ChannelType } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'unlock',
@@ -14,7 +14,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
       }
 
       const channels = new Set();
@@ -34,7 +34,7 @@ module.exports = {
         if (message.channel.type === ChannelType.GuildText) {
           channels.add(message.channel);
         } else {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Can only unlock text channels.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Can only unlock text channels.').setTimestamp()] });
         }
       }
 
@@ -59,9 +59,9 @@ module.exports = {
         )
         .setFooter({ text: 'Wild Wolf \u2022 Members can send messages again', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
-      message.channel.send({ embeds: [embed] });
+      message.reply({ embeds: [embed] });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

@@ -14,19 +14,19 @@ module.exports = {
     try {
       if (args.length < 2) {
         const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}reminder <time> <message>\n\`\`\`` }, { name: '\u2501\u2501 Examples', value: `\`\`\`\n${client.config.prefix}reminder 10m check the server\n${client.config.prefix}reminder 2h review applications\n${client.config.prefix}reminder 1d weekly meeting\n\`\`\`` }, { name: 'Time Formats', value: '`s` `m` `h` `d`', inline: true }, { name: 'Max', value: '`7 days`', inline: true }, { name: 'Aliases', value: '`remind`, `remindme`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-        return message.channel.send({ embeds: [usageEmbed] });
+        return message.reply({ embeds: [usageEmbed] });
       }
       const timeStr = args[0].toLowerCase();
       const timeMatch = timeStr.match(/^(\d+)(s|m|h|d)$/);
       if (!timeMatch) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Invalid Time').setDescription('Use format: `10m`, `2h`, `1d`').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Invalid Time').setDescription('Use format: `10m`, `2h`, `1d`').setTimestamp()] });
       }
       const amount = parseInt(timeMatch[1]);
       const unit = timeMatch[2];
       const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
       const duration = amount * multipliers[unit];
       if (duration > 7 * 86400000) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Too Long').setDescription('Maximum reminder duration is 7 days.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Too Long').setDescription('Maximum reminder duration is 7 days.').setTimestamp()] });
       }
       const reminderMsg = args.slice(1).join(' ');
       const id = Date.now().toString(36);
@@ -54,10 +54,10 @@ module.exports = {
         .setDescription(`I will remind you in **${amount}${unit}**.`)
         .addFields({ name: 'Message', value: reminderMsg })
         .setTimestamp();
-      const sent = await message.channel.send({ embeds: [embed] });
+      const sent = await message.reply({ embeds: [embed] });
       setTimeout(() => { sent.delete().catch(() => {}); message.delete().catch(() => {}); }, 120000);
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
     }
   }
 };

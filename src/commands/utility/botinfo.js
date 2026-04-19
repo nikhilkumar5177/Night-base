@@ -1,6 +1,6 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
 
 module.exports = {
@@ -10,9 +10,13 @@ module.exports = {
   usage: 'botinfo',
   cooldown: 5,
   enabled: true,
+  data: new SlashCommandBuilder()
+    .setName('botinfo')
+    .setDescription('Display bot information'),
   staffOnly: false,
   devOnly: false,
   execute: async (client, message) => {
+    const isInteraction = !message.author;
     try {
       const mem = process.memoryUsage();
       const up = process.uptime();
@@ -34,7 +38,7 @@ module.exports = {
           { name: '\u25B8 Statistics', value: `\`\`\`\nGuilds:   ${client.guilds.cache.size}\nUsers:    ${totalMembers}\nChannels: ${client.channels.cache.size}\nCommands: ${client.commands.size}\n\`\`\``, inline: true },
           { name: '\u25B8 System', value: `\`\`\`\nNode:    ${process.version}\ndjs:     v${require('discord.js').version}\nOS:      ${process.platform}\nPrefix:  ${client.config.prefix}\n\`\`\``, inline: false }
         )
-        .setFooter({ text: 'Wild Wolf \u2022 System Information', iconURL: message.guild.iconURL({ dynamic: true }) })
+        .setFooter({ text: 'Wild Wolf \u2022 System Information', iconURL: (isInteraction ? message.guild : message.guild).iconURL({ dynamic: true }) })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
@@ -42,12 +46,12 @@ module.exports = {
         new ButtonBuilder().setCustomId('bi_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.channel.send({ embeds: [embed], components: [row] });
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
+      const sent = await message.reply({ embeds: [embed], components: [row] });
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => { if (i.customId === 'bi_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

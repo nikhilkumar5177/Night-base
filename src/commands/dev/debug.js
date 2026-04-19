@@ -34,9 +34,9 @@ module.exports = {
           { name: 'Node', value: process.version, inline: true }
         )
         .setTimestamp();
-      message.channel.send({ embeds: [embed] });
+      message.reply({ embeds: [embed] });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
     }
   }
 };

@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const { resolveEmbedEmojis, EMOJI_DOT } = require('../../utils/constants');
+const { resolveEmbedEmojis, EMOJI_DOT, SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'mute',
@@ -26,10 +26,10 @@ module.exports = {
         return sendAutoDelete(message.channel, { embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}mute <@user> [minutes] [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}mute @User 30 spamming\n\`\`\`` }, { name: 'Aliases', value: '`timeout`, `to`', inline: true }, { name: 'Cooldown', value: '`3s`', inline: true }, { name: 'Max', value: '`28 days`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] }, 15000);
       }
       if (!target.moderatable) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I cannot timeout this user.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I cannot timeout this user.').setTimestamp()] });
       }
       if (target.roles.highest.position >= message.member.roles.highest.position) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
       }
 
       const timeStr = args[1]?.toLowerCase();
@@ -61,7 +61,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n{EMOJI_LOADING} **Applying timeout...**\n${SEP}`)
         .setTimestamp();
-      const sent = await message.channel.send({ embeds: [loadEmbed] });
+      const sent = await message.reply({ embeds: [loadEmbed] });
 
       await target.timeout(durationMs, reason);
       await new Promise(r => setTimeout(r, 400));
@@ -89,7 +89,7 @@ module.exports = {
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => {});
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

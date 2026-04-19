@@ -1,8 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
-const { LIMITS } = require('../../utils/constants');
+const { LIMITS, SEP } = require('../../utils/constants');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'purge',
@@ -34,7 +33,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Purging', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n{EMOJI_LOADING} **Scanning and deleting messages...**\n\n\`\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\` Processing\n${SEP}`)
         .setTimestamp();
-      const progressMsg = await message.channel.send({ embeds: [loadEmbed] });
+      const progressMsg = await message.reply({ embeds: [loadEmbed] });
 
       let fetched = await message.channel.messages.fetch({ limit: count });
       let filtered;
@@ -52,7 +51,7 @@ module.exports = {
         count = parseInt(type);
         if (isNaN(count) || count < 1) {
           await progressMsg.delete().catch(() => {});
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Invalid count.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Invalid count.').setTimestamp()] });
         }
         filtered = fetched;
       }
@@ -80,7 +79,7 @@ module.exports = {
       await progressMsg.edit({ embeds: [embed] });
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

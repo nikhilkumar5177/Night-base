@@ -1,8 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 
-const { resolveEmbedEmojis, EMOJIS } = require('../../utils/constants');
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+const { resolveEmbedEmojis, EMOJIS, SEP } = require('../../utils/constants');
 const DOT = '\u25AA';
 
 const EMOJI_DOT = EMOJIS.EMOJI_DOT;
@@ -15,11 +14,18 @@ module.exports = {
   usage: 'userinfo [@user/id]',
   cooldown: 3,
   enabled: true,
+  data: new SlashCommandBuilder()
+    .setName('userinfo')
+    .setDescription('Display user information')
+    .addUserOption(opt => opt.setName('user').setDescription('The user to get info for').setRequired(false)),
   staffOnly: false,
   devOnly: false,
   execute: async (client, message, args) => {
+    const isInteraction = !message.author;
     try {
-      const target = await resolveMember(message.guild, args[0]) || message.member;
+      const target = isInteraction 
+        ? (message.options.getMember('user') || message.member)
+        : (await resolveMember(message.guild, args[0]) || message.member);
       const u = target.user;
       const flags = u.flags?.toArray().map(f => `\`${f}\``).join(', ') || 'None';
       const roles = target.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== message.guild.id);
@@ -63,7 +69,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('ui_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.channel.send({ embeds: [embed], components: [row] });
+      const sent = await message.reply({ embeds: [embed], components: [row] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'ui_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
@@ -105,7 +111,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

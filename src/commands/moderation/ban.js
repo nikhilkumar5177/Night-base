@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const { resolveEmbedEmojis, EMOJI_DOT } = require('../../utils/constants');
+const { resolveEmbedEmojis, EMOJI_DOT, SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'ban',
@@ -78,7 +78,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('ban_no').setLabel('Cancel').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.channel.send({ embeds: [confirmEmbed], components: [row] });
+      const sent = await message.reply({ embeds: [confirmEmbed], components: [row] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 30000, max: 1 });
 
       coll.on('collect', async i => {
@@ -121,7 +121,7 @@ module.exports = {
         if (c.size === 0) sent.edit({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **Mass ban confirmation timed out.**\n${SEP}`).setTimestamp()], components: [] }).catch(() => { });
       });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

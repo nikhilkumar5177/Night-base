@@ -13,7 +13,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Owner Only').setDescription('Only the server owner can manage no-prefix access.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Owner Only').setDescription('Only the server owner can manage no-prefix access.').setTimestamp()] });
       }
 
       const action = args[0]?.toLowerCase();
@@ -22,7 +22,7 @@ module.exports = {
 
       if (action === 'list') {
         if (configData.noPrefixUsers.length === 0) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor(client.config.embedColor || '#0099ff').setTitle('{EMOJI_INFO} No-Prefix Users').setDescription('No users have no-prefix access.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor(client.config.embedColor || '#0099ff').setTitle('{EMOJI_INFO} No-Prefix Users').setDescription('No users have no-prefix access.').setTimestamp()] });
         }
 
         const now = Date.now();
@@ -65,7 +65,7 @@ module.exports = {
           .setDescription(list)
           .setFooter({ text: `${configData.noPrefixUsers.length} total entries` })
           .setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       const target = message.mentions.users.first() || client.users.cache.get(args[1]);
@@ -83,7 +83,7 @@ module.exports = {
           )
           .setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
           .setTimestamp();
-        return message.channel.send({ embeds: [usageEmbed] });
+        return message.reply({ embeds: [usageEmbed] });
       }
 
       if (action === 'add') {
@@ -111,7 +111,7 @@ module.exports = {
         } else {
           const match = durationStr.match(/^(\d+)(mo|m|h|d)$/);
           if (!match) {
-            return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Invalid Duration').setDescription('Use format: `30m`, `12h`, `7d`, `2mo`').setTimestamp()] });
+            return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Invalid Duration').setDescription('Use format: `30m`, `12h`, `7d`, `2mo`').setTimestamp()] });
           }
 
           const amount = parseInt(match[1]);
@@ -120,7 +120,7 @@ module.exports = {
           const duration = amount * multipliers[unit];
 
           if (duration > 365 * 86400000) {
-            return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Too Long').setDescription('Maximum duration is 365 days.').setTimestamp()] });
+            return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Too Long').setDescription('Maximum duration is 365 days.').setTimestamp()] });
           }
 
           entry = {
@@ -150,7 +150,7 @@ module.exports = {
         }
 
         embed.setFooter({ text: 'Wild Wolf \u2022 User can now use commands without prefix' }).setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       if (action === 'remove') {
@@ -160,7 +160,7 @@ module.exports = {
         });
 
         if (!exists) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle('{EMOJI_WARN} Not Found').setDescription(`**${target.tag}** does not have no-prefix access.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle('{EMOJI_WARN} Not Found').setDescription(`**${target.tag}** does not have no-prefix access.`).setTimestamp()] });
         }
 
         configData.noPrefixUsers = configData.noPrefixUsers.filter(u => {
@@ -178,7 +178,7 @@ module.exports = {
           )
           .setFooter({ text: 'Wild Wolf \u2022 User must now use prefix for commands' })
           .setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       const usageEmbed = new EmbedBuilder()
@@ -191,9 +191,9 @@ module.exports = {
         )
         .setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
         .setTimestamp();
-      message.channel.send({ embeds: [usageEmbed] });
+      message.reply({ embeds: [usageEmbed] });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
     }
   }
 };

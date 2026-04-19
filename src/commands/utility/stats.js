@@ -1,7 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
 
 module.exports = {
@@ -11,9 +11,13 @@ module.exports = {
   usage: 'stats',
   cooldown: 5,
   enabled: true,
+  data: new SlashCommandBuilder()
+    .setName('stats')
+    .setDescription('View command usage analytics'),
   staffOnly: true,
   devOnly: false,
   execute: async (client, message) => {
+    const isInteraction = !message.author;
     try {
       const analytics = storage.read('analytics.json');
       const entries = Object.entries(analytics).sort((a, b) => (b[1].uses || 0) - (a[1].uses || 0));
@@ -39,19 +43,19 @@ module.exports = {
           `${SEP}\n\n` +
           `**Top 10 Commands**\n${barChart || 'No data yet.'}`
         )
-        .setFooter({ text: 'Wild Wolf \u2022 Usage Analytics', iconURL: message.guild.iconURL({ dynamic: true }) })
+        .setFooter({ text: 'Wild Wolf \u2022 Usage Analytics', iconURL: (isInteraction ? message.guild : message.guild).iconURL({ dynamic: true }) })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('st_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.channel.send({ embeds: [embed], components: [row] });
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
+      const sent = await message.reply({ embeds: [embed], components: [row] });
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => { if (i.customId === 'st_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

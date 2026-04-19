@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const { resolveEmbedEmojis, EMOJI_DOT } = require('../../utils/constants');
+const { resolveEmbedEmojis, EMOJI_DOT, SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'kick',
@@ -39,7 +39,7 @@ module.exports = {
 
       if (finalTargets.length === 0) {
         const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}kick <@user(s)> [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}kick @User1 @User2 breaking rules\n\`\`\`` }, { name: 'Aliases', value: '`k`', inline: true }, { name: 'Cooldown', value: '`5s`', inline: true }, { name: 'Permission', value: '`KickMembers`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-        return message.channel.send({ embeds: [usageEmbed] });
+        return message.reply({ embeds: [usageEmbed] });
       }
 
       const reason = reasonArgs.join(' ') || 'No reason provided';
@@ -55,7 +55,7 @@ module.exports = {
       }
 
       if (validTargets.length === 0) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} I cannot kick any of the specified users (higher roles or unkickable).\n**Invalid:** ${invalidTargets.join(', ')}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} I cannot kick any of the specified users (higher roles or unkickable).\n**Invalid:** ${invalidTargets.join(', ')}`).setTimestamp()] });
       }
 
       const confirmEmbed = new EmbedBuilder()
@@ -77,7 +77,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('kick_no').setLabel('Cancel').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.channel.send({ embeds: [confirmEmbed], components: [row] });
+      const sent = await message.reply({ embeds: [confirmEmbed], components: [row] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 30000, max: 1 });
 
       coll.on('collect', async i => {
@@ -131,7 +131,7 @@ module.exports = {
         }
       });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

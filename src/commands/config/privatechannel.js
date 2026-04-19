@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
 
 module.exports = {
@@ -16,7 +16,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
       }
 
       const pcData = storage.read('privateChannels.json');
@@ -27,7 +27,7 @@ module.exports = {
       if (action === 'list') {
         const channels = Object.entries(pcData[guildId]);
         if (channels.length === 0) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Private Channels', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${DOT} No private channels configured.\n${SEP}`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Private Channels', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${DOT} No private channels configured.\n${SEP}`).setTimestamp()] });
         }
         const list = channels.map(([chId, data], i) => {
           const ch = message.guild.channels.cache.get(chId);
@@ -39,17 +39,17 @@ module.exports = {
           .setDescription(`${SEP}\n${list}\n${SEP}`)
           .setFooter({ text: `Wild Wolf \u2022 ${channels.length} private channels`, iconURL: message.guild.iconURL({ dynamic: true }) })
           .setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       if (action === 'create') {
         const name = args[1];
         if (!name) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**Provide a channel name.**').addFields({ name: '\u2501\u2501 Format', value: `\`\`\`fix\n${client.config.prefix}privatechannel create <name>\n\`\`\`` }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**Provide a channel name.**').addFields({ name: '\u2501\u2501 Format', value: `\`\`\`fix\n${client.config.prefix}privatechannel create <name>\n\`\`\`` }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] });
         }
 
         const loadEmbed = new EmbedBuilder().setColor('#EB459E').setAuthor({ name: 'Wild Wolf \u2502 Creating', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_LOADING} **Creating private channel...**\n${SEP}`).setTimestamp();
-        const sent = await message.channel.send({ embeds: [loadEmbed] });
+        const sent = await message.reply({ embeds: [loadEmbed] });
 
         const channel = await message.guild.channels.create({
           name: name,
@@ -80,7 +80,7 @@ module.exports = {
       if (action === 'delete') {
         const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
         if (!pcData[guildId][channel.id]) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} That channel is not a managed private channel.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} That channel is not a managed private channel.').setTimestamp()] });
         }
 
         const confirmEmbed = new EmbedBuilder()
@@ -92,7 +92,7 @@ module.exports = {
           new ButtonBuilder().setCustomId('pc_yes').setLabel('Delete').setStyle(ButtonStyle.Danger),
           new ButtonBuilder().setCustomId('pc_no').setLabel('Cancel').setStyle(ButtonStyle.Secondary)
         );
-        const sent = await message.channel.send({ embeds: [confirmEmbed], components: [row] });
+        const sent = await message.reply({ embeds: [confirmEmbed], components: [row] });
         const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 15000, max: 1 });
         coll.on('collect', async i => {
           if (i.customId === 'pc_yes') {
@@ -112,7 +112,7 @@ module.exports = {
         const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
         const target = message.mentions.members.last() || message.mentions.roles.first();
         if (!target) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**Mention a user or role to grant access.**').addFields({ name: '\u2501\u2501 Format', value: `\`\`\`fix\n${client.config.prefix}privatechannel add [#channel] <@user/@role>\n\`\`\`` }).setFooter({ text: 'Wild Wolf' }).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**Mention a user or role to grant access.**').addFields({ name: '\u2501\u2501 Format', value: `\`\`\`fix\n${client.config.prefix}privatechannel add [#channel] <@user/@role>\n\`\`\`` }).setFooter({ text: 'Wild Wolf' }).setTimestamp()] });
         }
         await channel.permissionOverwrites.edit(target.id, { ViewChannel: true, SendMessages: true });
 
@@ -127,14 +127,14 @@ module.exports = {
           .setAuthor({ name: 'Wild Wolf \u2502 Access Granted', iconURL: client.user.displayAvatarURL() })
           .setDescription(`${SEP}\n{EMOJI_SUCCESS} **${target} can now access ${channel}.**\n${SEP}`)
           .setFooter({ text: 'Wild Wolf \u2022 Private Channel Manager' }).setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       if (action === 'remove') {
         const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
         const target = message.mentions.members.last() || message.mentions.roles.first();
         if (!target) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**Mention a user or role to revoke access.**').addFields({ name: '\u2501\u2501 Format', value: `\`\`\`fix\n${client.config.prefix}privatechannel remove [#channel] <@user/@role>\n\`\`\`` }).setFooter({ text: 'Wild Wolf' }).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**Mention a user or role to revoke access.**').addFields({ name: '\u2501\u2501 Format', value: `\`\`\`fix\n${client.config.prefix}privatechannel remove [#channel] <@user/@role>\n\`\`\`` }).setFooter({ text: 'Wild Wolf' }).setTimestamp()] });
         }
         await channel.permissionOverwrites.delete(target.id).catch(() => {});
 
@@ -149,7 +149,7 @@ module.exports = {
           .setAuthor({ name: 'Wild Wolf \u2502 Access Revoked', iconURL: client.user.displayAvatarURL() })
           .setDescription(`${SEP}\n{EMOJI_SUCCESS} **${target} can no longer access ${channel}.**\n${SEP}`)
           .setFooter({ text: 'Wild Wolf \u2022 Private Channel Manager' }).setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       const usageEmbed = new EmbedBuilder()
@@ -164,9 +164,9 @@ module.exports = {
         )
         .setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
         .setTimestamp();
-      message.channel.send({ embeds: [usageEmbed] });
+      message.reply({ embeds: [usageEmbed] });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

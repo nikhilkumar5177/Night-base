@@ -13,10 +13,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageNicknames')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Missing Permissions').setDescription('You need **ManageNicknames** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Missing Permissions').setDescription('You need **ManageNicknames** permission.').setTimestamp()] });
       }
       if (!message.guild.members.me.permissions.has('ManageNicknames')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Bot Missing Permissions').setDescription('I need **ManageNicknames** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Bot Missing Permissions').setDescription('I need **ManageNicknames** permission.').setTimestamp()] });
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target || args.length < 2) {
@@ -33,13 +33,13 @@ module.exports = {
           )
           .setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
           .setTimestamp();
-        return message.channel.send({ embeds: [usageEmbed] });
+        return message.reply({ embeds: [usageEmbed] });
       }
       if (target.roles.highest.position >= message.guild.members.me.roles.highest.position) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Cannot Change').setDescription('That user has a higher or equal role than me.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Cannot Change').setDescription('That user has a higher or equal role than me.').setTimestamp()] });
       }
       if (target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Hierarchy Error').setDescription('Target has equal or higher role.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Hierarchy Error').setDescription('Target has equal or higher role.').setTimestamp()] });
       }
       const newNick = args.slice(1).join(' ');
       const oldNick = target.displayName;
@@ -53,9 +53,9 @@ module.exports = {
         .setTitle('{EMOJI_SUCCESS} Nickname Changed')
         .addFields({ name: 'User', value: target.user.tag, inline: true }, { name: 'Before', value: oldNick, inline: true }, { name: 'After', value: newNick.toLowerCase() === 'reset' ? target.user.username : newNick, inline: true })
         .setTimestamp();
-      message.channel.send({ embeds: [embed] });
+      message.reply({ embeds: [embed] });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
     }
   }
 };

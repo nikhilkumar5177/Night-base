@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'leaveserver',
@@ -15,14 +15,14 @@ module.exports = {
     try {
       const guildId = args[0];
       if (!guildId) {
-        return message.channel.send({ 
+        return message.reply({ 
           embeds: [new EmbedBuilder().setColor('#ED4245').setDescription('{EMOJI_ERROR} Please provide a Guild ID.')] 
         });
       }
 
       const guild = client.guilds.cache.get(guildId);
       if (!guild) {
-        return message.channel.send({ 
+        return message.reply({ 
           embeds: [new EmbedBuilder().setColor('#ED4245').setDescription('{EMOJI_ERROR} I am not in a server with that ID.')] 
         });
       }
@@ -40,10 +40,10 @@ module.exports = {
         )
         .setTimestamp();
 
-      await message.channel.send({ embeds: [successEmbed] });
+      await message.reply({ embeds: [successEmbed] });
 
     } catch (error) {
-      message.channel.send({ 
+      message.reply({ 
         embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`)] 
       });
     }

@@ -1,7 +1,7 @@
 const { EmbedBuilder } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 const { resolveChannel } = require('../../utils/resolver');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'unhide',
@@ -15,7 +15,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
       }
       const channel = resolveChannel(message.guild, args[0]) || message.channel;
       await channel.permissionOverwrites.edit(message.guild.roles.everyone, { ViewChannel: null });
@@ -30,9 +30,9 @@ module.exports = {
         )
         .setFooter({ text: 'Wild Wolf \u2022 Channel visibility restored', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
-      message.channel.send({ embeds: [embed] });
+      message.reply({ embeds: [embed] });
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

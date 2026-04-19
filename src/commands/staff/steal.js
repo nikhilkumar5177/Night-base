@@ -1,6 +1,6 @@
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'steal',
@@ -14,7 +14,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -26,7 +26,7 @@ module.exports = {
       }
 
       if (!message.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -56,7 +56,7 @@ module.exports = {
             });
           }
         } catch (err) {
-          return message.channel.send({
+          return message.reply({
             embeds: [
               new EmbedBuilder()
                 .setColor('#ED4245')
@@ -68,7 +68,7 @@ module.exports = {
       }
 
       if (!contentToParse) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -82,7 +82,7 @@ module.exports = {
       const matches = [...contentToParse.matchAll(emojiRegex)];
 
       if (matches.length === 0) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -101,7 +101,7 @@ module.exports = {
         .setDescription(`${SEP}\n{EMOJI_LOADING} **Stealing ${emojisToSteal.length} emoji(s)...**\n${SEP}`)
         .setTimestamp();
 
-      const sentMsg = await message.channel.send({ embeds: [loadEmbed] });
+      const sentMsg = await message.reply({ embeds: [loadEmbed] });
 
       const successes = [];
       const failures = [];
@@ -162,7 +162,7 @@ module.exports = {
       await sentMsg.edit({ embeds: [resultEmbed] });
 
     } catch (error) {
-      message.channel.send({
+      message.reply({
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')

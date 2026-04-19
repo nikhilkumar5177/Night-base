@@ -1,7 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 
 const COLORS = { primary: '#5865F2', success: '#57F287', loading: '#EB459E' };
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 module.exports = {
   name: 'ping',
@@ -10,9 +10,13 @@ module.exports = {
   usage: 'ping',
   cooldown: 5,
   enabled: true,
+  data: new SlashCommandBuilder()
+    .setName('ping')
+    .setDescription('Check bot and API latency'),
   staffOnly: false,
   devOnly: false,
   execute: async (client, message) => {
+    const isInteraction = !message.author;
     try {
       const loadEmbed = new EmbedBuilder()
         .setColor(COLORS.loading)
@@ -20,7 +24,7 @@ module.exports = {
         .setDescription(`${SEP}\n{EMOJI_LOADING} **Measuring latency...**\n\n\`\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\` 0%\n${SEP}`)
         .setTimestamp();
 
-      const sent = await message.channel.send({ embeds: [loadEmbed] });
+      const sent = await message.reply({ embeds: [loadEmbed] });
       await new Promise(r => setTimeout(r, 600));
 
       const rt = sent.createdTimestamp - message.createdTimestamp;
@@ -39,7 +43,7 @@ module.exports = {
           { name: '\u25B8 Uptime', value: `\`${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m\``, inline: true },
           { name: '\u25B8 Guilds', value: `\`${client.guilds.cache.size}\``, inline: true }
         )
-        .setFooter({ text: 'Wild Wolf \u2022 Network Diagnostics', iconURL: message.guild.iconURL({ dynamic: true }) })
+        .setFooter({ text: 'Wild Wolf \u2022 Network Diagnostics', iconURL: (isInteraction ? message.guild : message.guild).iconURL({ dynamic: true }) })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
@@ -48,7 +52,7 @@ module.exports = {
       );
 
       await sent.edit({ embeds: [embed], components: [row] });
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 60000 });
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 60000 });
       coll.on('collect', async i => {
         if (i.customId === 'ping_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
         if (i.customId === 'ping_refresh') {
@@ -65,7 +69,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

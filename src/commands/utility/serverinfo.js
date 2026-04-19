@@ -1,6 +1,5 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-
-const { resolveEmbedEmojis, EMOJIS } = require('../../utils/constants');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { resolveEmbedEmojis, EMOJIS, SEP } = require('../../utils/constants');
 
 const EMOJI_DOT = EMOJIS.EMOJI_DOT;
 const EMOJI_ARROW = EMOJIS.EMOJI_ARROW;
@@ -12,11 +11,15 @@ module.exports = {
   usage: 'serverinfo',
   cooldown: 5,
   enabled: true,
+  data: new SlashCommandBuilder()
+    .setName('serverinfo')
+    .setDescription('Display server information'),
   staffOnly: false,
   devOnly: false,
   execute: async (client, message) => {
+    const isInteraction = !message.author;
     try {
-      const g = message.guild;
+      const g = (isInteraction ? message.guild : message.guild);
       await g.members.fetch().catch(() => {});
       const online = g.members.cache.filter(m => m.presence?.status === 'online').size;
       const idle = g.members.cache.filter(m => m.presence?.status === 'idle').size;
@@ -49,7 +52,7 @@ module.exports = {
           { name: `${EMOJI_ARROW} Channels [${g.channels.cache.size}]`, value: `\`\`\`\nText:     ${tCh}\nVoice:    ${vCh}\nCategory: ${catCh}\n\`\`\``, inline: true },
           { name: `${EMOJI_ARROW} Server Info`, value: `\`\`\`\nRoles:       ${g.roles.cache.size}\nEmojis:      ${g.emojis.cache.size}\nStickers:    ${g.stickers.cache.size}\nBoosts:      ${g.premiumSubscriptionCount || 0}\nBoost Tier:  ${boostTier}\nVerify:      ${vLevel}\n\`\`\``, inline: true }
         )
-        .setFooter({ text: 'Wild Wolf \u2022 Server Analytics', iconURL: message.guild.iconURL({ dynamic: true }) })
+        .setFooter({ text: 'Wild Wolf \u2022 Server Analytics', iconURL: g.iconURL({ dynamic: true }) })
         .setTimestamp();
 
       if (g.bannerURL()) embed.setImage(g.bannerURL({ size: 1024 }));
@@ -59,8 +62,8 @@ module.exports = {
         new ButtonBuilder().setCustomId('si_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.channel.send({ embeds: [embed], components: [row] });
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
+      const sent = await message.reply({ embeds: [embed], components: [row] });
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'si_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
         if (i.customId === 'si_roles') {
@@ -84,7 +87,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

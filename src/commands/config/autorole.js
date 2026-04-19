@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SEP } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
 const MAX_ROLES = 10;
 
@@ -17,10 +17,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageRoles** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageRoles** permission.').setTimestamp()] });
       }
       if (!message.guild.members.me.permissions.has('ManageRoles')) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ManageRoles** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ManageRoles** permission.').setTimestamp()] });
       }
 
       const autoroleData = storage.read('autorole.json');
@@ -40,7 +40,7 @@ module.exports = {
           .setDescription(`${SEP}\n${config.enabled ? '{EMOJI_SUCCESS} **Auto-role system enabled.**' : '{EMOJI_ERROR} **Auto-role system disabled.**'}\nNew members will ${config.enabled ? 'receive' : 'no longer receive'} roles automatically.\n${SEP}`)
           .setFooter({ text: 'Wild Wolf \u2022 Auto-Role Configuration', iconURL: message.guild.iconURL({ dynamic: true }) })
           .setTimestamp();
-        return message.channel.send({ embeds: [statusEmbed] });
+        return message.reply({ embeds: [statusEmbed] });
       }
 
       if (action === 'list') {
@@ -92,7 +92,7 @@ module.exports = {
           new ButtonBuilder().setCustomId('ar_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
         );
 
-        const sent = await message.channel.send({ embeds: [embed], components: [row] });
+        const sent = await message.reply({ embeds: [embed], components: [row] });
         const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 60000 });
         coll.on('collect', async i => {
           if (i.customId === 'ar_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
@@ -131,12 +131,12 @@ module.exports = {
           )
           .setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
           .setTimestamp();
-        return message.channel.send({ embeds: [usageEmbed] });
+        return message.reply({ embeds: [usageEmbed] });
       }
 
       const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[2]);
       if (!role) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} Please mention a valid role or provide a role ID.\n\nUsage: \`${client.config.prefix}autorole ${action} ${type} @Role\``).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} Please mention a valid role or provide a role ID.\n\nUsage: \`${client.config.prefix}autorole ${action} ${type} @Role\``).setTimestamp()] });
       }
 
       const key = type === 'human' ? 'humanRoles' : 'botRoles';
@@ -144,16 +144,16 @@ module.exports = {
 
       if (action === 'add') {
         if (role.managed) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} That role is managed by an integration and cannot be auto-assigned.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} That role is managed by an integration and cannot be auto-assigned.').setTimestamp()] });
         }
         if (role.position >= message.guild.members.me.roles.highest.position) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} That role is above or equal to my highest role. I won\'t be able to assign it.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} That role is above or equal to my highest role. I won\'t be able to assign it.').setTimestamp()] });
         }
         if (config[key].includes(role.id)) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_WARN} ${role} is already in the ${type} autorole list.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_WARN} ${role} is already in the ${type} autorole list.`).setTimestamp()] });
         }
         if (config[key].length >= MAX_ROLES) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} Maximum of \`${MAX_ROLES}\` ${type} autoroles reached. Remove one first.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} Maximum of \`${MAX_ROLES}\` ${type} autoroles reached. Remove one first.`).setTimestamp()] });
         }
 
         config[key].push(role.id);
@@ -170,12 +170,12 @@ module.exports = {
           )
           .setFooter({ text: `Wild Wolf \u2022 New ${type}s will receive this role`, iconURL: message.guild.iconURL({ dynamic: true }) })
           .setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
 
       if (action === 'remove') {
         if (!config[key].includes(role.id)) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_WARN} ${role} is not in the ${type} autorole list.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_WARN} ${role} is not in the ${type} autorole list.`).setTimestamp()] });
         }
 
         config[key] = config[key].filter(id => id !== role.id);
@@ -192,10 +192,10 @@ module.exports = {
           )
           .setFooter({ text: `Wild Wolf \u2022 Role will no longer be auto-assigned`, iconURL: message.guild.iconURL({ dynamic: true }) })
           .setTimestamp();
-        return message.channel.send({ embeds: [embed] });
+        return message.reply({ embeds: [embed] });
       }
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

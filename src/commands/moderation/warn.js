@@ -3,7 +3,7 @@ const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const { resolveEmbedEmojis, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
+const { resolveEmbedEmojis, EMOJI_DOT, EMOJI_ARROW, SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'warn',
@@ -25,13 +25,13 @@ module.exports = {
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Could not find the specified user.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Could not find the specified user.').setTimestamp()] });
       }
       if (target.id === message.author.id) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You cannot warn yourself.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You cannot warn yourself.').setTimestamp()] });
       }
       if (target.roles.highest.position >= message.member.roles.highest.position) {
-        return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
       }
 
       const loadEmbed = new EmbedBuilder()
@@ -39,7 +39,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n{EMOJI_LOADING} **Issuing warning...**\n${SEP}`)
         .setTimestamp();
-      const sent = await message.channel.send({ embeds: [loadEmbed] });
+      const sent = await message.reply({ embeds: [loadEmbed] });
 
       const reason = args.slice(1).join(' ') || 'No reason provided';
       const warns = storage.read('warns.json');
@@ -84,7 +84,7 @@ module.exports = {
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => {});
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

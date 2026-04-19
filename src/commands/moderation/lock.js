@@ -1,6 +1,5 @@
 const { EmbedBuilder, ChannelType, PermissionsBitField } = require('discord.js')
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501'
 
 module.exports = {
   name: 'lock',
@@ -15,7 +14,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -27,7 +26,7 @@ module.exports = {
       }
 
       if (!message.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
-        return message.channel.send({
+        return message.reply({
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
@@ -55,7 +54,7 @@ module.exports = {
         if (message.channel.type === ChannelType.GuildText) {
           channels.add(message.channel);
         } else {
-          return message.channel.send({
+          return message.reply({
             embeds: [
               new EmbedBuilder()
                 .setColor('#ED4245')
@@ -69,7 +68,7 @@ module.exports = {
 
       const channelList = Array.from(channels);
 
-      const load = await message.channel.send({
+      const load = await message.reply({
         embeds: [
           new EmbedBuilder()
             .setColor('#EB459E')
@@ -91,7 +90,7 @@ module.exports = {
       await message.react('{EMOJI_LOCK}').catch(() => { })
 
     } catch (error) {
-      message.channel.send({
+      message.reply({
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')

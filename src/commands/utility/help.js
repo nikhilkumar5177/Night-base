@@ -1,11 +1,10 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
-const { resolveEmbedEmojis, EMOJIS } = require('../../utils/constants');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, SlashCommandBuilder } = require('discord.js');
+const { resolveEmbedEmojis, EMOJIS, SEP } = require('../../utils/constants');
 
 const EMOJI_DOP = '<a:wolf_Blackdot:1495113162071212183>';
 const EMOJI_DOT = EMOJIS.EMOJI_DOT;
 const EMOJI_ERROR = EMOJIS.EMOJI_ERROR;
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 const DOT = '\u25AA';
 const ARROW = '\u25B8';
 
@@ -29,24 +28,33 @@ module.exports = {
   usage: 'help [command]',
   cooldown: 5,
   enabled: true,
+  data: new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('Interactive help dashboard with category navigation')
+    .addStringOption(opt => opt.setName('command').setDescription('The command to get help for').setRequired(false).setAutocomplete(true)),
   staffOnly: false,
   devOnly: false,
   execute: async (client, message, args) => {
+    const isInteraction = !message.author;
+    const user = isInteraction ? message.user : message.author;
+    const guild = message.guild;
+    const cmdInput = isInteraction ? message.options.getString('command') : args[0];
     try {
       // ── Single command detail (text shortcut) ──
-      if (args[0]) {
-        const cmdName = args[0].toLowerCase();
+      if (cmdInput) {
+        const cmdName = cmdInput.toLowerCase();
         const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));
         if (!command) {
-          return message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} No command found with name \`${cmdName}\`.`).setTimestamp()] });
+          const errEmbed = new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} No command found with name \`${cmdName}\`.`).setTimestamp();
+          return isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }) : message.reply({ embeds: [errEmbed] });
         }
-        return message.channel.send({ embeds: [resolveEmbedEmojis(buildCommandEmbed(client, message, command).toJSON())], components: [buildHomeButton()] });
+        return isInteraction ? message.reply({ embeds: [resolveEmbedEmojis(buildCommandEmbed(client, message, command).toJSON())], components: [buildHomeButton()] }) : message.reply({ embeds: [resolveEmbedEmojis(buildCommandEmbed(client, message, command).toJSON())], components: [buildHomeButton()] });
       }
 
       // ── Build categories map (cached per invocation) ──
       const categories = {};
       client.commands.forEach(cmd => {
-        if (cmd.devOnly && message.author.id !== process.env.DEV_ID) return;
+        if (cmd.devOnly && user.id !== process.env.DEV_ID) return;
         const cat = cmd.category || 'uncategorized';
         if (!categories[cat]) categories[cat] = [];
         categories[cat].push(cmd);
@@ -256,15 +264,15 @@ module.exports = {
       }
 
       // ── SEND INITIAL ──
-      const sent = await message.channel.send(render());
-      await message.delete().catch(() => { });
+      const sent = isInteraction ? await message.reply({ ...render(), fetchReply: true }) : await message.reply(render());
+      if (!isInteraction) message.delete().catch(() => { });
 
       // ══════════════════════════════════════════════
       // ── COLLECTOR
       // ══════════════════════════════════════════════
 
       const collector = sent.createMessageComponentCollector({
-        filter: (i) => i.user.id === message.author.id,
+        filter: (i) => i.user.id === user.id,
         time: 300000
       });
 
@@ -321,7 +329,8 @@ module.exports = {
       });
 
     } catch (error) {
-      message.channel.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      const errEmbed = new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp();
+      isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }).catch(() => { }) : message.reply({ embeds: [errEmbed] });
     }
   }
 };
@@ -331,7 +340,6 @@ module.exports = {
 // ══════════════════════════════════════════════
 
 function buildCommandEmbed(client, message, command) {
-  const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
   const DOT = '\u25AA';
   const ARROW = '\u25B8';
 

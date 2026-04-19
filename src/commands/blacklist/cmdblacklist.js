@@ -6,10 +6,10 @@ module.exports = {
   aliases: ['cbl', 'channelblock'],
   description: 'Block commands in a channel',
   usage: 'cmdblacklist <add|remove|list> [channel] [command]',
-  cooldown: 3,
+  cooldown: 0,
   enabled: true,
-  staffOnly: true,
-  devOnly: false,
+  staffOnly: false,
+  devOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {

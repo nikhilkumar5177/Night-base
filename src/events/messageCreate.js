@@ -99,6 +99,21 @@ module.exports = {
       return
     }
 
+    if (message.content.toLowerCase() === 'stop') {
+      if (message.author.id !== process.env.DEV_ID) return;
+      if (global.activeVCTours && global.activeVCTours.has(message.guild.id)) {
+        global.activeVCTours.delete(message.guild.id);
+        return message.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#57F287')
+              .setDescription('{EMOJI_SUCCESS} **VC Tour loop stopped.**')
+              .setTimestamp()
+          ]
+        });
+      }
+    }
+
     const vouchData = storage.read('vouch.json');
     if (vouchData.channels && vouchData.channels.includes(message.channel.id)) {
       try {

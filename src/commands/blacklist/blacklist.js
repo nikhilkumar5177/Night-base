@@ -6,10 +6,10 @@ module.exports = {
   aliases: ['bl'],
   description: 'Add or remove a user from global blacklist',
   usage: 'blacklist <add|remove|list> [user]',
-  cooldown: 3,
+  cooldown: 0,
   enabled: true,
-  staffOnly: true,
-  devOnly: false,
+  staffOnly: false,
+  devOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('Administrator')) {

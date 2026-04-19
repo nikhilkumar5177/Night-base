@@ -8,8 +8,8 @@ module.exports = {
   usage: 'togglecmd <command>',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
-  devOnly: false,
+  staffOnly: false,
+  devOnly: true,
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {

@@ -10,7 +10,7 @@ module.exports = {
   usage: 'snipe [page]',
   cooldown: 3,
   enabled: true,
-  staffOnly: false,
+  staffOnly: true,
   devOnly: false,
   execute: async (client, message, args) => {
     try {
@@ -50,12 +50,12 @@ module.exports = {
       const sent = await message.reply({ embeds: [buildEmbed()], components: [buildRow()] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
-        if (i.customId === 'sn_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
+        if (i.customId === 'sn_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
         if (i.customId === 'sn_prev' && page > 0) page--;
         if (i.customId === 'sn_next' && page < pages.length - 1) page++;
         await i.update({ embeds: [buildEmbed()], components: [buildRow()] });
       });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
       message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }

@@ -21,14 +21,13 @@ module.exports = {
         return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **BanMembers** permission.').setTimestamp()] }, 5000);
       }
 
+      const { resolveMember } = require('../../utils/resolver');
       const targets = new Set();
-      message.mentions.members.forEach(m => targets.add(m));
-
       const reasonArgs = [];
+
       for (const arg of args) {
         if (arg.match(/^\d{17,20}$/) || arg.match(/^<@!?\d{17,20}>$/)) {
-          const id = arg.replace(/[<@!>]/g, '');
-          const member = message.guild.members.cache.get(id);
+          const member = await resolveMember(message.guild, arg);
           if (member) targets.add(member);
         } else {
           reasonArgs.push(arg);

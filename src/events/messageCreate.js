@@ -3,19 +3,7 @@ const logger = require('../utils/logger');
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 const { LIMITS, resolveEmbedEmojis } = require('../utils/constants');
 
-const sendAutoDelete = async (channel, options, ms = LIMITS.AUTO_DELETE_MS || 10000) => {
-  try {
-    if (options.embeds) {
-      options.embeds = options.embeds.map(e => {
-        if (typeof e.toJSON === 'function') return resolveEmbedEmojis(e.toJSON());
-        return resolveEmbedEmojis(e);
-      });
-    }
-    const sent = await channel.send(options);
-    setTimeout(() => sent.delete().catch(() => { }), ms);
-    return sent;
-  } catch (err) { }
-};
+const { sendAutoDelete } = require('../utils/messageHelper');
 
 module.exports = {
   name: 'messageCreate',
@@ -72,7 +60,7 @@ module.exports = {
         .setDescription('{EMOJI_LOADING} Pulling latest changes...')
         .setTimestamp()
 
-      const msg = await message.channel.send({ embeds: [loading] })
+      const msg = await message.reply({ embeds: [loading] })
 
       exec('git reset --hard && git pull', async (err, stdout, stderr) => {
         if (err) {
@@ -114,18 +102,21 @@ module.exports = {
     const vouchData = storage.read('vouch.json');
     if (vouchData.channels && vouchData.channels.includes(message.channel.id)) {
       try {
+        const target = message.mentions.users.first();
+        const cleanContent = target ? message.content.replace(new RegExp(`<@!?${target.id}>`, 'g'), '').trim() : message.content;
+        
         const embed = new EmbedBuilder()
           .setColor(client.config.embedColor || '#0099ff')
-          .setAuthor({ name: message.author.tag, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
-          .setDescription(message.content || 'No content')
+          .setAuthor({ name: 'Wild Wolf \u2502 New Vouch', iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+          .setDescription(`\u25B8 **Vouched:** ${target || '`N/A`'}\n\u25B8 **By:** ${message.author}\n\u25B8 **Message:** ${cleanContent || 'No content'}`)
           .setTimestamp();
+        
         if (message.attachments.size > 0) {
           embed.setImage(message.attachments.first().url);
         }
-        const sent = await message.channel.send({ embeds: [embed] });
+        const sent = await message.reply({ embeds: [embed] });
         await message.delete().catch(() => { });
         await sent.react('{EMOJI_CHECK}').catch(() => { });
-        await sent.react('{EMOJI_CROSS}').catch(() => { });
       } catch { }
       return;
     }
@@ -150,7 +141,10 @@ module.exports = {
           if (!role) continue;
 
           try {
-            const target = message.mentions.members.first() || message.member;
+            const targetInput = parts[1];
+            const resolver = require('../utils/resolver');
+            const target = targetInput ? (await resolver.resolveMember(message.guild, targetInput)) || message.member : message.member;
+            
             if (target.roles.cache.has(role.id)) {
               await target.roles.remove(role);
             } else {

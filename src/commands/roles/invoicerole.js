@@ -35,12 +35,13 @@ module.exports = {
           const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}invoicerole set <name> <roleId>\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}invoicerole set vc 123456789\n\`\`\`` }, { name: 'Aliases', value: '`ivr`, `voicerole`', inline: true }, { name: 'Permission', value: '`ManageRoles`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
           return message.reply({ embeds: [usageEmbed] });
         }
-        const role = message.guild.roles.cache.get(roleId);
+        const { resolveRole } = require('../../utils/resolver');
+        const role = resolveRole(message.guild, roleId);
         if (!role) {
           return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Role Not Found').setTimestamp()] });
         }
         if (!aliasData[alias]) aliasData[alias] = { roleId: null, aliases: [] };
-        aliasData[alias].voiceRole = roleId;
+        aliasData[alias].voiceRole = role.id;
         storage.write('aliases.json', aliasData);
         return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} Voice Role Set').setDescription(`**${role.name}** will be given when joining voice.`).setTimestamp()] });
       }

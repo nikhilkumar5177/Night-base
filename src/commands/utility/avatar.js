@@ -19,11 +19,13 @@ module.exports = {
   execute: async (client, message, args) => {
     const isInteraction = !message.author;
     try {
-      const user = isInteraction 
-        ? (message.options.getUser('user') || message.user)
-        : (message.mentions.users.first() || client.users.cache.get(args[0]) || message.author);
+      const resolver = require('../../utils/resolver');
+      const target = isInteraction 
+        ? (message.options.getMember('user') || message.member)
+        : (await resolver.resolveMember(message.guild, args[0]) || message.member);
+      const user = target.user;
       
-      const member = message.guild.members.cache.get(user.id);
+      const member = target;
       const globalAv = user.displayAvatarURL({ dynamic: true, size: 1024 });
       const serverAv = member?.displayAvatarURL({ dynamic: true, size: 1024 });
       const hasServerAv = serverAv && serverAv !== globalAv;

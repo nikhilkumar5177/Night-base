@@ -8,7 +8,7 @@ module.exports = {
   usage: 'removestaff <role>',
   cooldown: 3,
   enabled: true,
-  staffOnly: false,
+  staffOnly: true,
   devOnly: false,
   execute: async (client, message, args) => {
     try {

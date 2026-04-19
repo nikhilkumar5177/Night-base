@@ -8,7 +8,7 @@ module.exports = {
   usage: 'liststaff',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
+  staffOnly: true,
   devOnly: false,
   execute: async (client, message) => {
     try {

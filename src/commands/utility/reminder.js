@@ -8,7 +8,7 @@ module.exports = {
   usage: 'reminder <time> <message>',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
+  staffOnly: true,
   devOnly: false,
   execute: async (client, message, args) => {
     try {
@@ -42,7 +42,7 @@ module.exports = {
             .setTitle('{EMOJI_INFO} Reminder')
             .setDescription(reminderMsg)
             .setTimestamp();
-          ch.send({ content: `<@${message.author.id}>`, embeds: [remindEmbed] }).catch(() => {});
+          ch.send({ content: `<@${message.author.id}>`, embeds: [remindEmbed] }).catch(() => { });
         }
         const current = storage.read('reminders.json');
         const updated = current.filter(r => r.id !== id);
@@ -55,7 +55,7 @@ module.exports = {
         .addFields({ name: 'Message', value: reminderMsg })
         .setTimestamp();
       const sent = await message.reply({ embeds: [embed] });
-      setTimeout(() => { sent.delete().catch(() => {}); message.delete().catch(() => {}); }, 120000);
+      setTimeout(() => { sent.delete().catch(() => { }); message.delete().catch(() => { }); }, 120000);
     } catch (error) {
       message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
     }

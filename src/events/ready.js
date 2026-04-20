@@ -3,7 +3,7 @@ const storage = require('../utils/storageManager');
 const { EMOJI_INFO } = require('../utils/constants');
 
 module.exports = {
-  name: 'ready',
+  name: 'clientReady',
   once: true,
   execute: (client) => {
     logger.info(`Wild Wolf online as ${client.user.tag}`);

@@ -99,7 +99,30 @@ async function executeActions(client, message, violation, moduleConfig) {
       if (msg) setTimeout(() => msg.delete().catch(() => {}), 10000);
     }
 
-    // 3. Mod Actions
+    // 3. Send DM to Violator (Before Kick/Ban)
+    const majorActions = actions.filter(a => ['warn', 'mute', 'kick', 'ban'].includes(a));
+    if (majorActions.length > 0) {
+      const dmEmbed = new EmbedBuilder()
+        .setColor('#ff1744')
+        .setAuthor({ name: `AutoMod Alert \u2502 ${message.guild.name}`, iconURL: message.guild.iconURL() })
+        .setTitle('{EMOJI_WARN} You have been flagged by AutoMod')
+        .setDescription(
+          `${SEP}\n` +
+          `Your recent activity in **${message.guild.name}** triggered the AutoModeration system.\n` +
+          `${SEP}\n\n` +
+          `${EMOJI_DOT} **Rule Violated:** ${violation}\n` +
+          `${EMOJI_DOT} **Actions Taken:** ${majorActions.map(a => `\`${a.toUpperCase()}\``).join(', ')}\n\n` +
+          `${SEP}`
+        )
+        .setFooter({ text: 'This is an automated security alert' })
+        .setTimestamp();
+
+      await message.author.send({ embeds: [resolveEmbedEmojis(dmEmbed.toJSON())] }).catch(() => {
+        // User has DMs closed
+      });
+    }
+
+    // 4. Mod Actions
     if (actions.includes('mute')) {
       await message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {});
     }

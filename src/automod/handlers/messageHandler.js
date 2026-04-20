@@ -12,7 +12,7 @@ const { COLORS, resolveEmbedEmojis, SEP, EMOJI_DOT } = require('../../utils/cons
 async function handleAutoMod(client, message) {
   if (!message.guild || message.author.bot) return;
 
-  const config = getConfig(message.guild.id);
+  const config = await getConfig(message.guild.id);
   if (!config.enabled) return;
 
   // Global Bypass
@@ -147,7 +147,7 @@ async function executeActions(client, message, violation, moduleConfig) {
  * Sends a detailed AutoMod log to the configured channel.
  */
 async function logToChannel(client, message, data) {
-  const config = getConfig(message.guild.id);
+  const config = await getConfig(message.guild.id);
   const logChannelId = config.logChannel;
 
   if (!logChannelId) return;

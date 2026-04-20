@@ -82,18 +82,22 @@ const DEFAULT_CONFIG = {
   }
 };
 
+const cache = new Map();
+
 /**
  * Get the config for a specific guild.
  * @param {string} guildId 
  * @returns {object}
  */
-function getConfig(guildId) {
+async function getConfig(guildId) {
+  if (cache.has(guildId)) return cache.get(guildId);
+
   const filePath = path.join(CONFIG_DIR, `${guildId}.json`);
   let config = { ...DEFAULT_CONFIG };
 
   if (fs.existsSync(filePath)) {
     try {
-      const data = fs.readFileSync(filePath, 'utf8');
+      const data = await fs.promises.readFile(filePath, 'utf8');
       const loaded = JSON.parse(data);
       
       // Deep merge modules to handle missing modules or fields
@@ -117,9 +121,10 @@ function getConfig(guildId) {
       console.error(`Error reading config for guild ${guildId}:`, err);
     }
   } else {
-    saveConfig(guildId, config);
+    await saveConfig(guildId, config);
   }
   
+  cache.set(guildId, config);
   return config;
 }
 
@@ -128,10 +133,11 @@ function getConfig(guildId) {
  * @param {string} guildId 
  * @param {object} config 
  */
-function saveConfig(guildId, config) {
+async function saveConfig(guildId, config) {
+  cache.set(guildId, config);
   const filePath = path.join(CONFIG_DIR, `${guildId}.json`);
   try {
-    fs.writeFileSync(filePath, JSON.stringify(config, null, 2));
+    await fs.promises.writeFile(filePath, JSON.stringify(config));
   } catch (err) {
     console.error(`Error saving config for guild ${guildId}:`, err);
   }
@@ -141,8 +147,9 @@ function saveConfig(guildId, config) {
  * Reset config to default for a guild.
  * @param {string} guildId 
  */
-function resetConfig(guildId) {
-  saveConfig(guildId, DEFAULT_CONFIG);
+async function resetConfig(guildId) {
+  cache.delete(guildId);
+  await saveConfig(guildId, DEFAULT_CONFIG);
 }
 
 module.exports = {

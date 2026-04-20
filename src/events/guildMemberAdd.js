@@ -8,7 +8,7 @@ module.exports = {
   once: false,
   execute: async (client, member) => {
     // Run Raid Protection
-    const config = getConfig(member.guild.id);
+    const config = await getConfig(member.guild.id);
     if (config.enabled && config.modules.raid.enabled) {
       await checkRaid(member, config.modules.raid);
     }

@@ -16,49 +16,48 @@ MessagePayload.create = function(target, options) {
   } else if (options) {
     if (options.content) options.content = resolveEmojis(options.content);
     if (options.embeds) {
-      options.embeds = options.embeds.map(e => {
-        if (e.data) {
-          resolveEmbedEmojis(e.data);
-          return e;
-        }
-        return resolveEmbedEmojis(e);
-      });
+      for (let i = 0; i < options.embeds.length; i++) {
+        const e = options.embeds[i];
+        if (e.data) resolveEmbedEmojis(e.data);
+        else resolveEmbedEmojis(e);
+      }
     }
     if (options.components) {
-      options.components.forEach(row => {
-        const componentsArray = row.components || (row.data && row.data.components) || [];
-        if (componentsArray) {
-          componentsArray.forEach(child => {
-            const compData = child.data || child;
-            if (compData.label) compData.label = resolveEmojis(compData.label);
-            if (compData.placeholder) compData.placeholder = resolveEmojis(compData.placeholder);
-            if (compData.description) compData.description = resolveEmojis(compData.description);
-            if (compData.emoji && typeof compData.emoji.name === 'string') {
-              const res = resolveEmojis(compData.emoji.name);
-              if (res !== compData.emoji.name) compData.emoji = parseEmoji(res);
-            } else if (typeof compData.emoji === 'string') {
-              const res = resolveEmojis(compData.emoji);
-              if (res !== compData.emoji) compData.emoji = parseEmoji(res);
+      for (const row of options.components) {
+        const components = row.components || (row.data && row.data.components);
+        if (!components) continue;
+        
+        for (const comp of components) {
+          const data = comp.data || comp;
+          if (data.label) data.label = resolveEmojis(data.label);
+          if (data.placeholder) data.placeholder = resolveEmojis(data.placeholder);
+          if (data.description) data.description = resolveEmojis(data.description);
+          
+          if (data.emoji) {
+            const emojiName = data.emoji.name || data.emoji;
+            if (typeof emojiName === 'string' && emojiName.includes('{')) {
+              const res = resolveEmojis(emojiName);
+              if (res !== emojiName) data.emoji = parseEmoji(res);
             }
-            
-            const optionsArray = child.options || compData.options || [];
-            if (optionsArray.length) {
-              optionsArray.forEach(opt => {
-                const optData = opt.data || opt;
-                if (optData.label) optData.label = resolveEmojis(optData.label);
-                if (optData.description) optData.description = resolveEmojis(optData.description);
-                if (optData.emoji && typeof optData.emoji.name === 'string') {
-                  const res = resolveEmojis(optData.emoji.name);
-                  if (res !== optData.emoji.name) optData.emoji = parseEmoji(res);
-                } else if (typeof optData.emoji === 'string') {
-                  const res = resolveEmojis(optData.emoji);
-                  if (res !== optData.emoji) optData.emoji = parseEmoji(res);
+          }
+
+          const options = comp.options || data.options;
+          if (options?.length) {
+            for (const opt of options) {
+              const optData = opt.data || opt;
+              if (optData.label) optData.label = resolveEmojis(optData.label);
+              if (optData.description) optData.description = resolveEmojis(optData.description);
+              if (optData.emoji) {
+                const optEmojiName = optData.emoji.name || optData.emoji;
+                if (typeof optEmojiName === 'string' && optEmojiName.includes('{')) {
+                  const res = resolveEmojis(optEmojiName);
+                  if (res !== optEmojiName) optData.emoji = parseEmoji(res);
                 }
-              });
+              }
             }
-          });
+          }
         }
-      });
+      }
     }
   }
   return originalCreate.call(this, target, options);
@@ -111,13 +110,13 @@ process.on('unhandledRejection', (error) => {
   logger.error(`Unhandled Rejection: ${error.message}`);
 });
 
-process.on('SIGINT', () => {
-  storage.stopPeriodicFlush();
+process.on('SIGINT', async () => {
+  await storage.stopPeriodicFlush();
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
-  storage.stopPeriodicFlush();
+process.on('SIGTERM', async () => {
+  await storage.stopPeriodicFlush();
   process.exit(0);
 });
 

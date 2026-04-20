@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_ARROW, EMOJI_DOT } = require('../../utils/constants');
 
-const DOT = '\u25AA';
+
 
 module.exports = {
   name: 'roleinfo',
@@ -27,20 +27,20 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Role Details', iconURL: client.user.displayAvatarURL() })
         .setDescription(
           `${SEP}\n` +
-          `${DOT} **Name:** ${role}\n` +
-          `${DOT} **ID:** \`${role.id}\`\n` +
-          `${DOT} **Color:** \`${role.hexColor}\`\n` +
-          `${DOT} **Created:** <t:${Math.floor(role.createdTimestamp / 1000)}:R>\n` +
+          `${EMOJI_DOT} **Name:** ${role}\n` +
+          `${EMOJI_DOT} **ID:** \`${role.id}\`\n` +
+          `${EMOJI_DOT} **Color:** \`${role.hexColor}\`\n` +
+          `${EMOJI_DOT} **Created:** <t:${Math.floor(role.createdTimestamp / 1000)}:R>\n` +
           `${SEP}`
         )
         .addFields(
-          { name: '\u25B8 Position', value: `\`${role.position}\``, inline: true },
-          { name: '\u25B8 Members', value: `\`${role.members.size}\``, inline: true },
-          { name: '\u25B8 Mentionable', value: role.mentionable ? '\`Yes\`' : '\`No\`', inline: true },
-          { name: '\u25B8 Hoisted', value: role.hoist ? '\`Yes\`' : '\`No\`', inline: true },
-          { name: '\u25B8 Managed', value: role.managed ? '\`Yes\`' : '\`No\`', inline: true },
-          { name: '\u25B8 Bot Role', value: role.tags?.botId ? '\`Yes\`' : '\`No\`', inline: true },
-          { name: '\u25B8 Key Permissions', value: keyPerms.length > 0 ? keyPerms.map(p => `\`${p}\``).join(', ') : '\`None\`' }
+          { name: `${EMOJI_ARROW} Position`, value: `\`${role.position}\``, inline: true },
+          { name: `${EMOJI_ARROW} Members`, value: `\`${role.members.size}\``, inline: true },
+          { name: `${EMOJI_ARROW} Mentionable`, value: role.mentionable ? '\`Yes\`' : '\`No\`', inline: true },
+          { name: `${EMOJI_ARROW} Hoisted`, value: role.hoist ? '\`Yes\`' : '\`No\`', inline: true },
+          { name: `${EMOJI_ARROW} Managed`, value: role.managed ? '\`Yes\`' : '\`No\`', inline: true },
+          { name: `${EMOJI_ARROW} Bot Role`, value: role.tags?.botId ? '\`Yes\`' : '\`No\`', inline: true },
+          { name: '{EMOJI_ARROW} Key Permissions', value: keyPerms.length > 0 ? keyPerms.map(p => `\`${p}\``).join(', ') : '\`None\`' }
         )
         .setFooter({ text: `Wild Wolf \u2022 ${perms.length} total permissions`, iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
@@ -53,7 +53,7 @@ module.exports = {
       const sent = await message.reply({ embeds: [embed], components: [row] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
-        if (i.customId === 'ri_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
+        if (i.customId === 'ri_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
         if (i.customId === 'ri_members') {
           const list = role.members.map(m => `${m}`).join(', ');
           const truncated = list.length > 3900 ? list.substring(0, 3900) + '...' : list;
@@ -66,7 +66,7 @@ module.exports = {
         }
         if (i.customId === 'ri_back') await i.update({ embeds: [embed], components: [row] });
       });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
       message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }

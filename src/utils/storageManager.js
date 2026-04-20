@@ -68,23 +68,26 @@ function write(file, data) {
   }, 5000));
 }
 
-function flushFile(file) {
+async function flushFile(file) {
   if (!cache.has(file)) return;
   const filePath = path.join(STORAGE_DIR, file);
   const tmpPath = filePath + '.tmp';
   try {
-    fs.writeFileSync(tmpPath, JSON.stringify(cache.get(file), null, 2));
-    fs.renameSync(tmpPath, filePath);
+    const content = JSON.stringify(cache.get(file));
+    await fs.promises.writeFile(tmpPath, content);
+    await fs.promises.rename(tmpPath, filePath);
   } catch (err) {
-    try { fs.unlinkSync(tmpPath); } catch {}
+    try { await fs.promises.unlink(tmpPath); } catch {}
   }
   dirty.delete(file);
 }
 
-function flush() {
+async function flush() {
+  const promises = [];
   for (const file of dirty) {
-    flushFile(file);
+    promises.push(flushFile(file));
   }
+  await Promise.all(promises);
 }
 
 function startPeriodicFlush(intervalMs) {
@@ -92,7 +95,7 @@ function startPeriodicFlush(intervalMs) {
   flushInterval = setInterval(flush, intervalMs || 30000);
 }
 
-function stopPeriodicFlush() {
+async function stopPeriodicFlush() {
   if (flushInterval) {
     clearInterval(flushInterval);
     flushInterval = null;
@@ -101,7 +104,7 @@ function stopPeriodicFlush() {
     clearTimeout(timer);
   }
   debounceTimers.clear();
-  flush();
+  await flush();
 }
 
 function sweep(file, key, maxAgeMs) {

@@ -7,7 +7,7 @@ module.exports = {
   name: 'channelDelete',
   once: false,
   execute: async (client, channel) => {
-    const config = getConfig(channel.guild.id);
+    const config = await getConfig(channel.guild.id);
     const security = config.modules.security;
     if (!config.enabled || !security.enabled || !security.antiNuke) return;
 

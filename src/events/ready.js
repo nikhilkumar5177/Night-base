@@ -2,7 +2,7 @@ const logger = require('../utils/logger');
 const storage = require('../utils/storageManager');
 
 module.exports = {
-  name: 'ready',
+  name: 'clientReady',
   once: true,
   execute: (client) => {
     logger.info(`Wild Wolf online as ${client.user.tag}`);

@@ -23,7 +23,7 @@ module.exports = {
   execute: async (client, interaction, args) => {
     try {
       const guildId = interaction.guildId;
-      const config = { ...getConfig(guildId), clientAvatar: client.user.displayAvatarURL() };
+      const config = { ...(await getConfig(guildId)), clientAvatar: client.user.displayAvatarURL() };
 
       // Initial Command Call (Slash Only)
       if (interaction.isChatInputCommand && interaction.isChatInputCommand()) {
@@ -42,7 +42,7 @@ module.exports = {
 
         if (customId === 'automod_toggle_main') {
           config.enabled = !config.enabled;
-          saveConfig(guildId, config);
+          await saveConfig(guildId, config);
           const dashboard = createDashboard(config);
           return interaction.update({ ...dashboard });
         }
@@ -51,7 +51,7 @@ module.exports = {
           const moduleName = customId.split('_')[2];
           if (config.modules[moduleName]) {
             config.modules[moduleName].enabled = !config.modules[moduleName].enabled;
-            saveConfig(guildId, config);
+            await saveConfig(guildId, config);
             const panel = createCategoryPanel(moduleName.charAt(0).toUpperCase() + moduleName.slice(1), config);
             return interaction.update({ ...panel });
           }
@@ -80,8 +80,8 @@ module.exports = {
         }
 
         if (customId === 'automod_reset') {
-          resetConfig(guildId);
-          const dashboard = createDashboard(getConfig(guildId));
+          await resetConfig(guildId);
+          const dashboard = createDashboard(await getConfig(guildId));
           return interaction.update({ ...dashboard });
         }
       }
@@ -107,7 +107,7 @@ module.exports = {
 
           config.modules.spam.responseMessage = interaction.fields.getTextInputValue('response_message') || null;
 
-          saveConfig(guildId, config);
+          await saveConfig(guildId, config);
           const panel = createCategoryPanel('spam', config);
           return interaction.update({ ...panel });
         }
@@ -123,7 +123,7 @@ module.exports = {
 
           config.modules.links.responseMessage = interaction.fields.getTextInputValue('response_message') || null;
 
-          saveConfig(guildId, config);
+          await saveConfig(guildId, config);
           const panel = createCategoryPanel('links', config);
           return interaction.update({ ...panel });
         }
@@ -138,7 +138,7 @@ module.exports = {
 
           config.modules.content.responseMessage = interaction.fields.getTextInputValue('response_message') || null;
 
-          saveConfig(guildId, config);
+          await saveConfig(guildId, config);
           const panel = createCategoryPanel('content', config);
           return interaction.update({ ...panel });
         }
@@ -150,7 +150,7 @@ module.exports = {
           const rawActions = interaction.fields.getTextInputValue('raid_punishment').toLowerCase();
           config.modules.raid.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['kick', 'ban'].includes(a));
 
-          saveConfig(guildId, config);
+          await saveConfig(guildId, config);
           const panel = createCategoryPanel('raid', config);
           return interaction.update({ ...panel });
         }
@@ -161,7 +161,7 @@ module.exports = {
           const rawActions = interaction.fields.getTextInputValue('security_punishment').toLowerCase();
           config.modules.security.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));
 
-          saveConfig(guildId, config);
+          await saveConfig(guildId, config);
           const panel = createCategoryPanel('security', config);
           return interaction.update({ ...panel });
         }
@@ -171,7 +171,7 @@ module.exports = {
           config.bypassRoles = interaction.fields.getTextInputValue('global_bypass_roles').split('\n').filter(id => id.trim() !== '');
           config.bypassUsers = interaction.fields.getTextInputValue('global_bypass_users').split('\n').filter(id => id.trim() !== '');
 
-          saveConfig(guildId, config);
+          await saveConfig(guildId, config);
           const dashboard = createDashboard(config);
           return interaction.update({ ...dashboard });
         }

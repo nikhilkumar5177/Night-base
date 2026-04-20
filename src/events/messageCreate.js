@@ -1,10 +1,26 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
-const { LIMITS, resolveEmbedEmojis } = require('../utils/constants');
+const { LIMITS, resolveEmbedEmojis, resolveEmojis } = require('../utils/constants');
 
 const { sendAutoDelete } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
+const resolver = require('../utils/resolver');
+
+let lastAliasData = null;
+let aliasTriggerMap = new Map();
+
+function updateAliasCache(aliasData) {
+  if (aliasData === lastAliasData) return;
+  lastAliasData = aliasData;
+  aliasTriggerMap.clear();
+  for (const [aliasKey, config] of Object.entries(aliasData)) {
+    const triggers = [aliasKey, ...(config.aliases || [])];
+    for (const t of triggers) {
+      aliasTriggerMap.set(t.toLowerCase(), { ...config, key: aliasKey });
+    }
+  }
+}
 
 module.exports = {
   name: 'messageCreate',
@@ -135,7 +151,6 @@ module.exports = {
         }
         const sent = await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
         await message.delete().catch(() => { });
-        const { resolveEmojis } = require('../utils/constants');
         await sent.react(resolveEmojis('{EMOJI_CHECK}')).catch(() => { });
       } catch { }
       return;
@@ -145,38 +160,35 @@ module.exports = {
 
     if (runtimeConfig.aliasMode !== false) {
       const aliasData = storage.read('aliases.json');
+      updateAliasCache(aliasData);
+      
       const content = message.content.toLowerCase().trim();
       const parts = content.split(/\s+/);
       const firstWord = parts[0];
 
-      for (const [aliasKey, aliasConfig] of Object.entries(aliasData)) {
-        const triggers = [aliasKey, ...(aliasConfig.aliases || [])].map(a => a.toLowerCase());
+      const aliasConfig = aliasTriggerMap.get(content) || (message.mentions.members.size > 0 ? aliasTriggerMap.get(firstWord) : null);
 
-        if (triggers.includes(content) || (triggers.includes(firstWord) && message.mentions.members.size > 0)) {
-          if (aliasConfig.requiredRole && !message.member.roles.cache.has(aliasConfig.requiredRole)) {
-            continue;
-          }
-
+      if (aliasConfig) {
+        if (!aliasConfig.requiredRole || message.member.roles.cache.has(aliasConfig.requiredRole)) {
           const role = message.guild.roles.cache.get(aliasConfig.roleId);
-          if (!role) continue;
-
-          try {
-            const targetInput = parts[1];
-            const resolver = require('../utils/resolver');
-            const target = targetInput ? (await resolver.resolveMember(message.guild, targetInput)) || message.member : message.member;
-            
-            if (target.roles.cache.has(role.id)) {
-              await target.roles.remove(role);
-            } else {
-              await target.roles.add(role);
-            }
-            const embed = new EmbedBuilder()
-              .setColor('#00e676')
-              .setDescription(`{EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
-              .setTimestamp();
-            await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
-          } catch { }
-          return;
+          if (role) {
+            try {
+              const targetInput = parts[1];
+              const target = targetInput ? (await resolver.resolveMember(message.guild, targetInput)) || message.member : message.member;
+              
+              if (target.roles.cache.has(role.id)) {
+                await target.roles.remove(role);
+              } else {
+                await target.roles.add(role);
+              }
+              const embed = new EmbedBuilder()
+                .setColor('#00e676')
+                .setDescription(`{EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
+                .setTimestamp();
+              await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
+              return;
+            } catch { }
+          }
         }
       }
     }

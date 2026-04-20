@@ -8,7 +8,7 @@ module.exports = {
   once: false,
   execute: async (client, message) => {
     if (!message.guild) return;
-    const config = getConfig(message.guild.id);
+    const config = await getConfig(message.guild.id);
     await handleGhostPing(client, message, config.modules.content);
 
     if (message.author && message.author.bot) return;

@@ -7,7 +7,7 @@ module.exports = {
   name: 'roleDelete',
   once: false,
   execute: async (client, role) => {
-    const config = getConfig(role.guild.id);
+    const config = await getConfig(role.guild.id);
     const security = config.modules.security;
     if (!config.enabled || !security.enabled || !security.antiNuke) return;
 

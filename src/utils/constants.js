@@ -46,12 +46,14 @@ const EMOJIS = {
   EMOJI_SETTINGS: '<a:wolf_category:1494831494986858567>⚙️',
   EMOJI_LOGS: '<a:rd_thanda_note:1495587970416382043>',
   EMOJI_BYPASS: '🔓',
+  EMOJI_ARROW: '<a:wolf_Blackdot:1495113162071212183>'
 };
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 // ── Regex pattern that matches all {PLACEHOLDER} placeholders ──
 const EMOJI_PATTERN = /\{([a-zA-Z0-9_]+)\}/g;
+const memoCache = new Map();
 
 /**
  * Replace all {EMOJI_*} placeholders in a string with actual emoji values.
@@ -60,10 +62,21 @@ const EMOJI_PATTERN = /\{([a-zA-Z0-9_]+)\}/g;
  */
 function resolveEmojis(text) {
   if (!text || typeof text !== 'string') return text;
-  return text.replace(EMOJI_PATTERN, (match, key) => {
+  
+  // Use cache for frequently used strings (like help menu labels)
+  if (memoCache.has(text)) return memoCache.get(text);
+
+  const resolved = text.replace(EMOJI_PATTERN, (match, key) => {
     // Try exact match, then uppercase match
     return EMOJIS[key] || EMOJIS[key.toUpperCase()] || match;
   });
+
+  // Limit cache size to prevent memory leaks (max 500 entries)
+  if (memoCache.size < 500) {
+    memoCache.set(text, resolved);
+  }
+
+  return resolved;
 }
 
 /**

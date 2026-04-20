@@ -1,10 +1,18 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
+const { getConfig } = require('../automod/database');
+const { checkRaid } = require('../automod/modules/raid');
 
 module.exports = {
   name: 'guildMemberAdd',
   once: false,
   execute: async (client, member) => {
+    // Run Raid Protection
+    const config = getConfig(member.guild.id);
+    if (config.enabled && config.modules.raid.enabled) {
+      await checkRaid(member, config.modules.raid);
+    }
+
     try {
       const autoroleData = storage.read('autorole.json');
       const guildConfig = autoroleData[member.guild.id];

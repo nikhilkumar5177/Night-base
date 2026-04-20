@@ -6,7 +6,7 @@ const { resolveEmbedEmojis, EMOJI_DOT, SEP } = require('../../utils/constants');
 
 module.exports = {
   name: 'mute',
-  aliases: ['timeout', 'to'],
+  aliases: ['timeout', 'to', 'm'],
   description: 'Timeout a user',
   usage: 'mute <user> [duration in minutes] [reason]',
   cooldown: 3,
@@ -87,7 +87,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Timeout Notice', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n{EMOJI_WARN} **You have been timed out in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Duration:** \`${durationLabel}\`\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`)
         .setTimestamp();
-      target.send({ embeds: [dmEmbed] }).catch(() => {});
+      target.send({ embeds: [dmEmbed] }).catch(() => { });
     } catch (error) {
       message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }

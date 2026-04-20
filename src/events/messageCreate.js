@@ -4,11 +4,15 @@ const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 const { LIMITS, resolveEmbedEmojis } = require('../utils/constants');
 
 const { sendAutoDelete } = require('../utils/messageHelper');
+const { handleAutoMod } = require('../automod/handlers/messageHandler');
 
 module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
+    // Run AutoMod
+    await handleAutoMod(client, message);
+
     if (message.webhookId && message.guild) {
       const securityConfig = storage.read('security.json');
       if (securityConfig.enabled) {

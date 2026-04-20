@@ -1,4 +1,4 @@
-const { EmbedBuilder, InteractionType } = require('discord.js');
+const { EmbedBuilder, InteractionType, ComponentType } = require('discord.js');
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { LIMITS } = require('../utils/constants');
@@ -107,6 +107,22 @@ module.exports = {
         }
       } catch (error) {
         logger.error(`Autocomplete error: ${error.message}`);
+      }
+    }
+
+    // --- Message Components (Buttons, Select Menus) ---
+    if (interaction.type === InteractionType.MessageComponent) {
+      if (interaction.customId.startsWith('automod_')) {
+        const command = client.commands.get('automod');
+        if (command) return command.execute(client, interaction);
+      }
+    }
+
+    // --- Modal Submits ---
+    if (interaction.type === InteractionType.ModalSubmit) {
+      if (interaction.customId.startsWith('automod_modal_')) {
+        const command = client.commands.get('automod');
+        if (command) return command.execute(client, interaction);
       }
     }
   }

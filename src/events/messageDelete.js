@@ -1,11 +1,16 @@
 const storage = require('../utils/storageManager');
 const { LIMITS } = require('../utils/constants');
+const { getConfig } = require('../automod/database');
+const { handleGhostPing } = require('../automod/modules/ghostping');
 
 module.exports = {
   name: 'messageDelete',
   once: false,
-  execute: (client, message) => {
+  execute: async (client, message) => {
     if (!message.guild) return;
+    const config = getConfig(message.guild.id);
+    await handleGhostPing(client, message, config.modules.content);
+
     if (message.author && message.author.bot) return;
 
     if (client.ignoredDeletes && client.ignoredDeletes.has(message.id)) {

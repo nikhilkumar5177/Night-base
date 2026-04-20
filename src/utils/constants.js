@@ -9,7 +9,6 @@
 // ══════════════════════════════════════════════
 
 const EMOJIS = {
-  EMOJI_DOP: '',
   EMOJI_DOT: '<:white_dot:1495092726457438260>',
   EMOJI_SUCCESS: '<a:wolf_success:1425075216014377000>',
   EMOJI_ERROR: '<a:wolf_failed:1425075212646613123>',
@@ -19,10 +18,9 @@ const EMOJIS = {
   EMOJI_ARROW_LEFT: '◀',
   EMOJI_ARROW_RIGHT: '▶',
   EMOJI_CHECK: '<a:wolf_vouch:1425073954455945217>',
-  EMOJI_CROSS: '✖',
+  EMOJI_CROSS: '<a:rightarrow_haveli:1495585249617510501> ',
   EMOJI_STAR: '<:wolf_star:1494831555279978688>',
   EMOJI_HOME: '<:wolf_home:1494831519376605306>',
-  EMOJI_CATEGORY: '<:wolf_page:1425073965059149967>',
   EMOJI_COMMAND: '<a:wolf_category:1494831494986858567>',
   EMOJI_SHIELD: '<:wolf_shield:1425073969035350037>',
   EMOJI_TOOL: '<a:wolf_tool:1494826140962127903>',
@@ -30,16 +28,27 @@ const EMOJIS = {
   EMOJI_STAFF: '<:wolf_staff:1494826138613321840>',
   EMOJI_BAN: '<a:wolf_ban:1494826137799622807>',
   EMOJI_ROLE: '<a:LC_Star:1494837936989147237>',
-  EMOJI_VOUCH: '<a:wolf_tick:1425073954455945217>',
   EMOJI_SNIPE: '<a:wolf_snipe:1494826129423466607>',
   EMOJI_CONFIG: '<a:wolf_config:1494823882430087188>',
   EMOJI_DEV: '<:wolf_owner:1494822065746743460>',
   EMOJI_UPVOTE: '🔺 ',
   EMOJI_DOWNVOTE: '🔻',
-  EMOJI_ARROW: '<:white_dot:1495092726457438260>',
+  EMOJI_ACTIVE: '<a:green_butterflyholo:1495587211423383653>',
+  EMOJI_INACTIVE: '<a:z_unq_ButterflyaRed:1495587222018195496>',
+  EMOJI_LIST: '<a:wolf_tool:1494826140962127903>',
+  EMOJI_SPAM: '<a:hc_typing:1495585623476670627>',
+  EMOJI_LINK: '<:Partner_Black:1495588708047519815>',
+  EMOJI_RAID: '<:wolf_shield:1425073969035350037>',
+  EMOJI_CONTENT: '<a:rd_thanda_note:1495587970416382043>',
+  EMOJI_DELETE: '🗑️',
+  EMOJI_MUTE: '<:wolf_mute:1425088495126446132>',
+  EMOJI_KICK: '👢',
+  EMOJI_SETTINGS: '<a:wolf_category:1494831494986858567>⚙️',
+  EMOJI_LOGS: '<a:rd_thanda_note:1495587970416382043>',
+  EMOJI_BYPASS: '🔓',
 };
 
-const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501'; 
+const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
 
 // ── Regex pattern that matches all {PLACEHOLDER} placeholders ──
 const EMOJI_PATTERN = /\{([a-zA-Z0-9_]+)\}/g;

@@ -1,5 +1,6 @@
 const logger = require('../utils/logger');
 const storage = require('../utils/storageManager');
+const { resolveEmbedEmojis } = require('../utils/constants');
 
 module.exports = {
   name: 'ready',
@@ -36,7 +37,7 @@ module.exports = {
             .setDescription(reminder.message)
             .addFields({ name: 'Set by', value: `<@${reminder.userId}>` })
             .setTimestamp();
-          channel.send({ content: `<@${reminder.userId}>`, embeds: [embed] }).catch(() => {});
+          channel.send({ content: `<@${reminder.userId}>`, embeds: [resolveEmbedEmojis(embed.toJSON())] }).catch(() => {});
         }
       } else {
         pending.push(reminder);
@@ -51,7 +52,7 @@ module.exports = {
               .setDescription(reminder.message)
               .addFields({ name: 'Set by', value: `<@${reminder.userId}>` })
               .setTimestamp();
-            ch.send({ content: `<@${reminder.userId}>`, embeds: [embed] }).catch(() => {});
+            ch.send({ content: `<@${reminder.userId}>`, embeds: [resolveEmbedEmojis(embed.toJSON())] }).catch(() => {});
           }
           const current = storage.read('reminders.json');
           const updated = current.filter(r => r.id !== reminder.id);

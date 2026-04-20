@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { SEP } = require('../../utils/constants');
+const { SEP, resolveEmbedEmojis } = require('../../utils/constants');
 
 module.exports = {
   name: 'maintenance',
@@ -30,7 +30,7 @@ module.exports = {
           .setDescription(`${SEP}\n{EMOJI_WARN} **The bot is now in maintenance mode.**\n\n\u25AA All non-owner commands will be ignored.\n\u25AA Bot status has been set to **Do Not Disturb**.\n\u25AA Maintenance activity is now active.\n${SEP}`)
           .setTimestamp();
         
-        await message.reply({ embeds: [embed] });
+        await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
       } else {
         client.user.setPresence({
           activities: [{ name: `${client.config.prefix}help`, type: 3 }],
@@ -44,7 +44,7 @@ module.exports = {
           .setDescription(`${SEP}\n{EMOJI_SUCCESS} **The bot has resumed normal operation.**\n\n\u25AA All commands are now available to users.\n\u25AA Bot status has been reset to **Online**.\n${SEP}`)
           .setTimestamp();
 
-        await message.reply({ embeds: [embed] });
+        await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
       }
     } catch (error) {
       message.reply({ 

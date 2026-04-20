@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const storage = require('../../utils/storageManager');
+const { resolveEmbedEmojis } = require('../../utils/constants');
 
 module.exports = {
   name: 'addstaff',
@@ -13,11 +14,17 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Owner Only').setDescription('Only the server owner can manage staff roles.').setTimestamp()] });
+        return message.reply({ 
+          embeds: [resolveEmbedEmojis(new EmbedBuilder()
+            .setColor('#ff1744')
+            .setTitle('{EMOJI_OWNER} Owner Only')
+            .setDescription('Only the server owner can manage staff roles.')
+            .setTimestamp().toJSON())] 
+        });
       }
       const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[0]);
       if (!role) {
-        const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}addstaff <@role>\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}addstaff @Moderator\n\`\`\`` }, { name: 'Aliases', value: '`staffadd`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
+        const usageEmbed = resolveEmbedEmojis(new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}addstaff <@role>\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}addstaff @Moderator\n\`\`\`` }, { name: 'Aliases', value: '`staffadd`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp().toJSON());
         return message.reply({ embeds: [usageEmbed] });
       }
       const staffData = storage.read('staff.json');

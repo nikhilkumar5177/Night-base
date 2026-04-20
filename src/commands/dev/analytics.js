@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, resolveEmbedEmojis } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 
 const DOT = '\u25AA';
@@ -76,7 +76,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('an_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.reply({ embeds: [buildEmbed()], components: [buildRow()] });
+      const sent = await message.reply({ embeds: [resolveEmbedEmojis(buildEmbed().toJSON())], components: [buildRow()] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'an_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
@@ -88,7 +88,7 @@ module.exports = {
           await i.update({ embeds: [resetEmbed], components: [] });
           return;
         }
-        await i.update({ embeds: [buildEmbed()], components: [buildRow()] });
+        await i.update({ embeds: [resolveEmbedEmojis(buildEmbed().toJSON())], components: [buildRow()] });
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {

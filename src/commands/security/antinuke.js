@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const storage = require('../../utils/storageManager');
+const { resolveEmbedEmojis } = require('../../utils/constants');
 
 module.exports = {
   name: 'antinuke',
@@ -13,14 +14,20 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Owner Only').setDescription('Only the server owner can configure anti-nuke.').setTimestamp()] });
+        return message.reply({ 
+          embeds: [resolveEmbedEmojis(new EmbedBuilder()
+            .setColor('#ff1744')
+            .setTitle('{EMOJI_OWNER} Owner Only')
+            .setDescription('Only the server owner can configure anti-nuke.')
+            .setTimestamp().toJSON())] 
+        });
       }
       const action = args[0]?.toLowerCase();
       const securityConfig = storage.read('security.json');
       if (action === 'on') {
         securityConfig.enabled = true;
         storage.write('security.json', securityConfig);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} Anti-Nuke Enabled').setDescription('Security monitoring is now active.').setTimestamp()] });
+        return message.reply({ embeds: [resolveEmbedEmojis(new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} Anti-Nuke Enabled').setDescription('Security monitoring is now active.').setTimestamp().toJSON())] });
       }
       if (action === 'off') {
         securityConfig.enabled = false;
@@ -46,7 +53,7 @@ module.exports = {
         )
         .setDescription(`Usage:\n\`${client.config.prefix}antinuke on\` - Enable\n\`${client.config.prefix}antinuke off\` - Disable\n\`${client.config.prefix}antinuke config <threshold> <window_ms>\` - Configure`)
         .setTimestamp();
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
     } catch (error) {
       message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
     }

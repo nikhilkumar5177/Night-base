@@ -39,7 +39,7 @@ module.exports = {
             const staffMentions = staffData.roles ? staffData.roles.map(r => `<@&${r}>`).join(' ') : '';
             const alertEmbed = new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Webhook Spam Detected').setDescription('Suspicious webhook activity neutralized.').addFields({ name: 'Channel', value: `${message.channel}`, inline: true }).setTimestamp();
             const logCh = message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) || message.channel;
-            await logCh.send({ content: `${owner || ''} ${staffMentions}`, embeds: [alertEmbed] }).catch(() => { });
+            await logCh.send({ content: `${owner || ''} ${staffMentions}`, embeds: [resolveEmbedEmojis(alertEmbed.toJSON())] }).catch(() => { });
             const logs = securityConfig.logs || [];
             logs.push({ type: 'webhook_spam', guildId, channelId: message.channel.id, timestamp: now });
             securityConfig.logs = logs.slice(-100);
@@ -64,7 +64,7 @@ module.exports = {
         .setDescription('{EMOJI_LOADING} Pulling latest changes...')
         .setTimestamp()
 
-      const msg = await message.reply({ embeds: [loading] })
+      const msg = await message.reply({ embeds: [resolveEmbedEmojis(loading.toJSON())] })
 
       exec('git reset --hard && git pull', async (err, stdout, stderr) => {
         if (err) {
@@ -109,10 +109,10 @@ module.exports = {
         global.activeVCTours.delete(message.guild.id);
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            resolveEmbedEmojis(new EmbedBuilder()
               .setColor('#57F287')
               .setDescription('{EMOJI_SUCCESS} **VC Tour loop stopped.**')
-              .setTimestamp()
+              .setTimestamp().toJSON())
           ]
         });
       }
@@ -133,9 +133,10 @@ module.exports = {
         if (message.attachments.size > 0) {
           embed.setImage(message.attachments.first().url);
         }
-        const sent = await message.reply({ embeds: [embed] });
+        const sent = await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
         await message.delete().catch(() => { });
-        await sent.react('{EMOJI_CHECK}').catch(() => { });
+        const { resolveEmojis } = require('../utils/constants');
+        await sent.react(resolveEmojis('{EMOJI_CHECK}')).catch(() => { });
       } catch { }
       return;
     }
@@ -173,7 +174,7 @@ module.exports = {
               .setColor('#00e676')
               .setDescription(`{EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
               .setTimestamp();
-            await message.reply({ embeds: [embed] });
+            await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
           } catch { }
           return;
         }
@@ -247,11 +248,11 @@ module.exports = {
       if (!isStaff && !isDev) {
         return sendAutoDelete(message, {
           embeds: [
-            new EmbedBuilder()
+            resolveEmbedEmojis(new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription('{EMOJI_ERROR} You are not a **Staff member** of this server.')
-              .setTimestamp()
+              .setTimestamp().toJSON())
           ]
         }, 5000);
       }
@@ -260,11 +261,11 @@ module.exports = {
     if (command.devOnly && message.author.id !== process.env.DEV_ID) {
       return sendAutoDelete(message, {
         embeds: [
-          new EmbedBuilder()
+          resolveEmbedEmojis(new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
             .setDescription('{EMOJI_ERROR} This is an **Owner Command**.')
-            .setTimestamp()
+            .setTimestamp().toJSON())
         ]
       }, 5000);
     }
@@ -281,7 +282,7 @@ module.exports = {
             .setColor('#ffab00')
             .setDescription(`{EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`)
             .setTimestamp();
-          return sendAutoDelete(message, { embeds: [embed] }, 5000);
+          return sendAutoDelete(message, { embeds: [resolveEmbedEmojis(embed.toJSON())] }, 5000);
         }
       }
       client.cooldowns.set(key, now + cooldownAmount);

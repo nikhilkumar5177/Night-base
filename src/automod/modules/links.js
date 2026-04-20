@@ -1,6 +1,6 @@
-const LINK_REGEX = /https?:\/\/[^\s]+/gi;
-const INVITE_REGEX = /(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+/gi;
-const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discord-nitro|dlscord)/gi;
+const LINK_REGEX = /https?:\/\/[^\s]+/i;
+const INVITE_REGEX = /(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+/i;
+const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discord-nitro|dlscord)/i;
 
 /**
  * Handle link filtering, anti-invite, and anti-phishing.
@@ -12,20 +12,22 @@ async function checkLinks(message, config) {
   if (!config.enabled) return false;
 
   const content = message.content;
-  const allowedLinks = config.allowedLinks.map(l => l.trim());
+  const allowedLinks = config.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
 
   // 1. Gather all potential links (Standard URLs + Discord Invites)
-  const standardLinks = content.match(LINK_REGEX) || [];
-  const inviteLinks = content.match(INVITE_REGEX) || [];
+  const standardLinks = content.match(/https?:\/\/[^\s]+/gi) || [];
+  const inviteLinks = content.match(/(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+/gi) || [];
   const allLinks = [...new Set([...standardLinks, ...inviteLinks])];
 
   if (allLinks.length === 0) return false;
 
   for (const link of allLinks) {
+    const cleanLink = link.toLowerCase().replace(/^https?:\/\//, '');
+
     // 2. Check Whitelist (Primary Bypass)
     let isWhitelisted = false;
     for (const allowed of allowedLinks) {
-      if (link.toLowerCase().includes(allowed.toLowerCase())) {
+      if (cleanLink.includes(allowed)) {
         isWhitelisted = true;
         break;
       }

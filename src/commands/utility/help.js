@@ -1,12 +1,15 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, SlashCommandBuilder } = require('discord.js');
-const { resolveEmbedEmojis, EMOJIS, SEP } = require('../../utils/constants');
+const { 
+  SEP, 
+  EMOJI_DOT, 
+  EMOJI_ERROR, 
+  EMOJI_SUCCESS, 
+  EMOJI_ARROW, 
+  EMOJI_ARROW_LEFT, 
+  EMOJI_ARROW_RIGHT 
+} = require('../../utils/constants');
 
-const EMOJI_DOP = '<a:wolf_Blackdot:1495113162071212183>';
-const EMOJI_DOT = EMOJIS.EMOJI_DOT;
-const EMOJI_ERROR = EMOJIS.EMOJI_ERROR;
-
-const DOT = '\u25AA';
-const ARROW = '\u25B8';
+const ARROW_ICON = '\u25B8';
 
 const CATEGORY_META = {
   moderation: { label: 'Moderation', desc: 'Server moderation and member management tools' },
@@ -48,7 +51,8 @@ module.exports = {
           const errEmbed = new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} No command found with name \`${cmdName}\`.`).setTimestamp();
           return isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }) : message.reply({ embeds: [errEmbed] });
         }
-        return isInteraction ? message.reply({ embeds: [resolveEmbedEmojis(buildCommandEmbed(client, message, command).toJSON())], components: [buildHomeButton()] }) : message.reply({ embeds: [resolveEmbedEmojis(buildCommandEmbed(client, message, command).toJSON())], components: [buildHomeButton()] });
+        const embed = buildCommandEmbed(client, message, command);
+        return isInteraction ? message.reply({ embeds: [embed], components: [buildHomeButton()] }) : message.reply({ embeds: [embed], components: [buildHomeButton()] });
       }
 
       // ── Build categories map (cached per invocation) ──
@@ -80,7 +84,7 @@ module.exports = {
         const categoryList = allCatKeys.map(cat => {
           const meta = CATEGORY_META[cat] || { label: cat };
           const count = categories[cat].length;
-          return `${EMOJI_DOP} **${meta.label}** \u2014 \`${count}\` commands`;
+          return `${EMOJI_ARROW} **${meta.label}** \u2014 \`${count}\` commands`;
         }).join('\n');
 
         return new EmbedBuilder()
@@ -148,7 +152,7 @@ module.exports = {
         let text = '';
         for (const item of slice) {
           if (item.header) {
-            text += `\n**${ARROW} ${item.label}**\n`;
+            text += `\n**${ARROW_ICON} ${item.label}**\n`;
           } else {
             text += `${EMOJI_DOT} \`${client.config.prefix}${item.cmd.name}\` \u2014 ${item.cmd.description || 'No description'}\n`;
           }
@@ -212,8 +216,8 @@ module.exports = {
         btns.push(new ButtonBuilder().setCustomId('help_all').setLabel('All Commands').setStyle(view === 'all' ? ButtonStyle.Success : ButtonStyle.Primary));
 
         if (view === 'all' && allPageData) {
-          btns.push(new ButtonBuilder().setCustomId('help_prev').setEmoji('{EMOJI_ARROW_LEFT}').setStyle(ButtonStyle.Secondary).setDisabled(state.page === 0));
-          btns.push(new ButtonBuilder().setCustomId('help_next').setEmoji('{EMOJI_ARROW_RIGHT}').setStyle(ButtonStyle.Secondary).setDisabled(state.page >= allPageData.totalPages - 1));
+          btns.push(new ButtonBuilder().setCustomId('help_prev').setEmoji(EMOJI_ARROW_LEFT).setStyle(ButtonStyle.Secondary).setDisabled(state.page === 0));
+          btns.push(new ButtonBuilder().setCustomId('help_next').setEmoji(EMOJI_ARROW_RIGHT).setStyle(ButtonStyle.Secondary).setDisabled(state.page >= allPageData.totalPages - 1));
         }
 
         btns.push(new ButtonBuilder().setLabel('Support').setStyle(ButtonStyle.Link).setURL(client.config.supportServer));
@@ -229,6 +233,7 @@ module.exports = {
 
       // ══════════════════════════════════════════════
       // ── RENDER FUNCTION
+      // ── Using straight embeds since resolveEmbedEmojis is gone ──
       // ══════════════════════════════════════════════
 
       function render() {
@@ -260,7 +265,7 @@ module.exports = {
           components.push(buildButtons('command'));
         }
 
-        return { embeds: [resolveEmbedEmojis(embed.toJSON())], components };
+        return { embeds: [embed], components };
       }
 
       // ── SEND INITIAL ──
@@ -307,7 +312,7 @@ module.exports = {
           await i.update(render());
         } catch (err) {
           try {
-            await i.reply({ content: '{EMOJI_ERROR} Interaction failed. Try again.', ephemeral: true });
+            await i.reply({ content: `${EMOJI_ERROR} Interaction failed. Try again.`, ephemeral: true });
           } catch { }
         }
       });
@@ -322,14 +327,14 @@ module.exports = {
         });
 
         const timeoutEmbed = EmbedBuilder.from(sent.embeds[0])
-          .setFooter({ text: 'Wild Wolf \u2022 Session expired \u2502 Run the command again to interact' })
+          .setFooter({ text: 'Wild Wolf \u2022 Session expired \u2022 Run the command again to interact' })
           .setColor('#2B2D31');
 
         sent.edit({ embeds: [timeoutEmbed], components: disabledRows }).catch(() => { });
       });
 
     } catch (error) {
-      const errEmbed = new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp();
+      const errEmbed = new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp();
       isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }).catch(() => { }) : message.reply({ embeds: [errEmbed] });
     }
   }
@@ -340,9 +345,6 @@ module.exports = {
 // ══════════════════════════════════════════════
 
 function buildCommandEmbed(client, message, command) {
-  const DOT = '\u25AA';
-  const ARROW = '\u25B8';
-
   const aliasStr = command.aliases?.length > 0
     ? command.aliases.map(a => `\`${a}\``).join(' \u2502 ')
     : '\`None\`';
@@ -365,12 +367,12 @@ function buildCommandEmbed(client, message, command) {
       `${SEP}`
     )
     .addFields(
-      { name: `${ARROW} Usage`, value: `\`\`\`fix\n${trigger}${command.usage || command.name}\n\`\`\``, inline: false },
-      { name: `${ARROW} Aliases`, value: aliasStr, inline: true },
-      { name: `${ARROW} Cooldown`, value: `\`${command.cooldown || 0}s\``, inline: true },
-      { name: `${ARROW} Category`, value: `\`${(command.category || 'Unknown').charAt(0).toUpperCase() + (command.category || 'unknown').slice(1)}\``, inline: true },
-      { name: `${ARROW} Permissions`, value: permStr.join(', ') },
-      { name: `${ARROW} Status`, value: command.enabled ? `${EMOJI_DOT} \`\u25CF Enabled\`` : `${EMOJI_DOT} \`\u25CB Disabled\``, inline: true }
+      { name: `${ARROW_ICON} Usage`, value: `\`\`\`fix\n${trigger}${command.usage || command.name}\n\`\`\``, inline: false },
+      { name: `${ARROW_ICON} Aliases`, value: aliasStr, inline: true },
+      { name: `${ARROW_ICON} Cooldown`, value: `\`${command.cooldown || 0}s\``, inline: true },
+      { name: `${ARROW_ICON} Category`, value: `\`${(command.category || 'Unknown').charAt(0).toUpperCase() + (command.category || 'unknown').slice(1)}\``, inline: true },
+      { name: `${ARROW_ICON} Permissions`, value: permStr.join(', ') },
+      { name: `${ARROW_ICON} Status`, value: command.enabled ? `${EMOJI_DOT} \`\u25CF Enabled\`` : `${EMOJI_DOT} \`\u25CB Disabled\``, inline: true }
     );
 
   if (command.details) {

@@ -1,7 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
-
-const DOT = '\u25AA';
+const { SEP, EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 module.exports = {
   name: 'serverassets',
@@ -27,7 +25,7 @@ module.exports = {
       if (assets.icon) {
         pages.push({ label: 'Server Icon', embed: new EmbedBuilder()
           .setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Server Icon', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n${DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.icon)
+          .setDescription(`${SEP}\n${EMOJI_DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.icon)
           .setFooter({ text: `Wild Wolf \u2022 Page 1/${Object.values(assets).filter(Boolean).length}` }).setTimestamp(),
           url: assets.icon
         });
@@ -35,7 +33,7 @@ module.exports = {
       if (assets.banner) {
         pages.push({ label: 'Server Banner', embed: new EmbedBuilder()
           .setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Server Banner', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n${DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.banner)
+          .setDescription(`${SEP}\n${EMOJI_DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.banner)
           .setFooter({ text: `Wild Wolf` }).setTimestamp(),
           url: assets.banner
         });
@@ -43,7 +41,7 @@ module.exports = {
       if (assets.splash) {
         pages.push({ label: 'Invite Splash', embed: new EmbedBuilder()
           .setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Invite Splash', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n${DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.splash)
+          .setDescription(`${SEP}\n${EMOJI_DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.splash)
           .setFooter({ text: `Wild Wolf` }).setTimestamp(),
           url: assets.splash
         });
@@ -51,14 +49,14 @@ module.exports = {
       if (assets.discovery) {
         pages.push({ label: 'Discovery Splash', embed: new EmbedBuilder()
           .setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Discovery Splash', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n${DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.discovery)
+          .setDescription(`${SEP}\n${EMOJI_DOT} **Server:** ${g.name}\n${SEP}`).setImage(assets.discovery)
           .setFooter({ text: `Wild Wolf` }).setTimestamp(),
           url: assets.discovery
         });
       }
 
       if (pages.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} This server has no visual assets set.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} This server has no visual assets set.\n${SEP}`).setTimestamp()] });
       }
 
       let page = 0;
@@ -87,7 +85,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

@@ -1,11 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
-
-const { resolveEmbedEmojis, EMOJIS, SEP } = require('../../utils/constants');
-const DOT = '\u25AA';
-
-const EMOJI_DOT = EMOJIS.EMOJI_DOT;
-const EMOJI_ARROW = EMOJIS.EMOJI_ARROW;
+const { SEP, EMOJI_DOT, EMOJI_ARROW, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 module.exports = {
   name: 'userinfo',
@@ -70,7 +65,7 @@ module.exports = {
       );
 
       const sent = await message.reply({ embeds: [embed], components: [row] });
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'ui_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
         if (i.customId === 'ui_avatar') {
@@ -90,7 +85,7 @@ module.exports = {
           await u.fetch(true).catch(() => { });
           const bannerUrl = u.bannerURL({ dynamic: true, size: 1024 });
           if (!bannerUrl) {
-            await i.reply({ content: '{EMOJI_WARN} This user has no banner.', ephemeral: true });
+            await i.reply({ content: `${EMOJI_WARN} This user has no banner.`, ephemeral: true });
             return;
           }
           const bnEmbed = new EmbedBuilder()
@@ -111,7 +106,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

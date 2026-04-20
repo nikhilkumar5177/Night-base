@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const storage = require('../../utils/storageManager');
+const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO } = require('../../utils/constants');
 
 module.exports = {
   name: 'reminder',
@@ -19,14 +20,14 @@ module.exports = {
       const timeStr = args[0].toLowerCase();
       const timeMatch = timeStr.match(/^(\d+)(s|m|h|d)$/);
       if (!timeMatch) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Invalid Time').setDescription('Use format: `10m`, `2h`, `1d`').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Invalid Time`).setDescription('Use format: `10m`, `2h`, `1d`').setTimestamp()] });
       }
       const amount = parseInt(timeMatch[1]);
       const unit = timeMatch[2];
       const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
       const duration = amount * multipliers[unit];
       if (duration > 7 * 86400000) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Too Long').setDescription('Maximum reminder duration is 7 days.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Too Long`).setDescription('Maximum reminder duration is 7 days.').setTimestamp()] });
       }
       const reminderMsg = args.slice(1).join(' ');
       const id = Date.now().toString(36);
@@ -39,7 +40,7 @@ module.exports = {
         if (ch) {
           const remindEmbed = new EmbedBuilder()
             .setColor('#0099ff')
-            .setTitle('{EMOJI_INFO} Reminder')
+            .setTitle(`${EMOJI_INFO} Reminder`)
             .setDescription(reminderMsg)
             .setTimestamp();
           ch.send({ content: `<@${message.author.id}>`, embeds: [remindEmbed] }).catch(() => { });
@@ -50,14 +51,14 @@ module.exports = {
       }, Math.min(duration, 2147483647));
       const embed = new EmbedBuilder()
         .setColor('#00e676')
-        .setTitle('{EMOJI_SUCCESS} Reminder Set')
+        .setTitle(`${EMOJI_SUCCESS} Reminder Set`)
         .setDescription(`I will remind you in **${amount}${unit}**.`)
         .addFields({ name: 'Message', value: reminderMsg })
         .setTimestamp();
       const sent = await message.reply({ embeds: [embed] });
       setTimeout(() => { sent.delete().catch(() => { }); message.delete().catch(() => { }); }, 120000);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
     }
   }
 };

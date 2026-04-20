@@ -1,8 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { resolveEmbedEmojis, EMOJIS, SEP } = require('../../utils/constants');
-
-const EMOJI_DOT = EMOJIS.EMOJI_DOT;
-const EMOJI_ARROW = EMOJIS.EMOJI_ARROW;
+const { SEP, EMOJI_DOT, EMOJI_ARROW, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'serverinfo',
@@ -87,7 +84,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

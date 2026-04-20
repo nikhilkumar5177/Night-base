@@ -1,7 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP, EMOJI_ARROW, EMOJI_DOT } = require('../../utils/constants');
-
-
+const { SEP, EMOJI_ARROW, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'roleinfo',
@@ -40,7 +38,7 @@ module.exports = {
           { name: `${EMOJI_ARROW} Hoisted`, value: role.hoist ? '\`Yes\`' : '\`No\`', inline: true },
           { name: `${EMOJI_ARROW} Managed`, value: role.managed ? '\`Yes\`' : '\`No\`', inline: true },
           { name: `${EMOJI_ARROW} Bot Role`, value: role.tags?.botId ? '\`Yes\`' : '\`No\`', inline: true },
-          { name: '{EMOJI_ARROW} Key Permissions', value: keyPerms.length > 0 ? keyPerms.map(p => `\`${p}\``).join(', ') : '\`None\`' }
+          { name: `${EMOJI_ARROW} Key Permissions`, value: keyPerms.length > 0 ? keyPerms.map(p => `\`${p}\``).join(', ') : '\`None\`' }
         )
         .setFooter({ text: `Wild Wolf \u2022 ${perms.length} total permissions`, iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
@@ -68,7 +66,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

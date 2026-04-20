@@ -4,7 +4,7 @@ const { checkSpam } = require('../modules/spam');
 const { checkLinks } = require('../modules/links');
 const { checkContent } = require('../modules/content');
 const { checkSecurity } = require('../modules/security');
-const { COLORS, resolveEmbedEmojis, SEP, EMOJI_DOT } = require('../../utils/constants');
+const { COLORS, SEP, EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 /**
  * Handle AutoMod logic for every message.
@@ -64,7 +64,7 @@ async function executeActions(client, message, violation, moduleConfig) {
 
     // 2. Response / Warn
     if (actions.includes('warn')) {
-      const response = moduleConfig.responseMessage || '{EMOJI_ERROR} **{user}**, your message was flagged for **{violation}**.';
+      const response = moduleConfig.responseMessage || `${EMOJI_ERROR} **{user}**, your message was flagged for **{violation}**.`;
       const formatted = response
         .replace(/{user}/g, `<@${message.author.id}>`)
         .replace(/{violation}/g, violation);
@@ -74,7 +74,7 @@ async function executeActions(client, message, violation, moduleConfig) {
         .setAuthor({ name: 'Wild Wolf \u2502 AutoMod Violation', iconURL: client.user.displayAvatarURL() })
         .setDescription(
           `${SEP}\n` +
-          `{EMOJI_WARN} **Violation Detected**\n` +
+          `${EMOJI_WARN} **Violation Detected**\n` +
           `${SEP}\n\n` +
           `${EMOJI_DOT} **User:** <@${message.author.id}>\n` +
           `${EMOJI_DOT} **Rule:** ${violation}\n` +
@@ -86,13 +86,13 @@ async function executeActions(client, message, violation, moduleConfig) {
       let msg;
       try {
         msg = await message.reply({ 
-          embeds: [resolveEmbedEmojis(embed.toJSON())],
+          embeds: [embed],
           allowedMentions: { repliedUser: true },
           failIfNotExists: false
         });
       } catch (e) {
         msg = await message.channel.send({ 
-          embeds: [resolveEmbedEmojis(embed.toJSON())]
+          embeds: [embed]
         });
       }
       
@@ -105,7 +105,7 @@ async function executeActions(client, message, violation, moduleConfig) {
       const dmEmbed = new EmbedBuilder()
         .setColor('#ff1744')
         .setAuthor({ name: `AutoMod Alert \u2502 ${message.guild.name}`, iconURL: message.guild.iconURL() })
-        .setTitle('{EMOJI_WARN} You have been flagged by AutoMod')
+        .setTitle(`${EMOJI_WARN} You have been flagged by AutoMod`)
         .setDescription(
           `${SEP}\n` +
           `Your recent activity in **${message.guild.name}** triggered the AutoModeration system.\n` +
@@ -117,7 +117,7 @@ async function executeActions(client, message, violation, moduleConfig) {
         .setFooter({ text: 'This is an automated security alert' })
         .setTimestamp();
 
-      await message.author.send({ embeds: [resolveEmbedEmojis(dmEmbed.toJSON())] }).catch(() => {
+      await message.author.send({ embeds: [dmEmbed] }).catch(() => {
         // User has DMs closed
       });
     }
@@ -171,7 +171,7 @@ async function logToChannel(client, message, data) {
     .setFooter({ text: `User ID: ${message.author.id}` })
     .setTimestamp();
 
-  await channel.send({ embeds: [resolveEmbedEmojis(logEmbed.toJSON())] }).catch(() => {});
+  await channel.send({ embeds: [logEmbed] }).catch(() => {});
 }
 
 module.exports = { handleAutoMod };

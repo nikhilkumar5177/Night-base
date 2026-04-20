@@ -1,6 +1,6 @@
 const logger = require('../utils/logger');
 const storage = require('../utils/storageManager');
-const { resolveEmbedEmojis } = require('../utils/constants');
+const { EMOJI_INFO } = require('../utils/constants');
 
 module.exports = {
   name: 'ready',
@@ -33,11 +33,11 @@ module.exports = {
           const { EmbedBuilder } = require('discord.js');
           const embed = new EmbedBuilder()
             .setColor('#0099ff')
-            .setTitle('{EMOJI_INFO} Reminder')
+            .setTitle(`${EMOJI_INFO} Reminder`)
             .setDescription(reminder.message)
             .addFields({ name: 'Set by', value: `<@${reminder.userId}>` })
             .setTimestamp();
-          channel.send({ content: `<@${reminder.userId}>`, embeds: [resolveEmbedEmojis(embed.toJSON())] }).catch(() => {});
+          channel.send({ content: `<@${reminder.userId}>`, embeds: [embed] }).catch(() => {});
         }
       } else {
         pending.push(reminder);
@@ -48,11 +48,11 @@ module.exports = {
             const { EmbedBuilder } = require('discord.js');
             const embed = new EmbedBuilder()
               .setColor('#0099ff')
-              .setTitle('{EMOJI_INFO} Reminder')
+              .setTitle(`${EMOJI_INFO} Reminder`)
               .setDescription(reminder.message)
               .addFields({ name: 'Set by', value: `<@${reminder.userId}>` })
               .setTimestamp();
-            ch.send({ content: `<@${reminder.userId}>`, embeds: [resolveEmbedEmojis(embed.toJSON())] }).catch(() => {});
+            ch.send({ content: `<@${reminder.userId}>`, embeds: [embed] }).catch(() => {});
           }
           const current = storage.read('reminders.json');
           const updated = current.filter(r => r.id !== reminder.id);

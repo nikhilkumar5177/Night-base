@@ -3,6 +3,7 @@ const { getConfig, saveConfig, resetConfig } = require('../../automod/database')
 const { createDashboard } = require('../../automod/ui/dashboard');
 const { createCategoryPanel } = require('../../automod/ui/panels');
 const { createSpamModal, createLinkModal, createContentModal, createRaidModal, createSecurityModal, createGlobalModal } = require('../../automod/ui/modals');
+const { SEP, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'automod',
@@ -181,7 +182,7 @@ module.exports = {
       const errorEmbed = new EmbedBuilder()
         .setColor('#ED4245')
         .setAuthor({ name: 'Wild Wolf \u2502 Error', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_ERROR} **An error occurred:** \`${error.message}\`\n${SEP}`);
+        .setDescription(`${SEP}\n${EMOJI_ERROR} **An error occurred:** \`${error.message}\`\n${SEP}`);
 
       if (interaction.deferred || interaction.replied) {
         await interaction.followUp({ embeds: [errorEmbed], ephemeral: true }).catch(() => { });

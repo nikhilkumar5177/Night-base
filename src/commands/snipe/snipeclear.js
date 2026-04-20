@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_ERROR, EMOJI_WARN, EMOJI_SUCCESS } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 
 
@@ -15,7 +15,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageMessages** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
       }
 
       const isAll = args[0]?.toLowerCase() === 'all';
@@ -24,7 +24,7 @@ module.exports = {
         const confirmEmbed = new EmbedBuilder()
           .setColor('#FEE75C')
           .setAuthor({ name: 'Wild Wolf \u2502 Clear All Snipes', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n{EMOJI_WARN} **Clear snipe cache for ALL channels?**\nThis will remove \`${client.snipeCache.size}\` channel caches.\n${SEP}`)
+          .setDescription(`${SEP}\n${EMOJI_WARN} **Clear snipe cache for ALL channels?**\nThis will remove \`${client.snipeCache.size}\` channel caches.\n${SEP}`)
           .setTimestamp();
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId('sc_yes').setLabel('Clear All').setStyle(ButtonStyle.Danger),
@@ -36,9 +36,9 @@ module.exports = {
           if (i.customId === 'sc_yes') {
             client.snipeCache.clear();
             storage.write('snipe.json', {});
-            await i.update({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Snipe Cache', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_SUCCESS} **All snipe caches cleared.**\n${SEP}`).setTimestamp()], components: [] });
+            await i.update({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Snipe Cache', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_SUCCESS} **All snipe caches cleared.**\n${SEP}`).setTimestamp()], components: [] });
           } else {
-            await i.update({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **Cancelled.**\n${SEP}`).setTimestamp()], components: [] });
+            await i.update({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **Cancelled.**\n${SEP}`).setTimestamp()], components: [] });
           }
         });
         coll.on('end', c => { if (c.size === 0) sent.edit({ components: [] }).catch(() => {}); });
@@ -54,12 +54,12 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor('#57F287')
         .setAuthor({ name: 'Wild Wolf \u2502 Snipe Cache Cleared', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Cleared \`${count}\` sniped messages from this channel.**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Cleared \`${count}\` sniped messages from this channel.**\n${SEP}`)
         .setFooter({ text: `Wild Wolf \u2022 Use ${client.config.prefix}snipeclear all for global clear` })
         .setTimestamp();
       message.reply({ embeds: [embed] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

@@ -1,5 +1,5 @@
 const { EmbedBuilder, ChannelType, PermissionsBitField } = require('discord.js')
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_LOADING, EMOJI_LOCK } = require('../../utils/constants');
 
 module.exports = {
   name: 'lock',
@@ -19,7 +19,7 @@ module.exports = {
             new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.')
+              .setDescription(`${EMOJI_ERROR} You need **ManageChannels** permission.`)
               .setTimestamp()
           ]
         })
@@ -31,7 +31,7 @@ module.exports = {
             new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} I need **ManageChannels** permission.')
+              .setDescription(`${EMOJI_ERROR} I need **ManageChannels** permission.`)
               .setTimestamp()
           ]
         })
@@ -59,7 +59,7 @@ module.exports = {
               new EmbedBuilder()
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-                .setDescription('{EMOJI_ERROR} Can only lock text channels.')
+                .setDescription(`${EMOJI_ERROR} Can only lock text channels.`)
                 .setTimestamp()
             ]
           })
@@ -73,7 +73,7 @@ module.exports = {
           new EmbedBuilder()
             .setColor('#EB459E')
             .setAuthor({ name: 'Wild Wolf │ Processing', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`${SEP}\n{EMOJI_LOADING} Locking ${channelList.length} channel(s)...\n${SEP}`)
+            .setDescription(`${SEP}\n${EMOJI_LOADING} Locking ${channelList.length} channel(s)...\n${SEP}`)
             .setTimestamp()
         ]
       })
@@ -87,7 +87,7 @@ module.exports = {
       }
 
       await load.delete().catch(() => { })
-      await message.react('{EMOJI_LOCK}').catch(() => { })
+      await message.react(EMOJI_LOCK).catch(() => { })
 
     } catch (error) {
       message.reply({
@@ -95,10 +95,10 @@ module.exports = {
           new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`{EMOJI_ERROR} ${error.message}`)
+            .setDescription(`${EMOJI_ERROR} ${error.message}`)
             .setTimestamp()
         ]
       })
     }
   }
-}
+}

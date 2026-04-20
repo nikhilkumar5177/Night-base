@@ -1,8 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-
-const DOT = '\u25AA';
 
 module.exports = {
   name: 'privatechannel',
@@ -16,7 +14,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageChannels** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageChannels** permission.`).setTimestamp()] });
       }
 
       const pcData = storage.read('privateChannels.json');
@@ -27,7 +25,7 @@ module.exports = {
       if (action === 'list') {
         const channels = Object.entries(pcData[guildId]);
         if (channels.length === 0) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Private Channels', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${DOT} No private channels configured.\n${SEP}`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#5865F2').setAuthor({ name: 'Wild Wolf \u2502 Private Channels', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_DOT} No private channels configured.\n${SEP}`).setTimestamp()] });
         }
         const list = channels.map(([chId, data], i) => {
           const ch = message.guild.channels.cache.get(chId);
@@ -48,7 +46,7 @@ module.exports = {
           return message.reply({ embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**Provide a channel name.**').addFields({ name: '\u2501\u2501 Format', value: `\`\`\`fix\n${client.config.prefix}privatechannel create <name>\n\`\`\`` }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] });
         }
 
-        const loadEmbed = new EmbedBuilder().setColor('#EB459E').setAuthor({ name: 'Wild Wolf \u2502 Creating', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_LOADING} **Creating private channel...**\n${SEP}`).setTimestamp();
+        const loadEmbed = new EmbedBuilder().setColor('#EB459E').setAuthor({ name: 'Wild Wolf \u2502 Creating', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_LOADING} **Creating private channel...**\n${SEP}`).setTimestamp();
         const sent = await message.reply({ embeds: [loadEmbed] });
 
         const channel = await message.guild.channels.create({
@@ -66,7 +64,7 @@ module.exports = {
         const embed = new EmbedBuilder()
           .setColor('#57F287')
           .setAuthor({ name: 'Wild Wolf \u2502 Private Channel Created', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Private channel created successfully.**\n${SEP}`)
+          .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Private channel created successfully.**\n${SEP}`)
           .addFields(
             { name: '\u25B8 Channel', value: `${channel}`, inline: true },
             { name: '\u25B8 Created By', value: message.author.tag, inline: true }
@@ -80,13 +78,13 @@ module.exports = {
       if (action === 'delete') {
         const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
         if (!pcData[guildId][channel.id]) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} That channel is not a managed private channel.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} That channel is not a managed private channel.`).setTimestamp()] });
         }
 
         const confirmEmbed = new EmbedBuilder()
           .setColor('#ED4245')
           .setAuthor({ name: 'Wild Wolf \u2502 Delete Confirmation', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n{EMOJI_WARN} **Are you sure you want to delete ${channel}?**\nThis action cannot be undone.\n${SEP}`)
+          .setDescription(`${SEP}\n${EMOJI_WARN} **Are you sure you want to delete ${channel}?**\nThis action cannot be undone.\n${SEP}`)
           .setTimestamp();
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId('pc_yes').setLabel('Delete').setStyle(ButtonStyle.Danger),
@@ -99,9 +97,9 @@ module.exports = {
             await channel.delete().catch(() => {});
             delete pcData[guildId][channel.id];
             storage.write('privateChannels.json', pcData);
-            await i.update({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Deleted', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_SUCCESS} **Private channel deleted.**\n${SEP}`).setTimestamp()], components: [] });
+            await i.update({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Deleted', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_SUCCESS} **Private channel deleted.**\n${SEP}`).setTimestamp()], components: [] });
           } else {
-            await i.update({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **Cancelled.**\n${SEP}`).setTimestamp()], components: [] });
+            await i.update({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **Cancelled.**\n${SEP}`).setTimestamp()], components: [] });
           }
         });
         coll.on('end', c => { if (c.size === 0) sent.edit({ components: [] }).catch(() => {}); });
@@ -125,7 +123,7 @@ module.exports = {
         const embed = new EmbedBuilder()
           .setColor('#57F287')
           .setAuthor({ name: 'Wild Wolf \u2502 Access Granted', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n{EMOJI_SUCCESS} **${target} can now access ${channel}.**\n${SEP}`)
+          .setDescription(`${SEP}\n${EMOJI_SUCCESS} **${target} can now access ${channel}.**\n${SEP}`)
           .setFooter({ text: 'Wild Wolf \u2022 Private Channel Manager' }).setTimestamp();
         return message.reply({ embeds: [embed] });
       }
@@ -147,7 +145,7 @@ module.exports = {
         const embed = new EmbedBuilder()
           .setColor('#ff6d00')
           .setAuthor({ name: 'Wild Wolf \u2502 Access Revoked', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n{EMOJI_SUCCESS} **${target} can no longer access ${channel}.**\n${SEP}`)
+          .setDescription(`${SEP}\n${EMOJI_SUCCESS} **${target} can no longer access ${channel}.**\n${SEP}`)
           .setFooter({ text: 'Wild Wolf \u2022 Private Channel Manager' }).setTimestamp();
         return message.reply({ embeds: [embed] });
       }
@@ -166,7 +164,7 @@ module.exports = {
         .setTimestamp();
       message.reply({ embeds: [usageEmbed] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

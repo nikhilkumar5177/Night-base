@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 module.exports = {
   name: 'vcundeafenall',
@@ -14,12 +14,12 @@ module.exports = {
     try {
       const channel = message.member.voice.channel;
       if (!channel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription('{EMOJI_ERROR} You must be in a voice channel.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel.`).setTimestamp()] });
       }
 
       const members = channel.members.filter(m => !m.user.bot);
       if (members.size === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription('{EMOJI_WARN} No members to undeafen.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} No members to undeafen.`).setTimestamp()] });
       }
 
       for (const [, member] of members) {
@@ -29,7 +29,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor('#57F287')
         .setAuthor({ name: 'Wild Wolf \u2502 Mass Undeafen', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Undeafened ${members.size} members in the VC.**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Undeafened ${members.size} members in the VC.**\n${SEP}`)
         .addFields(
           { name: '\u25B8 Channel', value: `${channel.name}`, inline: true },
           { name: '\u25B8 Moderator', value: `${message.author.tag}`, inline: true }
@@ -38,7 +38,7 @@ module.exports = {
 
       message.reply({ embeds: [embed] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

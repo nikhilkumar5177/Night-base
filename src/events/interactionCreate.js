@@ -1,7 +1,7 @@
 const { EmbedBuilder, InteractionType, ComponentType } = require('discord.js');
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
-const { LIMITS, resolveEmbedEmojis, resolveEmojis } = require('../utils/constants');
+const { LIMITS, EMOJI_OWNER, EMOJI_WARN, EMOJI_ERROR, EMOJI_SUCCESS } = require('../utils/constants');
 
 module.exports = {
   name: 'interactionCreate',
@@ -16,15 +16,15 @@ module.exports = {
       const runtimeConfig = storage.read('config.json');
       const disabledCommands = runtimeConfig.disabledCommands || [];
       if (disabledCommands.includes(command.name)) {
-        return interaction.reply({ content: resolveEmojis('{EMOJI_ERROR} This command is currently disabled.'), ephemeral: true });
+        return interaction.reply({ content: `${EMOJI_ERROR} This command is currently disabled.`, ephemeral: true });
       }
       if (runtimeConfig.maintenance && interaction.user.id !== process.env.DEV_ID) {
         return interaction.reply({
           embeds: [
-            resolveEmbedEmojis(new EmbedBuilder()
+            new EmbedBuilder()
               .setColor('#ff1744')
               .setAuthor({ name: 'Wild Wolf \u2502 System Lockdown', iconURL: client.user.displayAvatarURL() })
-              .setDescription(`{EMOJI_OWNER} {EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`).toJSON())
+              .setDescription(`${EMOJI_OWNER} ${EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`)
           ],
           ephemeral: true
         });
@@ -42,10 +42,10 @@ module.exports = {
         if (!isStaff && !isDev) {
           return interaction.reply({
             embeds: [
-              resolveEmbedEmojis(new EmbedBuilder()
+              new EmbedBuilder()
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-                .setDescription('{EMOJI_ERROR} You are not a **Staff member** of this server.').toJSON())
+                .setDescription(`${EMOJI_ERROR} You are not a **Staff member** of this server.`)
             ],
             ephemeral: true
           });
@@ -55,10 +55,10 @@ module.exports = {
       if (command.devOnly && interaction.user.id !== process.env.DEV_ID) {
         return interaction.reply({
           embeds: [
-            resolveEmbedEmojis(new EmbedBuilder()
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_OWNER} This is an **Owner Command**.').toJSON())
+              .setDescription(`${EMOJI_OWNER} This is an **Owner Command**.`)
           ],
           ephemeral: true
         });
@@ -73,7 +73,7 @@ module.exports = {
           const expiresAt = client.cooldowns.get(key);
           if (now < expiresAt) {
             const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            return interaction.reply({ content: resolveEmojis(`{EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`), ephemeral: true });
+            return interaction.reply({ content: `${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`, ephemeral: true });
           }
         }
         client.cooldowns.set(key, now + cooldownAmount);
@@ -96,9 +96,9 @@ module.exports = {
       } catch (error) {
         logger.error(`Slash Command ${command.name} failed: ${error.message}`);
         if (interaction.replied || interaction.deferred) {
-          interaction.followUp({ content: resolveEmojis(`{EMOJI_ERROR} Error: ${error.message}`), ephemeral: true }).catch(() => { });
+          interaction.followUp({ content: `${EMOJI_ERROR} Error: ${error.message}`, ephemeral: true }).catch(() => { });
         } else {
-          interaction.reply({ content: resolveEmojis(`{EMOJI_ERROR} Error: ${error.message}`), ephemeral: true }).catch(() => { });
+          interaction.reply({ content: `${EMOJI_ERROR} Error: ${error.message}`, ephemeral: true }).catch(() => { });
         }
       }
     }

@@ -3,7 +3,7 @@ const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const { resolveEmbedEmojis, EMOJI_DOT, EMOJI_ARROW, SEP } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_ARROW, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
 
 module.exports = {
   name: 'warn',
@@ -17,7 +17,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ModerateMembers** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ModerateMembers** permission.`).setTimestamp()] }, 5000);
       }
       if (!args[0]) {
         const embed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}warn <@user> [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}warn @User being toxic in chat\n\`\`\`` }, { name: 'Aliases', value: '`w`', inline: true }, { name: 'Cooldown', value: '`3s`', inline: true }, { name: 'Permission', value: '`ModerateMembers`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
@@ -25,19 +25,19 @@ module.exports = {
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Could not find the specified user.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Could not find the specified user.`).setTimestamp()] });
       }
       if (target.id === message.author.id) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You cannot warn yourself.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You cannot warn yourself.`).setTimestamp()] });
       }
       if (target.roles.highest.position >= message.member.roles.highest.position) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has equal or higher role.`).setTimestamp()] });
       }
 
       const loadEmbed = new EmbedBuilder()
         .setColor('#EB459E')
         .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_LOADING} **Issuing warning...**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_LOADING} **Issuing warning...**\n${SEP}`)
         .setTimestamp();
       const sent = await message.reply({ embeds: [loadEmbed] });
 
@@ -61,7 +61,7 @@ module.exports = {
         .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
         .setDescription(
           `${SEP}\n` +
-          `{EMOJI_SUCCESS} **Warning has been recorded.**\n` +
+          `${EMOJI_SUCCESS} **Warning has been recorded.**\n` +
           `${SEP}`
         )
         .addFields(
@@ -79,12 +79,12 @@ module.exports = {
       const dmEmbed = new EmbedBuilder()
         .setColor('#FEE75C')
         .setAuthor({ name: 'Wild Wolf \u2502 Warning Received', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_WARN} **You received a warning in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Case ID:** \`${caseId}\`\n${EMOJI_DOT} **Total Warnings:** \`${totalWarns}\``)
+        .setDescription(`${SEP}\n${EMOJI_WARN} **You received a warning in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Case ID:** \`${caseId}\`\n${EMOJI_DOT} **Total Warnings:** \`${totalWarns}\``)
         .setFooter({ text: 'Repeated violations may result in further action' })
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

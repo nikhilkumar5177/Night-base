@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { COLORS, resolveEmbedEmojis } = require('../../utils/constants');
+const { COLORS, EMOJI_WARN } = require('../../utils/constants');
 
 /**
  * Handle ghost ping detection (messageDelete).
@@ -16,7 +16,7 @@ async function handleGhostPing(client, message, config) {
 
   const embed = new EmbedBuilder()
     .setColor(COLORS.WARN)
-    .setTitle('{EMOJI_WARN} Ghost Ping Detected')
+    .setTitle(`${EMOJI_WARN} Ghost Ping Detected`)
     .setDescription(
       `**User:** ${message.author.tag} (<@${message.author.id}>)\n` +
       `**Mentions:** ${mentions.map(u => `<@${u.id}>`).join(', ')}\n` +
@@ -28,7 +28,7 @@ async function handleGhostPing(client, message, config) {
   const targetChannel = message.guild.channels.cache.get(logChannelId) || message.channel;
 
   if (targetChannel) {
-    await targetChannel.send({ embeds: [resolveEmbedEmojis(embed.toJSON())] }).catch(() => {});
+    await targetChannel.send({ embeds: [embed] }).catch(() => {});
   }
 }
 

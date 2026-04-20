@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { EMOJI_ERROR } = require('../utils/constants');
 
 const CONFIG_DIR = path.join(__dirname, '..', '..', 'storage', 'automod');
 
@@ -22,7 +23,7 @@ const DEFAULT_CONFIG = {
       exemptChannels: [],
       exemptRoles: [],
       exemptUsers: [],
-      responseMessage: '{EMOJI_ERROR} **{user}**, please stop spamming!',
+      responseMessage: `${EMOJI_ERROR} **{user}**, please stop spamming!`,
       autoSlowmode: true,
       duplicateDetection: true
     },
@@ -35,7 +36,7 @@ const DEFAULT_CONFIG = {
       exemptChannels: [],
       exemptRoles: [],
       exemptUsers: [],
-      responseMessage: '{EMOJI_ERROR} **{user}**, links are not allowed here.'
+      responseMessage: `${EMOJI_ERROR} **{user}**, links are not allowed here.`
     },
     raid: {
       enabled: false,
@@ -58,7 +59,7 @@ const DEFAULT_CONFIG = {
       exemptChannels: [],
       exemptRoles: [],
       exemptUsers: [],
-      responseMessage: '{EMOJI_ERROR} **{user}**, your message contained prohibited content.'
+      responseMessage: `${EMOJI_ERROR} **{user}**, your message contained prohibited content.`
     },
     security: {
       enabled: false,

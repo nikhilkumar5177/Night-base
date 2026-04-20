@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { resolveMember, resolveRole } = require('../../utils/resolver');
-const { SEP, EMOJI_DOT } = require('../../utils/constants');
+const { SEP, EMOJI_DOT, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 module.exports = {
   name: 'role',
@@ -14,10 +14,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageRoles** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageRoles** permission.`).setTimestamp()] });
       }
       if (!message.guild.members.me.permissions.has('ManageRoles')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ManageRoles** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageRoles** permission.`).setTimestamp()] });
       }
 
       const target = await resolveMember(message.guild, args[0]);
@@ -31,16 +31,16 @@ module.exports = {
 
       // Hierarchy Checks
       if (role.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} That role is higher than or equal to your highest role.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} That role is higher than or equal to your highest role.`).setTimestamp()] });
       }
       if (role.position >= message.guild.members.me.roles.highest.position) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} That role is higher than my highest role.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} That role is higher than my highest role.`).setTimestamp()] });
       }
 
       const hasRole = target.roles.cache.has(role.id);
       const action = hasRole ? 'Removed' : 'Added';
       const color = hasRole ? '#ffab00' : '#00e676';
-      const emoji = hasRole ? '{EMOJI_WARN}' : '{EMOJI_SUCCESS}';
+      const emoji = hasRole ? EMOJI_WARN : EMOJI_SUCCESS;
 
       if (hasRole) {
         await target.roles.remove(role, `Moderator: ${message.author.tag}`);
@@ -63,7 +63,7 @@ module.exports = {
 
       message.reply({ embeds: [embed] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

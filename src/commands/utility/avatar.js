@@ -1,7 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { SEP } = require('../../utils/constants');
-
-const DOT = '\u25AA';
+const { SEP, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'avatar',
@@ -33,7 +31,7 @@ module.exports = {
       const buildEmbed = (url, label) => new EmbedBuilder()
         .setColor(member?.displayHexColor !== '#000000' ? member?.displayHexColor : '#5865F2')
         .setAuthor({ name: `Wild Wolf \u2502 ${label}`, iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${DOT} **User:** ${user.tag}\n${DOT} **Type:** \`${label}\`\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_DOT} **User:** ${user.tag}\n${EMOJI_DOT} **Type:** \`${label}\`\n${SEP}`)
         .setImage(url)
         .setFooter({ text: 'Wild Wolf \u2022 Avatar Viewer', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
@@ -71,7 +69,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

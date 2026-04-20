@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { EMOJI_ERROR, EMOJI_OWNER } = require('../../utils/constants');
 
 module.exports = {
   name: 'eval',
@@ -13,7 +14,7 @@ module.exports = {
     if (message.author.id !== process.env.DEV_ID) return;
     const code = args.join(' ');
     if (!code) {
-      return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} No Code').setDescription('Provide code to evaluate.').setTimestamp()] });
+      return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Code`).setDescription('Provide code to evaluate.').setTimestamp()] });
     }
     try {
       let result = eval(code);
@@ -23,14 +24,14 @@ module.exports = {
       result = result.replace(process.env.TOKEN, '[REDACTED]');
       const embed = new EmbedBuilder()
         .setColor('#00e676')
-        .setTitle('{EMOJI_OWNER} Eval Result')
+        .setTitle(`${EMOJI_OWNER} Eval Result`)
         .addFields({ name: 'Input', value: `\`\`\`js\n${code.substring(0, 1000)}\n\`\`\`` }, { name: 'Output', value: `\`\`\`js\n${result}\n\`\`\`` })
         .setTimestamp();
       message.reply({ embeds: [embed] });
     } catch (error) {
       const embed = new EmbedBuilder()
         .setColor('#ff1744')
-        .setTitle('{EMOJI_ERROR} Eval Error')
+        .setTitle(`${EMOJI_ERROR} Eval Error`)
         .setDescription(`\`\`\`js\n${error.message.substring(0, 4000)}\n\`\`\``)
         .setTimestamp();
       message.reply({ embeds: [embed] });

@@ -1,7 +1,7 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
-const { LIMITS, resolveEmbedEmojis, resolveEmojis } = require('../utils/constants');
+const { LIMITS, EMOJI_ERROR, EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, SEP } = require('../utils/constants');
 
 const { sendAutoDelete } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
@@ -53,9 +53,9 @@ module.exports = {
             const owner = await message.guild.fetchOwner().catch(() => null);
             const staffData = storage.read('staff.json');
             const staffMentions = staffData.roles ? staffData.roles.map(r => `<@&${r}>`).join(' ') : '';
-            const alertEmbed = new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Webhook Spam Detected').setDescription('Suspicious webhook activity neutralized.').addFields({ name: 'Channel', value: `${message.channel}`, inline: true }).setTimestamp();
+            const alertEmbed = new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Webhook Spam Detected`).setDescription('Suspicious webhook activity neutralized.').addFields({ name: 'Channel', value: `${message.channel}`, inline: true }).setTimestamp();
             const logCh = message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) || message.channel;
-            await logCh.send({ content: `${owner || ''} ${staffMentions}`, embeds: [resolveEmbedEmojis(alertEmbed.toJSON())] }).catch(() => { });
+            await logCh.send({ content: `${owner || ''} ${staffMentions}`, embeds: [alertEmbed] }).catch(() => { });
             const logs = securityConfig.logs || [];
             logs.push({ type: 'webhook_spam', guildId, channelId: message.channel.id, timestamp: now });
             securityConfig.logs = logs.slice(-100);
@@ -77,10 +77,10 @@ module.exports = {
       const loading = new EmbedBuilder()
         .setColor('#EB459E')
         .setAuthor({ name: 'Wild Wolf │ Updating', iconURL: client.user.displayAvatarURL() })
-        .setDescription('{EMOJI_LOADING} Pulling latest changes...')
+        .setDescription(`${EMOJI_LOADING} Pulling latest changes...`)
         .setTimestamp()
 
-      const msg = await message.reply({ embeds: [resolveEmbedEmojis(loading.toJSON())] })
+      const msg = await message.reply({ embeds: [loading] })
 
       exec('git reset --hard && git pull', async (err, stdout, stderr) => {
         if (err) {
@@ -89,7 +89,7 @@ module.exports = {
               new EmbedBuilder()
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-                .setDescription(`{EMOJI_ERROR} ${err.message}`)
+                .setDescription(`${EMOJI_ERROR} ${err.message}`)
                 .setTimestamp()
             ]
           })
@@ -101,7 +101,7 @@ module.exports = {
               new EmbedBuilder()
                 .setColor('#ffab00')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-                .setDescription(`{EMOJI_WARN} ${stderr}`)
+                .setDescription(`${EMOJI_WARN} ${stderr}`)
                 .setTimestamp()
             ]
           })
@@ -110,7 +110,7 @@ module.exports = {
         const success = new EmbedBuilder()
           .setColor('#00e676')
           .setAuthor({ name: 'Wild Wolf │ Updated', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`{EMOJI_SUCCESS} Update completed\n\`\`\`\n${stdout.slice(0, 1500)}\n\`\`\``)
+          .setDescription(`${EMOJI_SUCCESS} Update completed\n\`\`\`\n${stdout.slice(0, 1500)}\n\`\`\``)
           .setTimestamp()
 
         await msg.edit({ embeds: [success] })
@@ -125,10 +125,10 @@ module.exports = {
         global.activeVCTours.delete(message.guild.id);
         return message.reply({
           embeds: [
-            resolveEmbedEmojis(new EmbedBuilder()
+            new EmbedBuilder()
               .setColor('#57F287')
-              .setDescription('{EMOJI_SUCCESS} **VC Tour loop stopped.**')
-              .setTimestamp().toJSON())
+              .setDescription(`${EMOJI_SUCCESS} **VC Tour loop stopped.**`)
+              .setTimestamp()
           ]
         });
       }
@@ -149,9 +149,9 @@ module.exports = {
         if (message.attachments.size > 0) {
           embed.setImage(message.attachments.first().url);
         }
-        const sent = await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
+        const sent = await message.reply({ embeds: [embed] });
         await message.delete().catch(() => { });
-        await sent.react(resolveEmojis('{EMOJI_CHECK}')).catch(() => { });
+        await sent.react(EMOJI_CHECK).catch(() => { });
       } catch { }
       return;
     }
@@ -183,9 +183,9 @@ module.exports = {
               }
               const embed = new EmbedBuilder()
                 .setColor('#00e676')
-                .setDescription(`{EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
+                .setDescription(`${EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
                 .setTimestamp();
-              await message.reply({ embeds: [resolveEmbedEmojis(embed.toJSON())] });
+              await message.reply({ embeds: [embed] });
               return;
             } catch { }
           }
@@ -262,11 +262,11 @@ module.exports = {
       if (!isStaff && !isDev) {
         return sendAutoDelete(message, {
           embeds: [
-            resolveEmbedEmojis(new EmbedBuilder()
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} You are not a **Staff member** of this server.')
-              .setTimestamp().toJSON())
+              .setDescription(`${EMOJI_ERROR} You are not a **Staff member** of this server.`)
+              .setTimestamp()
           ]
         }, 5000);
       }
@@ -275,11 +275,11 @@ module.exports = {
     if (command.devOnly && message.author.id !== process.env.DEV_ID) {
       return sendAutoDelete(message, {
         embeds: [
-          resolveEmbedEmojis(new EmbedBuilder()
+          new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-            .setDescription('{EMOJI_OWNER} This is an **Owner Command**.')
-            .setTimestamp().toJSON())
+            .setDescription(`${EMOJI_OWNER} This is an **Owner Command**.`)
+            .setTimestamp()
         ]
       }, 5000);
     }
@@ -294,9 +294,9 @@ module.exports = {
           const remaining = ((expiresAt - now) / 1000).toFixed(1);
           const embed = new EmbedBuilder()
             .setColor('#ffab00')
-            .setDescription(`{EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`)
+            .setDescription(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`)
             .setTimestamp();
-          return sendAutoDelete(message, { embeds: [resolveEmbedEmojis(embed.toJSON())] }, 5000);
+          return sendAutoDelete(message, { embeds: [embed] }, 5000);
         }
       }
       client.cooldowns.set(key, now + cooldownAmount);

@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'clearconsole',
@@ -25,7 +26,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor('#00e676')
         .setAuthor({ name: 'Wild Wolf \u2502 System Manager', iconURL: client.user.displayAvatarURL() })
-        .setDescription('{EMOJI_OWNER} {EMOJI_SUCCESS} **System Cache & Console Cleared!**\n\u25AA Terminal console has been wiped clean.\n\u25AA Command cooldowns have been reset.\n\u25AA Stale message caches have been swept.')
+        .setDescription(`${EMOJI_OWNER} ${EMOJI_SUCCESS} **System Cache & Console Cleared!**\n\u25AA Terminal console has been wiped clean.\n\u25AA Command cooldowns have been reset.\n\u25AA Stale message caches have been swept.`)
         .setTimestamp();
 
       await message.reply({ embeds: [embed] });
@@ -35,7 +36,7 @@ module.exports = {
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')
-            .setDescription(`{EMOJI_ERROR} ${error.message}`)
+            .setDescription(`${EMOJI_ERROR} ${error.message}`)
         ]
       });
     }

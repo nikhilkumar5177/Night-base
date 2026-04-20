@@ -1,8 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_DOT } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-
-const DOT = '\u25AA';
 
 module.exports = {
   name: 'warnlist',
@@ -20,7 +18,7 @@ module.exports = {
       const userWarns = warns[target.id] || [];
 
       if (userWarns.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Warn History', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_SUCCESS} **${target.tag}** has no warnings.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Warn History', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_SUCCESS} **${target.tag}** has no warnings.\n${SEP}`).setTimestamp()] });
       }
 
       const perPage = 5;
@@ -29,7 +27,7 @@ module.exports = {
         const chunk = userWarns.slice(i, i + perPage);
         const desc = chunk.map((w, idx) => {
           const mod = client.users.cache.get(w.moderator);
-          return `**\`#${i + idx + 1}\`** \u2502 Case: \`${w.caseId}\`\n${DOT} **Reason:** ${w.reason}\n${DOT} **By:** ${mod ? mod.tag : w.moderator}\n${DOT} **Date:** <t:${Math.floor(w.timestamp / 1000)}:R>`;
+          return `**\`#${i + idx + 1}\`** \u2502 Case: \`${w.caseId}\`\n${EMOJI_DOT} **Reason:** ${w.reason}\n${EMOJI_DOT} **By:** ${mod ? mod.tag : w.moderator}\n${EMOJI_DOT} **Date:** <t:${Math.floor(w.timestamp / 1000)}:R>`;
         }).join('\n\n');
         pages.push(desc);
       }
@@ -44,8 +42,8 @@ module.exports = {
         .setThumbnail(target.displayAvatarURL({ dynamic: true }))
         .setDescription(
           `${SEP}\n` +
-          `${DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
-          `${DOT} **Warn Level:** \`${warnBar}\` **${totalWarns}**/10\n` +
+          `${EMOJI_DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
+          `${EMOJI_DOT} **Warn Level:** \`${warnBar}\` **${totalWarns}**/10\n` +
           `${SEP}\n\n` +
           pages[page]
         )
@@ -73,7 +71,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

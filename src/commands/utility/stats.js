@@ -1,8 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-
-const DOT = '\u25AA';
 
 module.exports = {
   name: 'stats',
@@ -37,9 +35,9 @@ module.exports = {
         .setThumbnail(client.user.displayAvatarURL({ dynamic: true, size: 256 }))
         .setDescription(
           `${SEP}\n` +
-          `${DOT} **Total Commands Used:** \`${totalUses}\`\n` +
-          `${DOT} **Unique Commands:** \`${entries.length}\`\n` +
-          `${DOT} **Loaded Commands:** \`${client.commands.size}\`\n` +
+          `${EMOJI_DOT} **Total Commands Used:** \`${totalUses}\`\n` +
+          `${EMOJI_DOT} **Unique Commands:** \`${entries.length}\`\n` +
+          `${EMOJI_DOT} **Loaded Commands:** \`${client.commands.size}\`\n` +
           `${SEP}\n\n` +
           `**Top 10 Commands**\n${barChart || 'No data yet.'}`
         )
@@ -55,7 +53,7 @@ module.exports = {
       coll.on('collect', async i => { if (i.customId === 'st_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

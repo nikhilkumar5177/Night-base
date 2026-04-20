@@ -1,8 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_WARN, EMOJI_ERROR, EMOJI_DOT } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-
-const DOT = '\u25AA';
 
 module.exports = {
   name: 'stafflist',
@@ -17,7 +15,7 @@ module.exports = {
     try {
       const staffData = storage.read('staff.json');
       if (!staffData.roles || staffData.roles.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Staff List', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **No staff roles configured.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Staff List', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No staff roles configured.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.\n${SEP}`).setTimestamp()] });
       }
 
       const cleaned = [];
@@ -29,7 +27,7 @@ module.exports = {
         if (!role) { cleaned.push(roleId); continue; }
         const members = role.members.map(m => m.user.tag);
         totalStaff += members.length;
-        sections.push(`${DOT} ${role} \u2014 \`${members.length}\` members\n${members.length > 0 ? members.slice(0, 15).map(t => `   \u2502 \`${t}\``).join('\n') + (members.length > 15 ? `\n   \u2502 ... +${members.length - 15} more` : '') : '   \u2502 *No members*'}`);
+        sections.push(`${EMOJI_DOT} ${role} \u2014 \`${members.length}\` members\n${members.length > 0 ? members.slice(0, 15).map(t => `   \u2502 \`${t}\``).join('\n') + (members.length > 15 ? `\n   \u2502 ... +${members.length - 15} more` : '') : '   \u2502 *No members*'}`);
       }
 
       if (cleaned.length > 0) {
@@ -43,8 +41,8 @@ module.exports = {
         .setThumbnail(message.guild.iconURL({ dynamic: true, size: 256 }))
         .setDescription(
           `${SEP}\n` +
-          `${DOT} **Staff Roles:** \`${staffData.roles.length}\`\n` +
-          `${DOT} **Total Staff:** \`${totalStaff}\`\n` +
+          `${EMOJI_DOT} **Staff Roles:** \`${staffData.roles.length}\`\n` +
+          `${EMOJI_DOT} **Total Staff:** \`${totalStaff}\`\n` +
           `${SEP}\n\n` +
           sections.join('\n\n')
         )
@@ -60,7 +58,7 @@ module.exports = {
       coll.on('collect', async i => { if (i.customId === 'sl_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

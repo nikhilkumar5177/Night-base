@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { COLORS, resolveEmbedEmojis, SEP, EMOJI_SPAM, EMOJI_LINK, EMOJI_RAID, EMOJI_CONTENT, EMOJI_SECURITY, EMOJI_SETTINGS, EMOJI_DOT } = require('../../utils/constants');
+const { COLORS, SEP, EMOJI_SPAM, EMOJI_LINK, EMOJI_RAID, EMOJI_CONTENT, EMOJI_SECURITY, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS, EMOJI_ACTIVE, EMOJI_INACTIVE } = require('../../utils/constants');
 
 /**
  * Create the main AutoMod dashboard.
@@ -17,9 +17,9 @@ function createDashboard(config) {
       `${SEP}`
     )
     .addFields(
-      { name: '{EMOJI_LIST} Module Status', value: getModuleStatus(config), inline: false },
-      { name: '{EMOJI_SETTINGS} Global Settings', value: 
-        `${EMOJI_DOT} **Status:** ${config.enabled ? '{EMOJI_ACTIVE} `Enabled`' : '{EMOJI_INACTIVE} `Disabled`'}\n` +
+      { name: `${EMOJI_LIST} Module Status`, value: getModuleStatus(config), inline: false },
+      { name: `${EMOJI_SETTINGS} Global Settings`, value: 
+        `${EMOJI_DOT} **Status:** ${config.enabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``}\n` +
         `${EMOJI_DOT} **Log Channel:** ${config.logChannel ? `<#${config.logChannel}>` : '`Not Set`'}\n` +
         `${EMOJI_DOT} **Bypasses:** \`${config.bypassRoles.length}\` Roles, \`${config.bypassUsers.length}\` Users`,
         inline: false 
@@ -63,14 +63,14 @@ function createDashboard(config) {
   );
 
   return {
-    embeds: [resolveEmbedEmojis(embed.toJSON())],
+    embeds: [embed],
     components: [menu, buttons]
   };
 }
 
 function getModuleStatus(config) {
   const modules = config.modules;
-  const format = (key, name) => `${modules[key].enabled ? '{EMOJI_CHECK}' : '{EMOJI_CROSS}'} **${name}**`;
+  const format = (key, name) => `${modules[key].enabled ? EMOJI_CHECK : EMOJI_CROSS} **${name}**`;
   
   return [
     `${format('spam', 'Spam')} \u2502 ${format('links', 'Links')}`,

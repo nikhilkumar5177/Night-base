@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { SEP, EMOJI_DOT } = require('../../utils/constants');
+const { SEP, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'vcstats',
@@ -29,7 +29,7 @@ module.exports = {
 
       message.reply({ embeds: [embed] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

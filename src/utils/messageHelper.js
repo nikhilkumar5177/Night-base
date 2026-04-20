@@ -1,4 +1,4 @@
-const { resolveEmbedEmojis, LIMITS } = require('./constants');
+const { LIMITS } = require('./constants');
 
 /**
  * Sends a message and automatically deletes it after a specified time.
@@ -12,14 +12,6 @@ async function sendAutoDelete(channelOrMessage, options, ms = LIMITS.AUTO_DELETE
         const isMessage = !!channelOrMessage.reply;
         const channel = channelOrMessage.channel || channelOrMessage;
         
-        // Resolve emojis in embeds if present
-        if (options.embeds) {
-            options.embeds = options.embeds.map(e => {
-                const raw = typeof e.toJSON === 'function' ? e.toJSON() : e;
-                return resolveEmbedEmojis(raw);
-            });
-        }
-
         const sent = isMessage ? await channelOrMessage.reply(options) : await channel.send(options);
         if (ms > 0) setTimeout(() => sent.delete().catch(() => { }), ms);
         return sent;

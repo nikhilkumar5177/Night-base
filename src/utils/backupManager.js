@@ -59,7 +59,7 @@ async function sendBackup(client) {
 
     const embed = new EmbedBuilder()
       .setColor('#00e676')
-      .setTitle('{EMOJI_SUCCESS} Database Backup')
+      .setTitle(`${EMOJI_SUCCESS} Database Backup`)
       .setDescription(`Automated database backup completed successfully at <t:${Math.floor(Date.now() / 1000)}:f>.`)
       .addFields({ name: 'File Size', value: `${(buffer.length / 1024).toFixed(2)} KB` })
       .setTimestamp();

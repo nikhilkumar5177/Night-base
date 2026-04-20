@@ -1,6 +1,6 @@
 const { getConfig } = require('../automod/database');
 const { trackNukeAction } = require('../automod/modules/security');
-const { COLORS, resolveEmbedEmojis } = require('../utils/constants');
+const { COLORS, EMOJI_ERROR } = require('../utils/constants');
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -17,7 +17,7 @@ module.exports = {
 
       const alertEmbed = new EmbedBuilder()
         .setColor(COLORS.ERROR)
-        .setTitle('{EMOJI_ERROR} Anti-Nuke: Rapid Role Deletion')
+        .setTitle(`${EMOJI_ERROR} Anti-Nuke: Rapid Role Deletion`)
         .setDescription(`**Multiple roles** deleted in rapid succession. Protection engaged.`)
         .addFields(
           { name: 'Last Deleted', value: `\`${role.name}\``, inline: true },
@@ -29,7 +29,7 @@ module.exports = {
                          guild.channels.cache.find(c => c.name.includes('mod') || c.name.includes('log'));
 
       if (logChannel) {
-        await logChannel.send({ content: owner ? `<@${owner.id}>` : '', embeds: [resolveEmbedEmojis(alertEmbed.toJSON())] }).catch(() => {});
+        await logChannel.send({ content: owner ? `<@${owner.id}>` : '', embeds: [alertEmbed] }).catch(() => {});
       }
     }
   }

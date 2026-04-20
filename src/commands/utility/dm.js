@@ -1,4 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO } = require('../../utils/constants');
 
 module.exports = {
   name: 'dm',
@@ -12,7 +13,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Missing Permissions').setDescription('You need **ModerateMembers** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Missing Permissions`).setDescription('You need **ModerateMembers** permission.').setTimestamp()] });
       }
       const target = message.mentions.users.first() || client.users.cache.get(args[0]);
       if (!target) {
@@ -21,23 +22,23 @@ module.exports = {
       }
       const content = args.slice(1).join(' ');
       if (!content) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} No Message').setDescription('Please provide a message.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Message`).setDescription('Please provide a message.').setTimestamp()] });
       }
       const dmEmbed = new EmbedBuilder()
         .setColor(client.config.embedColor || '#0099ff')
-        .setTitle('{EMOJI_INFO} Message from Staff')
+        .setTitle(`${EMOJI_INFO} Message from Staff`)
         .setDescription(content)
         .addFields({ name: 'Server', value: message.guild.name })
         .setTimestamp();
       await target.send({ embeds: [dmEmbed] });
       const embed = new EmbedBuilder()
         .setColor('#00e676')
-        .setTitle('{EMOJI_SUCCESS} DM Sent')
+        .setTitle(`${EMOJI_SUCCESS} DM Sent`)
         .setDescription(`Message sent to **${target.tag}**.`)
         .setTimestamp();
       message.reply({ embeds: [embed] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Error').setDescription(`Could not DM user. They may have DMs disabled.`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(`Could not DM user. They may have DMs disabled.`).setTimestamp()] });
     }
   }
 };

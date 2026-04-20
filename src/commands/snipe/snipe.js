@@ -1,7 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
-
-const DOT = '\u25AA';
+const { SEP, EMOJI_WARN, EMOJI_ERROR, EMOJI_DOT } = require('../../utils/constants');
 
 module.exports = {
   name: 'snipe',
@@ -16,7 +14,7 @@ module.exports = {
     try {
       const snipes = client.snipeCache.get(message.channel.id);
       if (!snipes || snipes.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Snipe', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} No recently deleted messages in this channel.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Snipe', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No recently deleted messages in this channel.\n${SEP}`).setTimestamp()] });
       }
 
       const perPage = 3;
@@ -24,8 +22,8 @@ module.exports = {
       for (let i = 0; i < snipes.length; i += perPage) {
         const chunk = snipes.slice(i, i + perPage);
         pages.push(chunk.map((s, idx) => {
-          let text = `**\`#${i + idx + 1}\`** \u2502 ${s.authorTag}\n${DOT} ${s.content || '*No text content*'}\n${DOT} Deleted: <t:${Math.floor(s.timestamp / 1000)}:R>`;
-          if (s.attachments?.length > 0) text += `\n${DOT} Attachments: \`${s.attachments.length}\``;
+          let text = `**\`#${i + idx + 1}\`** \u2502 ${s.authorTag}\n${EMOJI_DOT} ${s.content || '*No text content*'}\n${EMOJI_DOT} Deleted: <t:${Math.floor(s.timestamp / 1000)}:R>`;
+          if (s.attachments?.length > 0) text += `\n${EMOJI_DOT} Attachments: \`${s.attachments.length}\``;
           return text;
         }).join('\n\n'));
       }
@@ -57,7 +55,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

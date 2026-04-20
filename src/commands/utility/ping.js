@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_LOADING } = require('../../utils/constants');
 
 const COLORS = { primary: '#5865F2', success: '#57F287', loading: '#EB459E' };
 
@@ -21,7 +21,7 @@ module.exports = {
       const loadEmbed = new EmbedBuilder()
         .setColor(COLORS.loading)
         .setAuthor({ name: 'Wild Wolf \u2502 Latency Check', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_LOADING} **Measuring latency...**\n\n\`\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\` 0%\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_LOADING} **Measuring latency...**\n\n\`\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\` 0%\n${SEP}`)
         .setTimestamp();
 
       const sent = await message.reply({ embeds: [loadEmbed] });
@@ -36,7 +36,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor(clr(rt))
         .setAuthor({ name: 'Wild Wolf \u2502 Latency Report', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Latency check complete.**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Latency check complete.**\n${SEP}`)
         .addFields(
           { name: '\u25B8 Bot Latency', value: `\`${rt}ms\` ${bar(rt)}` },
           { name: '\u25B8 WebSocket', value: `\`${ws}ms\` ${bar(ws)}`, inline: true },
@@ -69,7 +69,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

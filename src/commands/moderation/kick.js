@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const { resolveEmbedEmojis, EMOJI_DOT, SEP } = require('../../utils/constants');
+const { EMOJI_DOT, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
 
 module.exports = {
   name: 'kick',
@@ -15,10 +15,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('KickMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **KickMembers** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **KickMembers** permission.`).setTimestamp()] }, 5000);
       }
       if (!message.guild.members.me.permissions.has('KickMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **KickMembers** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **KickMembers** permission.`).setTimestamp()] }, 5000);
       }
 
       const { resolveMember } = require('../../utils/resolver');
@@ -54,7 +54,7 @@ module.exports = {
       }
 
       if (validTargets.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} I cannot kick any of the specified users (higher roles or unkickable).\n**Invalid:** ${invalidTargets.join(', ')}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I cannot kick any of the specified users (higher roles or unkickable).\n**Invalid:** ${invalidTargets.join(', ')}`).setTimestamp()] });
       }
 
       const confirmEmbed = new EmbedBuilder()
@@ -62,7 +62,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Mass Kick Confirmation', iconURL: client.user.displayAvatarURL() })
         .setDescription(
           `${SEP}\n` +
-          `{EMOJI_WARN} **Are you sure you want to kick ${validTargets.length} user(s)?**\n` +
+          `${EMOJI_WARN} **Are you sure you want to kick ${validTargets.length} user(s)?**\n` +
           `${SEP}\n\n` +
           `${EMOJI_DOT} **Targets:** ${validTargets.map(t => `\`${t.user.tag}\``).join(', ')}\n` +
           `${EMOJI_DOT} **Reason:** ${reason}\n` +
@@ -84,7 +84,7 @@ module.exports = {
           const loadEmbed = new EmbedBuilder()
             .setColor('#EB459E')
             .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`${SEP}\n{EMOJI_LOADING} **Mass kicking ${validTargets.length} users...**\n${SEP}`)
+            .setDescription(`${SEP}\n${EMOJI_LOADING} **Mass kicking ${validTargets.length} users...**\n${SEP}`)
             .setTimestamp();
           await i.update({ embeds: [loadEmbed], components: [] });
 
@@ -93,7 +93,7 @@ module.exports = {
 
           for (const target of validTargets) {
             try {
-              await target.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_ERROR} **You have been kicked from ${message.guild.name}**\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Moderator:** ${message.author.tag}\n${SEP}`).setTimestamp()] }).catch(() => { });
+              await target.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_ERROR} **You have been kicked from ${message.guild.name}**\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Moderator:** ${message.author.tag}\n${SEP}`).setTimestamp()] }).catch(() => { });
               await target.kick(reason);
               successCount++;
             } catch (err) {
@@ -104,7 +104,7 @@ module.exports = {
           const successEmbed = new EmbedBuilder()
             .setColor('#57F287')
             .setAuthor({ name: 'Wild Wolf \u2502 Mass Kick Executed', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Mass kick action completed.**\n${SEP}`)
+            .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Mass kick action completed.**\n${SEP}`)
             .addFields(
               { name: '\u25B8 Success', value: `\`${successCount}\` users`, inline: true },
               { name: '\u25B8 Failed', value: `\`${failCount}\` users`, inline: true },
@@ -117,7 +117,7 @@ module.exports = {
           const cancelEmbed = new EmbedBuilder()
             .setColor('#2B2D31')
             .setAuthor({ name: 'Wild Wolf \u2502 Cancelled', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`${SEP}\n{EMOJI_WARN} **Mass kick action cancelled.**\n${SEP}`)
+            .setDescription(`${SEP}\n${EMOJI_WARN} **Mass kick action cancelled.**\n${SEP}`)
             .setTimestamp();
           await i.update({ embeds: [cancelEmbed], components: [] });
           setTimeout(() => sent.delete().catch(() => { }), 5000);
@@ -126,11 +126,11 @@ module.exports = {
 
       coll.on('end', (c) => {
         if (c.size === 0) {
-          sent.edit({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **Mass kick confirmation timed out.**\n${SEP}`).setTimestamp()], components: [] }).catch(() => { });
+          sent.edit({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **Mass kick confirmation timed out.**\n${SEP}`).setTimestamp()], components: [] }).catch(() => { });
         }
       });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

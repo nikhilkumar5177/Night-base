@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { LIMITS, SEP } = require('../../utils/constants');
+const { LIMITS, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
 
 module.exports = {
   name: 'purgebot',
@@ -13,10 +13,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ManageMessages** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
       }
       if (!message.guild.members.me.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ManageMessages** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageMessages** permission.`).setTimestamp()] });
       }
 
       let count = Math.min(parseInt(args[0]) || 50, LIMITS.MAX_PURGE);
@@ -25,7 +25,7 @@ module.exports = {
       const loadEmbed = new EmbedBuilder()
         .setColor('#EB459E')
         .setAuthor({ name: 'Wild Wolf \u2502 Purge Bot', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_LOADING} **Scanning and deleting bot messages...**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_LOADING} **Scanning and deleting bot messages...**\n${SEP}`)
         .setTimestamp();
       const progressMsg = await message.reply({ embeds: [loadEmbed] });
 
@@ -36,7 +36,7 @@ module.exports = {
       const deletable = filtered.filter(m => m.createdTimestamp > twoWeeks).first(count);
 
       if (deletable.length === 0) {
-        return progressMsg.edit({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Purge Bot', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n{EMOJI_WARN} **No bot messages found.**\n${SEP}`).setTimestamp()] });
+        return progressMsg.edit({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Purge Bot', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No bot messages found.**\n${SEP}`).setTimestamp()] });
       }
 
       const deleted = await message.channel.bulkDelete(deletable, true);
@@ -44,7 +44,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor('#57F287')
         .setAuthor({ name: 'Wild Wolf \u2502 Purge Complete', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Bot messages purged successfully.**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Bot messages purged successfully.**\n${SEP}`)
         .addFields(
           { name: '\u25B8 Deleted', value: `\`${deleted.size}\` messages`, inline: true },
           { name: '\u25B8 Filter', value: '`Bot Messages`', inline: true },
@@ -53,11 +53,9 @@ module.exports = {
         .setTimestamp();
       
       await progressMsg.edit({ embeds: [embed] });
-      // Not deleting the success message as per user's preference for alias (maybe applies here too? User said "don't delete alias given message", didn't specify for purgebot, but I'll keep it for consistency unless they want it auto-deleted). 
-      // Purge success messages are usually auto-deleted to keep channel clean. I'll keep it for now.
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

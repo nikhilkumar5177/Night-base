@@ -1,5 +1,5 @@
 const { EmbedBuilder } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING, EMOJI_OWNER } = require('../../utils/constants');
 
 module.exports = {
   name: 'vcpullall',
@@ -8,52 +8,56 @@ module.exports = {
   usage: 'vcpullall',
   cooldown: 10,
   enabled: true,
-  staffOnly: true,
-  devOnly: false,
+  staffOnly: false,
+  devOnly: true,
   execute: async (client, message, args) => {
     try {
-      const moderatorChannel = message.member.voice.channel;
-      if (!moderatorChannel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription('{EMOJI_ERROR} You must be in a voice channel to pull people.').setTimestamp()] });
+      if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_OWNER} Only the server owner can use this command.`).setTimestamp()] });
+      }
+
+      const channel = message.member.voice.channel;
+      if (!channel) {
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to pull people.`).setTimestamp()] });
       }
 
       const allMembers = [];
-      message.guild.channels.cache.filter(c => c.isVoiceBased() && c.id !== moderatorChannel.id).forEach(c => {
+      message.guild.channels.cache.filter(c => c.isVoiceBased() && c.id !== channel.id).forEach(c => {
         c.members.forEach(m => allMembers.push(m));
       });
 
       if (allMembers.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription('{EMOJI_WARN} No other users found in voice channels.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} No other users found in voice channels.`).setTimestamp()] });
       }
 
-      const loadEmbed = new EmbedBuilder()
-        .setColor('#EB459E')
-        .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_LOADING} **Pulling ${allMembers.length} users into ${moderatorChannel.name}...**\n${SEP}`)
+      const statusEmbed = new EmbedBuilder()
+        .setColor('#ED4245')
+        .setDescription(`${EMOJI_LOADING} **Pulling ${allMembers.length} members into ${channel}...**`)
         .setTimestamp();
-      const sent = await message.reply({ embeds: [loadEmbed] });
+      
+      const statusMsg = await message.reply({ embeds: [statusEmbed] });
 
       let count = 0;
       for (const member of allMembers) {
         try {
-          await member.voice.setChannel(moderatorChannel, `Mass pulled by ${message.author.tag}`);
+          await member.voice.setChannel(channel, `Pulled by ${message.author.tag}`);
           count++;
-        } catch { }
+        } catch (e) {}
       }
 
-      const doneEmbed = new EmbedBuilder()
+      const embed = new EmbedBuilder()
         .setColor('#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Pull Complete', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Successfully pulled all users.**\n${SEP}`)
+        .setAuthor({ name: 'Wild Wolf \u2502 Mass Pull', iconURL: client.user.displayAvatarURL() })
+        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Successfully pulled ${count} members.**\n${SEP}`)
         .addFields(
-          { name: '\u25B8 Success', value: `\`${count}\` users`, inline: true },
-          { name: '\u25B8 Channel', value: `${moderatorChannel.name}`, inline: true }
+          { name: '\u25B8 Target Channel', value: `${channel}`, inline: true },
+          { name: '\u25B8 Moderator', value: `${message.author.tag}`, inline: true }
         )
         .setTimestamp();
 
-      await sent.edit({ embeds: [doneEmbed] });
+      statusMsg.edit({ embeds: [embed] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

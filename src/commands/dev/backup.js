@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { sendBackup } = require('../../utils/backupManager');
+const { EMOJI_OWNER, EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'backup',
@@ -15,7 +16,7 @@ module.exports = {
         new EmbedBuilder()
           .setColor('#EB459E')
           .setAuthor({ name: 'Wild Wolf \u2502 Backup', iconURL: client.user.displayAvatarURL() })
-          .setDescription('{EMOJI_OWNER} {EMOJI_LOADING} **Generating backup...**')
+          .setDescription(`${EMOJI_OWNER} ${EMOJI_LOADING} **Generating backup...**`)
           .setTimestamp()
       ]
     });
@@ -27,7 +28,7 @@ module.exports = {
         embeds: [
           new EmbedBuilder()
             .setColor('#00e676')
-            .setDescription('{EMOJI_SUCCESS} **Backup generated and sent to the backup channel.**')
+            .setDescription(`${EMOJI_SUCCESS} **Backup generated and sent to the backup channel.**`)
             .setTimestamp()
         ]
       });
@@ -36,7 +37,7 @@ module.exports = {
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')
-            .setDescription('{EMOJI_ERROR} **Failed to send backup. Check the logs and ensure backupChannelId is set.**')
+            .setDescription(`${EMOJI_ERROR} **Failed to send backup. Check the logs and ensure backupChannelId is set.**`)
             .setTimestamp()
         ]
       });

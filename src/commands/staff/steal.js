@@ -1,5 +1,5 @@
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_ERROR, EMOJI_LOADING, EMOJI_SUCCESS } = require('../../utils/constants');
 
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
             new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} You need **ManageGuildExpressions** permission to steal emojis.')
+              .setDescription(`${EMOJI_ERROR} You need **ManageGuildExpressions** permission to steal emojis.`)
               .setTimestamp()
           ]
         });
@@ -31,7 +31,7 @@ module.exports = {
             new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} I need **ManageGuildExpressions** permission to add emojis.')
+              .setDescription(`${EMOJI_ERROR} I need **ManageGuildExpressions** permission to add emojis.`)
               .setTimestamp()
           ]
         });
@@ -60,7 +60,7 @@ module.exports = {
             embeds: [
               new EmbedBuilder()
                 .setColor('#ED4245')
-                .setDescription('{EMOJI_ERROR} Could not fetch the replied message.')
+                .setDescription(`${EMOJI_ERROR} Could not fetch the replied message.`)
                 .setTimestamp()
             ]
           });
@@ -72,7 +72,7 @@ module.exports = {
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
-              .setDescription('{EMOJI_ERROR} Please provide emojis to steal or reply to a message containing emojis.')
+              .setDescription(`${EMOJI_ERROR} Please provide emojis to steal or reply to a message containing emojis.`)
               .setTimestamp()
           ]
         });
@@ -86,7 +86,7 @@ module.exports = {
           embeds: [
             new EmbedBuilder()
               .setColor('#ED4245')
-              .setDescription('{EMOJI_ERROR} No custom emojis found in the provided text or message.')
+              .setDescription(`${EMOJI_ERROR} No custom emojis found in the provided text or message.`)
               .setTimestamp()
           ]
         });
@@ -98,7 +98,7 @@ module.exports = {
       const loadEmbed = new EmbedBuilder()
         .setColor('#EB459E')
         .setAuthor({ name: 'Wild Wolf \u2502 Emoji Stealer', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_LOADING} **Stealing ${emojisToSteal.length} emoji(s)...**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_LOADING} **Stealing ${emojisToSteal.length} emoji(s)...**\n${SEP}`)
         .setTimestamp();
 
       const sentMsg = await message.reply({ embeds: [loadEmbed] });
@@ -146,10 +146,10 @@ module.exports = {
 
       let desc = `${SEP}\n`;
       if (successes.length > 0) {
-        desc += `{EMOJI_SUCCESS} **Successfully Stolen (${successes.length}):**\n${successes.join('\n')}\n\n`;
+        desc += `${EMOJI_SUCCESS} **Successfully Stolen (${successes.length}):**\n${successes.join('\n')}\n\n`;
       }
       if (failures.length > 0) {
-        desc += `{EMOJI_ERROR} **Failed (${failures.length}):**\n${failures.join('\n')}\n`;
+        desc += `${EMOJI_ERROR} **Failed (${failures.length}):**\n${failures.join('\n')}\n`;
       }
 
       if (matches.length > maxEmojis) {
@@ -167,7 +167,7 @@ module.exports = {
           new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`{EMOJI_ERROR} ${error.message}`)
+            .setDescription(`${EMOJI_ERROR} ${error.message}`)
             .setTimestamp()
         ]
       });

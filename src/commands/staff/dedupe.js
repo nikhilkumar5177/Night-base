@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, PermissionsBitField } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_ERROR, EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO } = require('../../utils/constants');
 
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
             new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} You need **ManageGuildExpressions** permission to manage emojis.')
+              .setDescription(`${EMOJI_ERROR} You need **ManageGuildExpressions** permission to manage emojis.`)
               .setTimestamp()
           ]
         });
@@ -31,7 +31,7 @@ module.exports = {
             new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription('{EMOJI_ERROR} I need **ManageGuildExpressions** permission to manage emojis.')
+              .setDescription(`${EMOJI_ERROR} I need **ManageGuildExpressions** permission to manage emojis.`)
               .setTimestamp()
           ]
         });
@@ -40,7 +40,7 @@ module.exports = {
       const loadEmbed = new EmbedBuilder()
         .setColor('#EB459E')
         .setAuthor({ name: 'Wild Wolf \u2502 Dedupe Emojis', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_LOADING} **Scanning server for duplicate emojis...**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_LOADING} **Scanning server for duplicate emojis...**\n${SEP}`)
         .setTimestamp();
       
       const sentMsg = await message.reply({ embeds: [loadEmbed] });
@@ -78,7 +78,7 @@ module.exports = {
             new EmbedBuilder()
               .setColor('#00e676')
               .setAuthor({ name: 'Wild Wolf \u2502 Dedupe Emojis', iconURL: client.user.displayAvatarURL() })
-              .setDescription(`${SEP}\n{EMOJI_SUCCESS} **No duplicate emojis found!**\nAll ${uniqueCount} emojis are unique.\n${SEP}`)
+              .setDescription(`${SEP}\n${EMOJI_SUCCESS} **No duplicate emojis found!**\nAll ${uniqueCount} emojis are unique.\n${SEP}`)
               .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
               .setTimestamp()
           ]
@@ -88,7 +88,7 @@ module.exports = {
       const confirmEmbed = new EmbedBuilder()
         .setColor('#FEE75C')
         .setAuthor({ name: 'Wild Wolf \u2502 Dedupe Emojis', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_WARN} **Found ${emojisToDelete.length} duplicate emoji(s)!**\n\nAre you sure you want to permanently delete them?\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_WARN} **Found ${emojisToDelete.length} duplicate emoji(s)!**\n\nAre you sure you want to permanently delete them?\n${SEP}`)
         .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
         .setTimestamp();
 
@@ -96,7 +96,7 @@ module.exports = {
         new ButtonBuilder()
           .setCustomId('confirm_dedupe')
           .setLabel('Yes, Delete Them')
-          .setEmoji('1425075216014377000') // EMOJI_SUCCESS ID approx, or use standard emoji
+          .setEmoji(EMOJI_SUCCESS)
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId('cancel_dedupe')
@@ -119,7 +119,7 @@ module.exports = {
             embeds: [
               new EmbedBuilder()
                 .setColor('#2B2D31')
-                .setDescription(`${SEP}\n{EMOJI_INFO} **Deduplication cancelled.**\n${SEP}`)
+                .setDescription(`${SEP}\n${EMOJI_INFO} **Deduplication cancelled.**\n${SEP}`)
             ],
             components: []
           });
@@ -130,7 +130,7 @@ module.exports = {
               new EmbedBuilder()
                 .setColor('#EB459E')
                 .setAuthor({ name: 'Wild Wolf \u2502 Dedupe Emojis', iconURL: client.user.displayAvatarURL() })
-                .setDescription(`${SEP}\n{EMOJI_LOADING} **Deleting ${emojisToDelete.length} emoji(s)...**\nThis might take a moment to avoid rate limits.\n${SEP}`)
+                .setDescription(`${SEP}\n${EMOJI_LOADING} **Deleting ${emojisToDelete.length} emoji(s)...**\nThis might take a moment to avoid rate limits.\n${SEP}`)
             ],
             components: []
           });
@@ -152,7 +152,7 @@ module.exports = {
           const resultEmbed = new EmbedBuilder()
             .setColor(failed === 0 ? '#00e676' : '#FEE75C')
             .setAuthor({ name: 'Wild Wolf \u2502 Dedupe Results', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Successfully deleted ${deleted} duplicate emoji(s).**\n${failed > 0 ? `{EMOJI_ERROR} Failed to delete ${failed} emoji(s).\n` : ''}${SEP}`)
+            .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Successfully deleted ${deleted} duplicate emoji(s).**\n${failed > 0 ? `${EMOJI_ERROR} Failed to delete ${failed} emoji(s).\n` : ''}${SEP}`)
             .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
             .setTimestamp();
 
@@ -166,7 +166,7 @@ module.exports = {
             embeds: [
               new EmbedBuilder()
                 .setColor('#ED4245')
-                .setDescription(`${SEP}\n{EMOJI_ERROR} **Deduplication timed out.**\n${SEP}`)
+                .setDescription(`${SEP}\n${EMOJI_ERROR} **Deduplication timed out.**\n${SEP}`)
             ],
             components: []
           }).catch(() => {});
@@ -179,7 +179,7 @@ module.exports = {
           new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-            .setDescription(`{EMOJI_ERROR} ${error.message}`)
+            .setDescription(`${EMOJI_ERROR} ${error.message}`)
             .setTimestamp()
         ]
       }).catch(() => {});

@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 const { sendAutoDelete } = require('../../utils/messageHelper');
 
-const { resolveEmbedEmojis, EMOJI_DOT, SEP } = require('../../utils/constants');
+const { EMOJI_DOT, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
 
 module.exports = {
   name: 'mute',
@@ -16,20 +16,20 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} You need **ModerateMembers** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ModerateMembers** permission.`).setTimestamp()] }, 5000);
       }
       if (!message.guild.members.me.permissions.has('ModerateMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I need **ModerateMembers** permission.').setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ModerateMembers** permission.`).setTimestamp()] }, 5000);
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
         return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}mute <@user> [minutes] [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}mute @User 30 spamming\n\`\`\`` }, { name: 'Aliases', value: '`timeout`, `to`', inline: true }, { name: 'Cooldown', value: '`3s`', inline: true }, { name: 'Max', value: '`28 days`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] }, 15000);
       }
       if (!target.moderatable) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} I cannot timeout this user.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I cannot timeout this user.`).setTimestamp()] });
       }
       if (target.roles.highest.position >= message.member.roles.highest.position) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription('{EMOJI_ERROR} Target has equal or higher role.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has equal or higher role.`).setTimestamp()] });
       }
 
       const timeStr = args[1]?.toLowerCase();
@@ -59,7 +59,7 @@ module.exports = {
       const loadEmbed = new EmbedBuilder()
         .setColor('#EB459E')
         .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_LOADING} **Applying timeout...**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_LOADING} **Applying timeout...**\n${SEP}`)
         .setTimestamp();
       const sent = await message.reply({ embeds: [loadEmbed] });
 
@@ -70,7 +70,7 @@ module.exports = {
         .setColor('#57F287')
         .setAuthor({ name: 'Wild Wolf \u2502 Timeout Applied', iconURL: client.user.displayAvatarURL() })
         .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
-        .setDescription(`${SEP}\n{EMOJI_SUCCESS} **User has been timed out.**\n${SEP}`)
+        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **User has been timed out.**\n${SEP}`)
         .addFields(
           { name: '\u25B8 User', value: `${target.user.tag}\n\`${target.id}\``, inline: true },
           { name: '\u25B8 Duration', value: `\`${durationLabel}\``, inline: true },
@@ -85,11 +85,11 @@ module.exports = {
       const dmEmbed = new EmbedBuilder()
         .setColor('#FEE75C')
         .setAuthor({ name: 'Wild Wolf \u2502 Timeout Notice', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_WARN} **You have been timed out in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Duration:** \`${durationLabel}\`\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`)
+        .setDescription(`${SEP}\n${EMOJI_WARN} **You have been timed out in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Duration:** \`${durationLabel}\`\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`)
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => { });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

@@ -1,7 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { SEP } = require('../../utils/constants');
-
-const DOT = '\u25AA';
+const { SEP, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'botinfo',
@@ -28,9 +26,9 @@ module.exports = {
         .setThumbnail(client.user.displayAvatarURL({ dynamic: true, size: 512 }))
         .setDescription(
           `${SEP}\n` +
-          `${DOT} **Bot:** ${client.user.tag}\n` +
-          `${DOT} **ID:** \`${client.user.id}\`\n` +
-          `${DOT} **Created:** <t:${Math.floor(client.user.createdTimestamp / 1000)}:R>\n` +
+          `${EMOJI_DOT} **Bot:** ${client.user.tag}\n` +
+          `${EMOJI_DOT} **ID:** \`${client.user.id}\`\n` +
+          `${EMOJI_DOT} **Created:** <t:${Math.floor(client.user.createdTimestamp / 1000)}:R>\n` +
           `${SEP}`
         )
         .addFields(
@@ -51,7 +49,7 @@ module.exports = {
       coll.on('collect', async i => { if (i.customId === 'bi_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

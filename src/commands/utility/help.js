@@ -353,6 +353,8 @@ function buildCommandEmbed(client, message, command) {
   if (command.userPerms?.length) permStr.push(...command.userPerms.map(p => `\`${p}\``));
   if (permStr.length === 0) permStr.push('\`Everyone\`');
 
+  const trigger = command.slash ? '/' : client.config.prefix;
+
   const embed = new EmbedBuilder()
     .setColor('#5865F2')
     .setAuthor({ name: 'Wild Wolf \u2502 Command Reference', iconURL: client.user.displayAvatarURL() })
@@ -363,7 +365,7 @@ function buildCommandEmbed(client, message, command) {
       `${SEP}`
     )
     .addFields(
-      { name: `${ARROW} Usage`, value: `\`\`\`fix\n${client.config.prefix}${command.usage || command.name}\n\`\`\``, inline: false },
+      { name: `${ARROW} Usage`, value: `\`\`\`fix\n${trigger}${command.usage || command.name}\n\`\`\``, inline: false },
       { name: `${ARROW} Aliases`, value: aliasStr, inline: true },
       { name: `${ARROW} Cooldown`, value: `\`${command.cooldown || 0}s\``, inline: true },
       { name: `${ARROW} Category`, value: `\`${(command.category || 'Unknown').charAt(0).toUpperCase() + (command.category || 'unknown').slice(1)}\``, inline: true },

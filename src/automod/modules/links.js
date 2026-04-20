@@ -12,31 +12,37 @@ async function checkLinks(message, config) {
   if (!config.enabled) return false;
 
   const content = message.content;
-
-  // Anti-Phishing
-  if (config.antiPhishing && PHISHING_REGEX.test(content)) {
-    return 'Phishing/Scam Link';
-  }
-
-  // Anti-Invite
-  if (config.antiInvite && INVITE_REGEX.test(content)) {
-    // Check if it's an internal invite (optional, but usually we block all)
-    return 'Discord Invite Link';
-  }
-
   const links = content.match(LINK_REGEX);
   if (!links) return false;
 
   const { allowedLinks } = config;
+
   for (const link of links) {
-    let isAllowed = false;
+    // 1. Check Whitelist (Primary Bypass)
+    let isWhitelisted = false;
     for (const allowed of allowedLinks) {
-      if (link.includes(allowed)) {
-        isAllowed = true;
+      if (link.toLowerCase().includes(allowed.toLowerCase())) {
+        isWhitelisted = true;
         break;
       }
     }
-    if (!isAllowed) return 'Forbidden Link';
+    if (isWhitelisted) continue; // Skip all other checks for this link
+
+    // 2. Anti-Phishing (Only if not whitelisted)
+    if (config.antiPhishing && PHISHING_REGEX.test(link)) {
+      return 'Phishing/Scam Link';
+    }
+
+    // 3. Anti-Invite (Only if not whitelisted)
+    if (config.antiInvite && INVITE_REGEX.test(link)) {
+      return 'Discord Invite Link';
+    }
+
+    // 4. General Link Block (If any link is present and not whitelisted, we treat it as forbidden)
+    // Note: If you want to allow general links but only block specific ones, 
+    // you would normally have a 'blockAllLinks' toggle. 
+    // Currently, enabling the module acts as 'Block All except whitelisted'.
+    return 'Forbidden Link';
   }
 
   return false;

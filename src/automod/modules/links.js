@@ -12,7 +12,7 @@ async function checkLinks(message, config) {
   if (!config.enabled) return false;
 
   const content = message.content;
-  const { allowedLinks } = config;
+  const allowedLinks = config.allowedLinks.map(l => l.trim());
 
   // 1. Gather all potential links (Standard URLs + Discord Invites)
   const standardLinks = content.match(LINK_REGEX) || [];
@@ -39,12 +39,37 @@ async function checkLinks(message, config) {
 
     // 4. Anti-Invite (Only if not whitelisted)
     if (INVITE_REGEX.test(link)) {
-      if (config.antiInvite) return 'Discord Invite Link';
-      // If antiInvite is off, we still proceed to General Link Block
+      if (config.antiInvite) {
+        // Smart Bypass: Check if the invite belongs to THIS server
+        const code = link.split('/').pop();
+        if (code) {
+          try {
+            // Check if it matches vanity first (fast)
+            if (message.guild.vanityURLCode && code.toLowerCase() === message.guild.vanityURLCode.toLowerCase()) {
+              continue;
+            }
+            
+            // Fetch invite info to verify guild ID
+            const invite = await message.client.fetchInvite(code).catch(() => null);
+            if (invite && invite.guild && invite.guild.id === message.guild.id) {
+              continue; // It's an invite to this server!
+            }
+          } catch (err) {
+            // If fetch fails (invalid invite), we still treat it as a potential forbidden link
+          }
+        }
+        return 'Discord Invite Link';
+      }
     }
 
-    // 5. General Link Block (Treat all remaining links as forbidden)
-    return 'Forbidden Link';
+    // 5. General Link Block
+    // If we reached here, it means it's a link that wasn't whitelisted, 
+    // wasn't a self-invite, and anti-spam/phishing might have flagged it.
+    // However, if antiInvite and antiPhishing are BOTH off, we should allow it.
+    if (config.antiInvite || config.antiPhishing) {
+       // Only block as forbidden if some protection is actually active
+       return 'Forbidden Link';
+    }
   }
 
   return false;

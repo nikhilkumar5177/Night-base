@@ -113,7 +113,7 @@ module.exports = {
         }
 
         if (interaction.customId === 'automod_modal_links') {
-          config.modules.links.allowedLinks = interaction.fields.getTextInputValue('allowed_links').split('\n').filter(l => l.trim() !== '');
+          config.modules.links.allowedLinks = interaction.fields.getTextInputValue('allowed_links').split('\n').map(l => l.trim()).filter(l => l !== '');
 
           const rawActions = interaction.fields.getTextInputValue('link_punishment').toLowerCase();
           config.modules.links.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));

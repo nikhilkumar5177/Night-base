@@ -8,8 +8,8 @@ module.exports = {
   usage: 'reminder <time> <message>',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
-  devOnly: false,
+  staffOnly: false,
+  devOnly: true,
   execute: async (client, message, args) => {
     try {
       if (args.length < 2) {

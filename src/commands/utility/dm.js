@@ -7,8 +7,8 @@ module.exports = {
   usage: 'dm <user> <message>',
   cooldown: 10,
   enabled: true,
-  staffOnly: true,
-  devOnly: false,
+  staffOnly: false,
+  devOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {

@@ -9,7 +9,7 @@ module.exports = {
   usage: 'emoji <emoji>',
   cooldown: 3,
   enabled: true,
-  staffOnly: false,
+  staffOnly: true,
   devOnly: false,
   execute: async (client, message, args) => {
     try {
@@ -65,7 +65,7 @@ module.exports = {
       } else {
         let desc = `${SEP}\n{EMOJI_SUCCESS} **Successfully parsed ${matches.length} emojis!**\n${SEP}\n\n`;
         const maxDisplay = Math.min(matches.length, 10);
-        
+
         for (let i = 0; i < maxDisplay; i++) {
           const match = matches[i];
           const isAnimated = match[1] === 'a';
@@ -73,14 +73,14 @@ module.exports = {
           const id = match[3];
           const pattern = `<${isAnimated ? 'a' : ''}:${name}:${id}>`;
           const url = `https://cdn.discordapp.com/emojis/${id}.${isAnimated ? 'gif' : 'png'}`;
-          
+
           desc += `${pattern} **${name}**\n\u25B8 **ID:** \`${id}\`\n\u25B8 **Pattern:** \`${pattern}\`\n\u25B8 [Download Link](${url})\n\n`;
         }
-        
+
         if (matches.length > 10) {
           desc += `*...and ${matches.length - 10} more.*`;
         }
-        
+
         embed.setDescription(desc);
       }
 

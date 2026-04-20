@@ -9,54 +9,50 @@ const { resolveEmbedEmojis, resolveEmojis } = require('./src/utils/constants');
 
 // --- Global Emoji Resolver Patch ---
 // Automatically resolves {EMOJI_*} placeholders in all message content, embeds, components, and reactions
-const originalCreate = MessagePayload.create;
-MessagePayload.create = function(target, options) {
-  if (typeof options === 'string') {
-    options = resolveEmojis(options);
-  } else if (options) {
-    if (options.content) options.content = resolveEmojis(options.content);
-    
-    // Resolve embeds
-    if (options.embeds) {
-      for (let i = 0; i < options.embeds.length; i++) {
-        const e = options.embeds[i];
-        if (e.data) resolveEmbedEmojis(e.data);
-        else resolveEmbedEmojis(e);
-      }
-    }
-    
-    // Resolve components
-    if (options.components) {
-      for (const row of options.components) {
-        const components = row.components || (row.data && row.data.components);
-        if (!components) continue;
-        
-        for (const comp of components) {
-          const data = comp.data || comp;
-          if (data.label) data.label = resolveEmojis(data.label);
-          if (data.placeholder) data.placeholder = resolveEmojis(data.placeholder);
-          if (data.description) data.description = resolveEmojis(data.description);
-          
-          if (data.emoji) {
-            const emojiName = data.emoji.name || data.emoji;
-            if (typeof emojiName === 'string' && emojiName.includes('{')) {
-              const res = resolveEmojis(emojiName);
-              if (res !== emojiName) data.emoji = parseEmoji(res);
-            }
-          }
+// --- Helper to resolve all emojis in a message options object ---
+function resolveAllEmojis(options) {
+  if (typeof options === 'string') return resolveEmojis(options);
+  if (!options || typeof options !== 'object') return options;
 
-          const selectOptions = comp.options || data.options;
-          if (selectOptions?.length) {
-            for (const opt of selectOptions) {
-              const optData = opt.data || opt;
-              if (optData.label) optData.label = resolveEmojis(optData.label);
-              if (optData.description) optData.description = resolveEmojis(optData.description);
-              if (optData.emoji) {
-                const optEmojiName = optData.emoji.name || optData.emoji;
-                if (typeof optEmojiName === 'string' && optEmojiName.includes('{')) {
-                  const res = resolveEmojis(optEmojiName);
-                  if (res !== optEmojiName) optData.emoji = parseEmoji(res);
-                }
+  if (options.content) options.content = resolveEmojis(options.content);
+  
+  if (options.embeds && Array.isArray(options.embeds)) {
+    options.embeds.forEach(e => {
+      if (e.data) resolveEmbedEmojis(e.data);
+      else resolveEmbedEmojis(e);
+    });
+  }
+
+  if (options.components && Array.isArray(options.components)) {
+    for (const row of options.components) {
+      const components = row.components || (row.data && row.data.components);
+      if (!components) continue;
+      
+      for (const comp of components) {
+        const data = comp.data || comp;
+        if (data.label) data.label = resolveEmojis(data.label);
+        if (data.placeholder) data.placeholder = resolveEmojis(data.placeholder);
+        if (data.description) data.description = resolveEmojis(data.description);
+        
+        if (data.emoji) {
+          const emojiName = data.emoji.name || data.emoji;
+          if (typeof emojiName === 'string' && emojiName.includes('{')) {
+            const res = resolveEmojis(emojiName);
+            if (res !== emojiName) data.emoji = parseEmoji(res);
+          }
+        }
+
+        const selectOptions = comp.options || data.options;
+        if (selectOptions?.length) {
+          for (const opt of selectOptions) {
+            const optData = opt.data || opt;
+            if (optData.label) optData.label = resolveEmojis(optData.label);
+            if (optData.description) optData.description = resolveEmojis(optData.description);
+            if (optData.emoji) {
+              const optEmojiName = optData.emoji.name || optData.emoji;
+              if (typeof optEmojiName === 'string' && optEmojiName.includes('{')) {
+                const res = resolveEmojis(optEmojiName);
+                if (res !== optEmojiName) optData.emoji = parseEmoji(res);
               }
             }
           }
@@ -64,41 +60,49 @@ MessagePayload.create = function(target, options) {
       }
     }
   }
-  return originalCreate.call(this, target, options);
+  return options;
+}
+
+// --- Patch Message & Channel Send Methods ---
+const { TextChannel, NewsChannel, ThreadChannel, User, DMChannel } = require('discord.js');
+
+const originalSend = TextChannel.prototype.send;
+const patchSend = function(options) {
+  return originalSend.call(this, resolveAllEmojis(options));
+};
+
+[TextChannel, NewsChannel, ThreadChannel, DMChannel, User].forEach(cls => {
+  if (cls.prototype.send) cls.prototype.send = patchSend;
+});
+
+const originalReply = Message.prototype.reply;
+Message.prototype.reply = function(options) {
+  return originalReply.call(this, resolveAllEmojis(options));
 };
 
 // --- Patch Interactions (Slash Commands, Buttons, Menus) ---
-const { Interaction, CommandInteraction, MessageComponentInteraction, ModalSubmitInteraction } = require('discord.js');
+const { CommandInteraction, MessageComponentInteraction, ModalSubmitInteraction } = require('discord.js');
 
 const patchInteraction = (proto) => {
-  const originalReply = proto.reply;
-  const originalUpdate = proto.update;
-  const originalFollowUp = proto.followUp;
+  const originalIntReply = proto.reply;
+  const originalIntUpdate = proto.update;
+  const originalIntFollowUp = proto.followUp;
 
-  if (originalReply) {
+  if (originalIntReply) {
     proto.reply = function(options) {
-      if (typeof options === 'string') options = resolveEmojis(options);
-      else if (options && options.embeds) options.embeds.forEach(e => resolveEmbedEmojis(e.data || e));
-      if (options && options.content) options.content = resolveEmojis(options.content);
-      return originalReply.call(this, options);
+      return originalIntReply.call(this, resolveAllEmojis(options));
     };
   }
 
-  if (originalUpdate) {
+  if (originalIntUpdate) {
     proto.update = function(options) {
-      if (typeof options === 'string') options = resolveEmojis(options);
-      else if (options && options.embeds) options.embeds.forEach(e => resolveEmbedEmojis(e.data || e));
-      if (options && options.content) options.content = resolveEmojis(options.content);
-      return originalUpdate.call(this, options);
+      return originalIntUpdate.call(this, resolveAllEmojis(options));
     };
   }
 
-  if (originalFollowUp) {
+  if (originalIntFollowUp) {
     proto.followUp = function(options) {
-      if (typeof options === 'string') options = resolveEmojis(options);
-      else if (options && options.embeds) options.embeds.forEach(e => resolveEmbedEmojis(e.data || e));
-      if (options && options.content) options.content = resolveEmojis(options.content);
-      return originalFollowUp.call(this, options);
+      return originalIntFollowUp.call(this, resolveAllEmojis(options));
     };
   }
 };

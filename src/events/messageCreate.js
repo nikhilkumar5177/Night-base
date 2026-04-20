@@ -139,13 +139,13 @@ module.exports = {
       try {
         const target = message.mentions.users.first();
         const cleanContent = target ? message.content.replace(new RegExp(`<@!?${target.id}>`, 'g'), '').trim() : message.content;
-        
+
         const embed = new EmbedBuilder()
           .setColor(client.config.embedColor || '#0099ff')
           .setAuthor({ name: 'Wild Wolf \u2502 New Vouch', iconURL: message.author.displayAvatarURL({ dynamic: true }) })
           .setDescription(`\u25B8 **Vouched:** ${target || '`N/A`'}\n\u25B8 **By:** ${message.author}\n\u25B8 **Message:** ${cleanContent || 'No content'}`)
           .setTimestamp();
-        
+
         if (message.attachments.size > 0) {
           embed.setImage(message.attachments.first().url);
         }
@@ -161,7 +161,7 @@ module.exports = {
     if (runtimeConfig.aliasMode !== false) {
       const aliasData = storage.read('aliases.json');
       updateAliasCache(aliasData);
-      
+
       const content = message.content.toLowerCase().trim();
       const parts = content.split(/\s+/);
       const firstWord = parts[0];
@@ -175,7 +175,7 @@ module.exports = {
             try {
               const targetInput = parts[1];
               const target = targetInput ? (await resolver.resolveMember(message.guild, targetInput)) || message.member : message.member;
-              
+
               if (target.roles.cache.has(role.id)) {
                 await target.roles.remove(role);
               } else {
@@ -276,7 +276,7 @@ module.exports = {
           resolveEmbedEmojis(new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-            .setDescription('{EMOJI_ERROR} This is an **Owner Command**.')
+            .setDescription('{} This is an **Owner Command**.')
             .setTimestamp().toJSON())
         ]
       }, 5000);

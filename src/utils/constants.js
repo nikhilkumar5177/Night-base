@@ -46,7 +46,8 @@ const EMOJIS = {
   EMOJI_SETTINGS: '<a:wolf_category:1494831494986858567>⚙️',
   EMOJI_LOGS: '<a:rd_thanda_note:1495587970416382043>',
   EMOJI_BYPASS: '🔓',
-  EMOJI_ARROW: '<a:wolf_Blackdot:1495113162071212183>'
+  EMOJI_ARROW: '<a:wolf_Blackdot:1495113162071212183>',
+  EMOJI_OWNER: '<:wolf_owner:1494822065746743460>'
 };
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
@@ -62,7 +63,7 @@ const memoCache = new Map();
  */
 function resolveEmojis(text) {
   if (!text || typeof text !== 'string') return text;
-  
+
   // Use cache for frequently used strings (like help menu labels)
   if (memoCache.has(text)) return memoCache.get(text);
 

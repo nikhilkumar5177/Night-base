@@ -16,7 +16,7 @@ const DEFAULT_FILES = {
   'reminders.json': [],
   'analytics.json': {},
   'security.json': { enabled: false, logs: [], nukeThreshold: 3, nukeWindow: 10000 },
-  'config.json': { channelCommands: {}, disabledCommands: [], noPrefixUsers: [], aliasMode: true },
+  'config.json': { channelCommands: {}, disabledCommands: [], noPrefixUsers: [], aliasMode: true, maintenance: false },
   'autorole.json': {},
   'privateChannels.json': {}
 };

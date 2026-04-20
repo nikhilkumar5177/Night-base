@@ -18,6 +18,17 @@ module.exports = {
       if (disabledCommands.includes(command.name)) {
         return interaction.reply({ content: resolveEmojis('{EMOJI_ERROR} This command is currently disabled.'), ephemeral: true });
       }
+      if (runtimeConfig.maintenance && interaction.user.id !== process.env.DEV_ID) {
+        return interaction.reply({
+          embeds: [
+            resolveEmbedEmojis(new EmbedBuilder()
+              .setColor('#ff1744')
+              .setAuthor({ name: 'Wild Wolf \u2502 System Lockdown', iconURL: client.user.displayAvatarURL() })
+              .setDescription(`{EMOJI_OWNER} {EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`).toJSON())
+          ],
+          ephemeral: true
+        });
+      }
 
       const blacklistData = storage.read('blacklist.json');
       if (blacklistData.users && blacklistData.users.includes(interaction.user.id)) return;

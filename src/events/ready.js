@@ -2,16 +2,24 @@ const logger = require('../utils/logger');
 const storage = require('../utils/storageManager');
 
 module.exports = {
-  name: 'clientReady',
+  name: 'ready',
   once: true,
   execute: (client) => {
     logger.info(`Wild Wolf online as ${client.user.tag}`);
     logger.info(`Serving ${client.guilds.cache.size} guilds`);
 
-    client.user.setPresence({
-      activities: [{ name: `${client.config.prefix}help`, type: 3 }],
-      status: 'online'
-    });
+    let configData = storage.read('config.json');
+    if (configData.maintenance) {
+      client.user.setPresence({
+        activities: [{ name: 'System Maintenance', type: 0 }],
+        status: 'dnd'
+      });
+    } else {
+      client.user.setPresence({
+        activities: [{ name: `${client.config.prefix}help`, type: 3 }],
+        status: 'online'
+      });
+    }
 
     const reminders = storage.read('reminders.json');
     const now = Date.now();
@@ -54,7 +62,7 @@ module.exports = {
 
     storage.write('reminders.json', pending);
 
-    const configData = storage.read('config.json');
+    configData = storage.read('config.json');
     if (configData.noPrefixUsers && Array.isArray(configData.noPrefixUsers)) {
       const before = configData.noPrefixUsers.length;
       configData.noPrefixUsers = configData.noPrefixUsers.filter(u => {

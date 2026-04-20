@@ -236,6 +236,8 @@ module.exports = {
     const command = client.commands.get(commandName) || client.commands.get(client.aliases.get(commandName));
     if (!command) return;
 
+    if (runtimeConfig.maintenance && message.author.id !== process.env.DEV_ID) return;
+
     const disabledCommands = runtimeConfig.disabledCommands || [];
     if (disabledCommands.includes(command.name)) return;
     if (command.enabled === false) return;

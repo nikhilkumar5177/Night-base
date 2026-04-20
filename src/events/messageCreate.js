@@ -121,7 +121,7 @@ module.exports = {
 
     if (message.content.toLowerCase() === 'stop') {
       if (message.author.id !== process.env.DEV_ID) return;
-      if (global.activeVCTours && global.activeVCTours.has(message.guild.id)) {
+      if (global.activeVCTours instanceof Set && global.activeVCTours.has(message.guild.id)) {
         global.activeVCTours.delete(message.guild.id);
         return message.reply({
           embeds: [
@@ -276,7 +276,7 @@ module.exports = {
           resolveEmbedEmojis(new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-            .setDescription('{} This is an **Owner Command**.')
+            .setDescription('{EMOJI_OWNER} This is an **Owner Command**.')
             .setTimestamp().toJSON())
         ]
       }, 5000);

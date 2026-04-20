@@ -33,7 +33,7 @@ module.exports = {
       const successEmbed = new EmbedBuilder()
         .setColor('#57F287')
         .setAuthor({ name: 'Wild Wolf \u2502 Server Leaved', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n{EMOJI_SUCCESS} **Successfully left the server.**\n${SEP}`)
+        .setDescription(`${SEP}\n{EMOJI_OWNER} {EMOJI_SUCCESS} **Successfully left the server.**\n${SEP}`)
         .addFields(
           { name: '\u25B8 Server Name', value: `\`${guildName}\``, inline: true },
           { name: '\u25B8 Server ID', value: `\`${guildId}\``, inline: true }

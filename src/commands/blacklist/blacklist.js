@@ -19,13 +19,13 @@ module.exports = {
       const blData = storage.read('blacklist.json');
       if (action === 'list') {
         if (blData.users.length === 0) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle('{EMOJI_INFO} Blacklist').setDescription('No blacklisted users.').setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle('{EMOJI_OWNER} Blacklist').setDescription('No blacklisted users.').setTimestamp()] });
         }
         const list = blData.users.map((id, i) => {
           const user = client.users.cache.get(id);
           return `**${i + 1}.** ${user ? user.tag : id}`;
         }).join('\n');
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle('{EMOJI_INFO} Blacklisted Users').setDescription(list).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle('{EMOJI_OWNER} Blacklisted Users').setDescription(list).setTimestamp()] });
       }
       const target = message.mentions.users.first() || client.users.cache.get(args[1]);
       if (!target) {
@@ -38,12 +38,12 @@ module.exports = {
         }
         blData.users.push(target.id);
         storage.write('blacklist.json', blData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} User Blacklisted').setDescription(`**${target.tag}** has been blacklisted.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_OWNER} User Blacklisted').setDescription(`**${target.tag}** has been blacklisted.`).setTimestamp()] });
       }
       if (action === 'remove') {
         blData.users = blData.users.filter(id => id !== target.id);
         storage.write('blacklist.json', blData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} User Removed').setDescription(`**${target.tag}** removed from blacklist.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_OWNER} User Removed').setDescription(`**${target.tag}** removed from blacklist.`).setTimestamp()] });
       }
       message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Invalid Action').setDescription('Use `add`, `remove`, or `list`.').setTimestamp()] });
     } catch (error) {

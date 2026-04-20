@@ -58,6 +58,7 @@ module.exports = {
         .setThumbnail(client.user.displayAvatarURL({ dynamic: true, size: 256 }))
         .setDescription(
           `${SEP}\n` +
+          `{EMOJI_OWNER} **Developer Analytics Interface**\n` +
           `${DOT} **Total Uses:** \`${totalUses.toLocaleString()}\`\n` +
           `${DOT} **Tracked Commands:** \`${entries.length}\`\n` +
           `${DOT} **Loaded Commands:** \`${client.commands.size}\`\n` +

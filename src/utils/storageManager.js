@@ -43,17 +43,34 @@ function init() {
 }
 
 function read(file) {
-  if (cache.has(file)) return cache.get(file);
-  const filePath = path.join(STORAGE_DIR, file);
-  try {
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  const defaultData = DEFAULT_FILES[file] || {};
+  let data;
+  
+  if (cache.has(file)) {
+    data = cache.get(file);
+  } else {
+    const filePath = path.join(STORAGE_DIR, file);
+    try {
+      data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    } catch {
+      data = JSON.parse(JSON.stringify(defaultData));
+    }
     cache.set(file, data);
-    return data;
-  } catch {
-    const defaultData = DEFAULT_FILES[file] || {};
-    cache.set(file, JSON.parse(JSON.stringify(defaultData)));
-    return cache.get(file);
   }
+
+  // Deep merge/ensure defaults for top-level keys if it's an object
+  if (data && typeof data === 'object' && !Array.isArray(data) && defaultData && typeof defaultData === 'object' && !Array.isArray(defaultData)) {
+    let changed = false;
+    for (const [key, value] of Object.entries(defaultData)) {
+      if (data[key] === undefined) {
+        data[key] = JSON.parse(JSON.stringify(value));
+        changed = true;
+      }
+    }
+    if (changed) write(file, data);
+  }
+
+  return data;
 }
 
 function write(file, data) {

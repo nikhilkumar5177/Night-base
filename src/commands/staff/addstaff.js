@@ -8,7 +8,7 @@ module.exports = {
   usage: 'addstaff <role>',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
+  staffOnly: false,
   devOnly: false,
   execute: async (client, message, args) => {
     try {

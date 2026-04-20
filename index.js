@@ -71,7 +71,9 @@ Message.prototype.react = function(emoji) {
 const originalDelete = Message.prototype.delete;
 Message.prototype.delete = function() {
   if (this.client) {
-    if (!this.client.ignoredDeletes) this.client.ignoredDeletes = new Set();
+    if (!this.client.ignoredDeletes || !(this.client.ignoredDeletes instanceof Set)) {
+      this.client.ignoredDeletes = new Set();
+    }
     this.client.ignoredDeletes.add(this.id);
     setTimeout(() => {
       if (this.client.ignoredDeletes) this.client.ignoredDeletes.delete(this.id);
@@ -107,7 +109,7 @@ commandHandler(client);
 eventHandler(client);
 
 process.on('unhandledRejection', (error) => {
-  logger.error(`Unhandled Rejection: ${error.message}`);
+  logger.error(`Unhandled Rejection: ${error.stack || error}`);
 });
 
 process.on('SIGINT', async () => {

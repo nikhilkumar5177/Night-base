@@ -14,7 +14,8 @@ module.exports = {
       embeds: [
         new EmbedBuilder()
           .setColor('#EB459E')
-          .setDescription('{EMOJI_LOADING} **Generating backup...**')
+          .setAuthor({ name: 'Wild Wolf \u2502 Backup', iconURL: client.user.displayAvatarURL() })
+          .setDescription('{EMOJI_OWNER} {EMOJI_LOADING} **Generating backup...**')
           .setTimestamp()
       ]
     });

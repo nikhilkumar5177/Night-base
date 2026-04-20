@@ -13,7 +13,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Owner Only').setDescription('Only the server owner can manage no-prefix access.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_OWNER} Owner Only').setDescription('Only the server owner can manage no-prefix access.').setTimestamp()] });
       }
 
       const action = args[0]?.toLowerCase();
@@ -61,7 +61,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setColor(client.config.embedColor || '#0099ff')
-          .setTitle('{EMOJI_INFO} No-Prefix Users')
+          .setTitle('{EMOJI_OWNER} No-Prefix Users')
           .setDescription(list)
           .setFooter({ text: `${configData.noPrefixUsers.length} total entries` })
           .setTimestamp();
@@ -137,7 +137,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setColor('#00e676')
-          .setTitle('{EMOJI_SUCCESS} No-Prefix Access Granted')
+          .setTitle('{EMOJI_OWNER} No-Prefix Access Granted')
           .addFields(
             { name: 'User', value: `${target.tag} (${target.id})`, inline: true },
             { name: 'Type', value: entry.permanent ? '`Permanent`' : '`Timed`', inline: true },
@@ -171,7 +171,7 @@ module.exports = {
 
         const embed = new EmbedBuilder()
           .setColor('#ff6d00')
-          .setTitle('{EMOJI_SUCCESS} No-Prefix Access Revoked')
+          .setTitle('{EMOJI_OWNER} No-Prefix Access Revoked')
           .addFields(
             { name: 'User', value: `${target.tag} (${target.id})`, inline: true },
             { name: 'Removed By', value: message.author.tag, inline: true }

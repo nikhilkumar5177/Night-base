@@ -42,15 +42,15 @@ module.exports = {
       }
 
       if (command.devOnly && interaction.user.id !== process.env.DEV_ID) {
-          return interaction.reply({
-            embeds: [
-              resolveEmbedEmojis(new EmbedBuilder()
-                .setColor('#ED4245')
-                .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-                .setDescription('{EMOJI_ERROR} This is an **Owner Command**.').toJSON())
-            ],
-            ephemeral: true
-          });
+        return interaction.reply({
+          embeds: [
+            resolveEmbedEmojis(new EmbedBuilder()
+              .setColor('#ED4245')
+              .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+              .setDescription('{EMOJI_OWNER} This is an **Owner Command**.').toJSON())
+          ],
+          ephemeral: true
+        });
       }
 
       // --- Cooldowns ---
@@ -73,7 +73,7 @@ module.exports = {
       try {
         await command.execute(client, interaction, []);
         logger.cmd(interaction.user.tag, `[Slash] ${command.name}`);
-        
+
         // Analytics
         const analytics = storage.read('analytics.json');
         if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0, users: {} };
@@ -85,9 +85,9 @@ module.exports = {
       } catch (error) {
         logger.error(`Slash Command ${command.name} failed: ${error.message}`);
         if (interaction.replied || interaction.deferred) {
-          interaction.followUp({ content: resolveEmojis(`{EMOJI_ERROR} Error: ${error.message}`), ephemeral: true }).catch(() => {});
+          interaction.followUp({ content: resolveEmojis(`{EMOJI_ERROR} Error: ${error.message}`), ephemeral: true }).catch(() => { });
         } else {
-          interaction.reply({ content: resolveEmojis(`{EMOJI_ERROR} Error: ${error.message}`), ephemeral: true }).catch(() => {});
+          interaction.reply({ content: resolveEmojis(`{EMOJI_ERROR} Error: ${error.message}`), ephemeral: true }).catch(() => { });
         }
       }
     }

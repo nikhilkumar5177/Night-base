@@ -23,7 +23,7 @@ module.exports = {
       result = result.replace(process.env.TOKEN, '[REDACTED]');
       const embed = new EmbedBuilder()
         .setColor('#00e676')
-        .setTitle('{EMOJI_SUCCESS} Eval Result')
+        .setTitle('{EMOJI_OWNER} Eval Result')
         .addFields({ name: 'Input', value: `\`\`\`js\n${code.substring(0, 1000)}\n\`\`\`` }, { name: 'Output', value: `\`\`\`js\n${result}\n\`\`\`` })
         .setTimestamp();
       message.reply({ embeds: [embed] });

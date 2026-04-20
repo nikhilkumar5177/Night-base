@@ -18,7 +18,7 @@ module.exports = {
       const totalUses = Object.values(analytics).reduce((acc, cmd) => acc + (cmd.uses || 0), 0);
       const embed = new EmbedBuilder()
         .setColor('#0099ff')
-        .setTitle('{EMOJI_INFO} Debug Info')
+        .setTitle('{EMOJI_OWNER} Debug Info')
         .addFields(
           { name: 'Heap Used', value: `${(mem.heapUsed / 1024 / 1024).toFixed(2)} MB`, inline: true },
           { name: 'Heap Total', value: `${(mem.heapTotal / 1024 / 1024).toFixed(2)} MB`, inline: true },

@@ -13,7 +13,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_ERROR} Owner Only').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle('{EMOJI_OWNER} Owner Only').setTimestamp()] });
       }
       const cmdName = args[0]?.toLowerCase();
       if (!cmdName) {
@@ -29,7 +29,7 @@ module.exports = {
       if (configData.disabledCommands.includes(cmdName)) {
         configData.disabledCommands = configData.disabledCommands.filter(c => c !== cmdName);
         storage.write('config.json', configData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_SUCCESS} Command Enabled').setDescription(`\`${cmdName}\` is now enabled.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_OWNER} Command Enabled').setDescription(`\`${cmdName}\` is now enabled.`).setTimestamp()] });
       }
       configData.disabledCommands.push(cmdName);
       storage.write('config.json', configData);

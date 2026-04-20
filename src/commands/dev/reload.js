@@ -65,7 +65,7 @@ module.exports = {
           slashMsg = `\n{EMOJI_ERROR} Failed to re-deploy slash commands: ${e.message}`;
         }
 
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('Wild Wolf \u2502 System Reload').setDescription(`${SEP}\n{EMOJI_SUCCESS} **System reloaded successfully.**\n${SEP}`).addFields({ name: 'Details', value: `\u25B8 Commands: \`${count}\`\n\u25B8 Events: \`${client.eventNames().length}\`${slashMsg.replace(/{EMOJI_SUCCESS}/g, '\u25B8').replace(/{EMOJI_ERROR}/g, '\u2716')}` }).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_OWNER} Wild Wolf \u2502 System Reload').setDescription(`${SEP}\n{EMOJI_SUCCESS} **System reloaded successfully.**\n${SEP}`).addFields({ name: 'Details', value: `\u25B8 Commands: \`${count}\`\n\u25B8 Events: \`${client.eventNames().length}\`${slashMsg.replace(/{EMOJI_SUCCESS}/g, '\u25B8').replace(/{EMOJI_ERROR}/g, '\u2716')}` }).setTimestamp()] });
       }
       const cmdName = args[0].toLowerCase();
       const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));

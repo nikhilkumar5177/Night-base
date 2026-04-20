@@ -135,12 +135,43 @@ async function executeActions(client, message, violation, moduleConfig) {
       await message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {});
     }
 
-    // 4. Logging (Placeholder for actual logging service)
-    // logToChannel(message.guild.id, { user: message.author, violation, actions });
+    // 5. Logging
+    await logToChannel(client, message, { violation, actions });
 
   } catch (err) {
     console.error('Error executing AutoMod actions:', err);
   }
+}
+
+/**
+ * Sends a detailed AutoMod log to the configured channel.
+ */
+async function logToChannel(client, message, data) {
+  const config = getConfig(message.guild.id);
+  const logChannelId = config.logChannel;
+
+  if (!logChannelId) return;
+
+  const channel = message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null);
+  if (!channel) return;
+
+  const logEmbed = new EmbedBuilder()
+    .setColor('#2F3136')
+    .setAuthor({ name: 'AutoMod Log \u2502 Activity Detected', iconURL: message.author.displayAvatarURL() })
+    .setDescription(
+      `${SEP}\n` +
+      `${EMOJI_DOT} **User:** ${message.author} (\`${message.author.id}\`)\n` +
+      `${EMOJI_DOT} **Channel:** ${message.channel}\n` +
+      `${EMOJI_DOT} **Violation:** \`${data.violation}\`\n` +
+      `${EMOJI_DOT} **Actions:** ${data.actions.map(a => `\`${a.toUpperCase()}\``).join(', ')}\n` +
+      `${SEP}\n\n` +
+      `**Original Content:**\n\`\`\`\n${message.content.slice(0, 1024) || 'None'}\n\`\`\`\n` +
+      `${SEP}`
+    )
+    .setFooter({ text: `User ID: ${message.author.id}` })
+    .setTimestamp();
+
+  await channel.send({ embeds: [resolveEmbedEmojis(logEmbed.toJSON())] }).catch(() => {});
 }
 
 module.exports = { handleAutoMod };

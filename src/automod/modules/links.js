@@ -1,6 +1,7 @@
 const LINK_REGEX = /https?:\/\/[^\s]+/i;
 const INVITE_REGEX = /(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+/i;
 const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discord-nitro|dlscord)/i;
+const GIF_REGEX = /(tenor\.com|giphy\.com|.+\.gif)/i;
 
 /**
  * Handle link filtering, anti-invite, and anti-phishing.
@@ -13,6 +14,7 @@ async function checkLinks(message, config) {
 
   const content = message.content;
   const allowedLinks = config.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
+  const allowedGifs = (config.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
 
   // 1. Gather all potential links (Standard URLs + Discord Invites)
   const standardLinks = content.match(/https?:\/\/[^\s]+/gi) || [];
@@ -37,6 +39,22 @@ async function checkLinks(message, config) {
     // 3. Anti-Phishing (Only if not whitelisted)
     if (config.antiPhishing && PHISHING_REGEX.test(link)) {
       return 'Phishing/Scam Link';
+    }
+
+    // 4. Anti-GIF (Only if not whitelisted)
+    if (config.antiGifs && GIF_REGEX.test(link)) {
+      // GIF Role Bypass
+      const hasGifRole = config.exemptGifsRoles?.some(roleId => message.member.roles.cache.has(roleId));
+      if (hasGifRole) continue;
+
+      let isGifWhitelisted = false;
+      for (const allowed of allowedGifs) {
+        if (cleanLink.includes(allowed)) {
+          isGifWhitelisted = true;
+          break;
+        }
+      }
+      if (!isGifWhitelisted) return 'GIF Link';
     }
 
     // 4. Anti-Invite (Only if not whitelisted)

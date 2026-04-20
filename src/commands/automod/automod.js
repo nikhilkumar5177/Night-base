@@ -115,12 +115,18 @@ module.exports = {
 
         if (interaction.customId === 'automod_modal_links') {
           config.modules.links.allowedLinks = interaction.fields.getTextInputValue('allowed_links').split('\n').map(l => l.trim()).filter(l => l !== '');
+          
+          const gifInput = interaction.fields.getTextInputValue('allowed_gifs').split('\n').map(l => l.trim()).filter(l => l !== '');
+          config.modules.links.allowedGifs = gifInput.filter(item => isNaN(item) || item.includes('.'));
+          config.modules.links.exemptGifsRoles = gifInput.filter(item => !isNaN(item) && item.length >= 17);
 
           const rawActions = interaction.fields.getTextInputValue('link_punishment').toLowerCase();
           config.modules.links.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));
 
-          config.modules.links.antiInvite = interaction.fields.getTextInputValue('anti_invite').toLowerCase() === 'yes';
-          config.modules.links.antiPhishing = interaction.fields.getTextInputValue('anti_phishing').toLowerCase() === 'yes';
+          const toggles = interaction.fields.getTextInputValue('link_toggles').toLowerCase();
+          config.modules.links.antiInvite = toggles.includes('invite: yes');
+          config.modules.links.antiPhishing = toggles.includes('phish: yes');
+          config.modules.links.antiGifs = toggles.includes('gifs: yes');
 
           config.modules.links.responseMessage = interaction.fields.getTextInputValue('response_message') || null;
 
@@ -131,8 +137,11 @@ module.exports = {
 
         if (interaction.customId === 'automod_modal_content') {
           config.modules.content.blockedWords = interaction.fields.getTextInputValue('blocked_words').split(',').map(w => w.trim()).filter(w => w !== '');
-          config.modules.content.capsLimit = parseInt(interaction.fields.getTextInputValue('caps_limit')) || config.modules.content.capsLimit;
-          config.modules.content.emojiLimit = parseInt(interaction.fields.getTextInputValue('emoji_limit')) || config.modules.content.emojiLimit;
+          config.modules.content.partialBlockedWords = interaction.fields.getTextInputValue('partial_words').split(',').map(w => w.trim()).filter(w => w !== '');
+          
+          const limits = interaction.fields.getTextInputValue('content_limits').toLowerCase();
+          config.modules.content.capsLimit = parseInt(limits.match(/caps:\s*(\d+)/)?.[1]) || config.modules.content.capsLimit;
+          config.modules.content.emojiLimit = parseInt(limits.match(/emojis:\s*(\d+)/)?.[1]) || config.modules.content.emojiLimit;
 
           const rawActions = interaction.fields.getTextInputValue('content_punishment').toLowerCase();
           config.modules.content.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));

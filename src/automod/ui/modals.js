@@ -66,27 +66,27 @@ function createLinkModal(config) {
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(false);
 
+  const allowedGifsInput = new TextInputBuilder()
+    .setCustomId('allowed_gifs')
+    .setLabel('GIF Whitelists (Links or Role IDs)')
+    .setPlaceholder('Enter GIF domains or Role IDs to bypass (one per line)')
+    .setValue(config.allowedGifs || config.exemptGifsRoles ? [...(config.allowedGifs || []), ...(config.exemptGifsRoles || [])].join('\n') : '')
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(false);
+
+  const togglesInput = new TextInputBuilder()
+    .setCustomId('link_toggles')
+    .setLabel('Toggles (yes/no) - Invite, Phish, GIFs')
+    .setPlaceholder('Invite: yes, Phishing: yes, GIFs: yes')
+    .setValue(`Invite: ${config.antiInvite ? 'yes' : 'no'}, Phish: ${config.antiPhishing ? 'yes' : 'no'}, GIFs: ${config.antiGifs ? 'yes' : 'no'}`)
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
   const punishmentInput = new TextInputBuilder()
     .setCustomId('link_punishment')
     .setLabel('Actions (comma separated)')
     .setPlaceholder('delete, warn, mute, kick, ban')
     .setValue(config.actions ? config.actions.join(', ') : 'delete, warn')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-
-  const antiInviteInput = new TextInputBuilder()
-    .setCustomId('anti_invite')
-    .setLabel('Anti-Invite (yes/no)')
-    .setPlaceholder('Block Discord invites?')
-    .setValue(config.antiInvite ? 'yes' : 'no')
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-
-  const antiPhishingInput = new TextInputBuilder()
-    .setCustomId('anti_phishing')
-    .setLabel('Anti-Phishing (yes/no)')
-    .setPlaceholder('Block scam links?')
-    .setValue(config.antiPhishing ? 'yes' : 'no')
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
@@ -100,9 +100,9 @@ function createLinkModal(config) {
 
   modal.addComponents(
     new ActionRowBuilder().addComponents(allowedLinksInput),
+    new ActionRowBuilder().addComponents(allowedGifsInput),
+    new ActionRowBuilder().addComponents(togglesInput),
     new ActionRowBuilder().addComponents(punishmentInput),
-    new ActionRowBuilder().addComponents(antiInviteInput),
-    new ActionRowBuilder().addComponents(antiPhishingInput),
     new ActionRowBuilder().addComponents(responseMessageInput)
   );
 
@@ -125,19 +125,19 @@ function createContentModal(config) {
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(false);
 
-  const capsLimitInput = new TextInputBuilder()
-    .setCustomId('caps_limit')
-    .setLabel('Caps Limit (%)')
-    .setPlaceholder('e.g. 70')
-    .setValue(String(config.capsLimit || 70))
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
+  const partialWordsInput = new TextInputBuilder()
+    .setCustomId('partial_words')
+    .setLabel('Partial Words (In-Between Match)')
+    .setPlaceholder('badword1, badword2 (matches even inside words)')
+    .setValue(config.partialBlockedWords ? config.partialBlockedWords.join(', ') : '')
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(false);
 
-  const emojiLimitInput = new TextInputBuilder()
-    .setCustomId('emoji_limit')
-    .setLabel('Emoji Limit')
-    .setPlaceholder('e.g. 10')
-    .setValue(String(config.emojiLimit || 10))
+  const limitsInput = new TextInputBuilder()
+    .setCustomId('content_limits')
+    .setLabel('Limits (Caps %, Emojis)')
+    .setPlaceholder('Caps: 70, Emojis: 10')
+    .setValue(`Caps: ${config.capsLimit || 70}, Emojis: ${config.emojiLimit || 10}`)
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
@@ -159,8 +159,8 @@ function createContentModal(config) {
 
   modal.addComponents(
     new ActionRowBuilder().addComponents(blockedWordsInput),
-    new ActionRowBuilder().addComponents(capsLimitInput),
-    new ActionRowBuilder().addComponents(emojiLimitInput),
+    new ActionRowBuilder().addComponents(partialWordsInput),
+    new ActionRowBuilder().addComponents(limitsInput),
     new ActionRowBuilder().addComponents(punishmentInput),
     new ActionRowBuilder().addComponents(responseMessageInput)
   );

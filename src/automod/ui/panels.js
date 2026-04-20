@@ -53,11 +53,11 @@ function formatConfig(category, data) {
   if (c === 'spam') {
     details = `${EMOJI_DOT} Threshold: \`${data.limit}\` msgs in \`${data.window}\`s\n${EMOJI_DOT} Duplicates: \`${data.duplicateDetection ? 'Yes' : 'No'}\``;
   } else if (c === 'links') {
-    details = `${EMOJI_DOT} Invites: \`${data.antiInvite ? 'Blocked' : 'Allowed'}\`\n${EMOJI_DOT} Phishing: \`${data.antiPhishing ? 'Blocked' : 'Allowed'}\`\n${EMOJI_DOT} Allowed: \`${data.allowedLinks.length}\` domains`;
+    details = `${EMOJI_DOT} Invites: \`${data.antiInvite ? 'Blocked' : 'Allowed'}\`\n${EMOJI_DOT} Phishing: \`${data.antiPhishing ? 'Blocked' : 'Allowed'}\`\n${EMOJI_DOT} GIFs: \`${data.antiGifs ? 'Blocked' : 'Allowed'}\` (\`${data.allowedGifs?.length || 0}\` links, \`${data.exemptGifsRoles?.length || 0}\` roles)\n${EMOJI_DOT} Allowed Links: \`${data.allowedLinks.length}\` domains`;
   } else if (c === 'raid') {
     details = `${EMOJI_DOT} Join Limit: \`${data.joinLimit}\` per \`${data.window}\`s\n${EMOJI_DOT} Min Age: \`${data.minAccountAge}\` days`;
   } else if (c === 'content') {
-    details = `${EMOJI_DOT} Blocked Words: \`${data.blockedWords.length}\` words\n${EMOJI_DOT} Caps Limit: \`${data.capsLimit}%\`\n${EMOJI_DOT} Emoji Limit: \`${data.emojiLimit}\`\n${EMOJI_DOT} Ghost Ping: \`${data.ghostPing ? 'Yes' : 'No'}\``;
+    details = `${EMOJI_DOT} Blocked Words: \`${data.blockedWords.length}\` (Whole) \u2502 \`${data.partialBlockedWords?.length || 0}\` (Partial)\n${EMOJI_DOT} Caps Limit: \`${data.capsLimit}%\`\n${EMOJI_DOT} Emoji Limit: \`${data.emojiLimit}\`\n${EMOJI_DOT} Ghost Ping: \`${data.ghostPing ? 'Yes' : 'No'}\``;
   } else if (c === 'security') {
     details = `${EMOJI_DOT} Anti-Nuke: \`${data.antiNuke ? 'Yes' : 'No'}\` (Limit: \`${data.nukeThreshold}\` actions)\n${EMOJI_DOT} Anti-Webhook: \`${data.antiWebhook ? 'Yes' : 'No'}\``;
   }

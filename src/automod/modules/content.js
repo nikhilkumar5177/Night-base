@@ -10,11 +10,22 @@ async function checkContent(message, config) {
   const content = message.content;
   const lowerContent = content.toLowerCase();
 
-  // Blocked Words
+  // Blocked Words (Whole Word)
   const { blockedWords } = config;
   for (const word of blockedWords) {
-    if (lowerContent.includes(word.toLowerCase())) {
+    const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (regex.test(content)) {
       return 'Blocked Word';
+    }
+  }
+
+  // Blocked Words (Partial/Substring)
+  const { partialBlockedWords } = config;
+  if (partialBlockedWords && Array.isArray(partialBlockedWords)) {
+    for (const word of partialBlockedWords) {
+      if (lowerContent.includes(word.toLowerCase())) {
+        return 'Blocked Word (Partial)';
+      }
     }
   }
 

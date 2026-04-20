@@ -32,6 +32,9 @@ const DEFAULT_CONFIG = {
       allowedLinks: [],
       antiInvite: true,
       antiPhishing: true,
+      antiGifs: false,
+      allowedGifs: [],
+      exemptGifsRoles: [],
       actions: ['delete', 'warn'],
       exemptChannels: [],
       exemptRoles: [],
@@ -51,7 +54,8 @@ const DEFAULT_CONFIG = {
     },
     content: {
       enabled: false,
-      blockedWords: [],
+      blockedWords: [], // Whole word matching only
+      partialBlockedWords: [], // Substring/in-between matching
       capsLimit: 70, // percentage
       emojiLimit: 10,
       ghostPing: true,

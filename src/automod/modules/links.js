@@ -12,13 +12,17 @@ async function checkLinks(message, config) {
   if (!config.enabled) return false;
 
   const content = message.content;
-  const links = content.match(LINK_REGEX);
-  if (!links) return false;
-
   const { allowedLinks } = config;
 
-  for (const link of links) {
-    // 1. Check Whitelist (Primary Bypass)
+  // 1. Gather all potential links (Standard URLs + Discord Invites)
+  const standardLinks = content.match(LINK_REGEX) || [];
+  const inviteLinks = content.match(INVITE_REGEX) || [];
+  const allLinks = [...new Set([...standardLinks, ...inviteLinks])];
+
+  if (allLinks.length === 0) return false;
+
+  for (const link of allLinks) {
+    // 2. Check Whitelist (Primary Bypass)
     let isWhitelisted = false;
     for (const allowed of allowedLinks) {
       if (link.toLowerCase().includes(allowed.toLowerCase())) {
@@ -26,22 +30,20 @@ async function checkLinks(message, config) {
         break;
       }
     }
-    if (isWhitelisted) continue; // Skip all other checks for this link
+    if (isWhitelisted) continue;
 
-    // 2. Anti-Phishing (Only if not whitelisted)
+    // 3. Anti-Phishing (Only if not whitelisted)
     if (config.antiPhishing && PHISHING_REGEX.test(link)) {
       return 'Phishing/Scam Link';
     }
 
-    // 3. Anti-Invite (Only if not whitelisted)
-    if (config.antiInvite && INVITE_REGEX.test(link)) {
-      return 'Discord Invite Link';
+    // 4. Anti-Invite (Only if not whitelisted)
+    if (INVITE_REGEX.test(link)) {
+      if (config.antiInvite) return 'Discord Invite Link';
+      // If antiInvite is off, we still proceed to General Link Block
     }
 
-    // 4. General Link Block (If any link is present and not whitelisted, we treat it as forbidden)
-    // Note: If you want to allow general links but only block specific ones, 
-    // you would normally have a 'blockAllLinks' toggle. 
-    // Currently, enabling the module acts as 'Block All except whitelisted'.
+    // 5. General Link Block (Treat all remaining links as forbidden)
     return 'Forbidden Link';
   }
 

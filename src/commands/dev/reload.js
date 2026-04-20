@@ -2,7 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const path = require('path');
 const fs = require('fs');
 const { deployCommands } = require('../../utils/deployer');
-const { SEP } = require('../../utils/constants');
+const { SEP, EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
   name: 'reload',
@@ -18,7 +18,7 @@ module.exports = {
     try {
       if (!args[0] || args[0].toLowerCase() === 'all') {
         const srcPath = path.resolve(__dirname, '..', '..');
-        
+
         const sweep = (dir) => {
           const files = fs.readdirSync(dir);
           for (const file of files) {
@@ -28,7 +28,7 @@ module.exports = {
             } else if (file.endsWith('.js')) {
               try {
                 delete require.cache[require.resolve(fullPath)];
-              } catch (e) {}
+              } catch (e) { }
             }
           }
         };
@@ -46,7 +46,7 @@ module.exports = {
               if (event.name) {
                 client.removeAllListeners(event.name);
               }
-            } catch (e) {}
+            } catch (e) { }
           }
         }
 
@@ -65,7 +65,7 @@ module.exports = {
           slashMsg = `\n{EMOJI_ERROR} Failed to re-deploy slash commands: ${e.message}`;
         }
 
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle('{EMOJI_OWNER} Wild Wolf \u2502 System Reload').setDescription(`${SEP}\n{EMOJI_SUCCESS} **System reloaded successfully.**\n${SEP}`).addFields({ name: 'Details', value: `\u25B8 Commands: \`${count}\`\n\u25B8 Events: \`${client.eventNames().length}\`${slashMsg.replace(/{EMOJI_SUCCESS}/g, '\u25B8').replace(/{EMOJI_ERROR}/g, '\u2716')}` }).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_OWNER} Wild Wolf \u2502 System Reload`).setDescription(`${SEP}\n{EMOJI_SUCCESS} **System reloaded successfully.**\n${SEP}`).addFields({ name: 'Details', value: `\u25B8 Commands: \`${count}\`\n\u25B8 Events: \`${client.eventNames().length}\`${slashMsg.replace(/{EMOJI_SUCCESS}/g, '\u25B8').replace(/{EMOJI_ERROR}/g, '\u2716')}` }).setTimestamp()] });
       }
       const cmdName = args[0].toLowerCase();
       const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));

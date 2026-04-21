@@ -98,7 +98,7 @@ async function getConfig(guildId) {
   if (cache.has(guildId)) return cache.get(guildId);
 
   const filePath = path.join(CONFIG_DIR, `${guildId}.json`);
-  let config = { ...DEFAULT_CONFIG };
+  let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
   if (fs.existsSync(filePath)) {
     try {

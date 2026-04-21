@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
-const { sendAutoDelete } = require('../../utils/messageHelper');
+const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
 
 const { EMOJI_DOT, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
 
@@ -8,7 +8,8 @@ module.exports = {
   name: 'mute',
   aliases: ['timeout', 'to', 'm'],
   description: 'Timeout a user',
-  usage: 'mute <user> [duration in minutes] [reason]',
+  usage: 'mute <user> [duration] [reason]',
+  example: 'mute @User 30m spamming\nmute 123456789 2h repetitive messages',
   cooldown: 3,
   enabled: true,
   staffOnly: true,
@@ -23,7 +24,7 @@ module.exports = {
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}mute <@user> [minutes] [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}mute @User 30 spamming\n\`\`\`` }, { name: 'Aliases', value: '`timeout`, `to`', inline: true }, { name: 'Cooldown', value: '`3s`', inline: true }, { name: 'Max', value: '`28 days`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] }, 15000);
+        return sendUsage(message, module.exports);
       }
       if (!target.moderatable) {
         return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I cannot timeout this user.`).setTimestamp()] });

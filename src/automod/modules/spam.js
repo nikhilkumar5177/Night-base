@@ -1,6 +1,21 @@
 const userMessages = new Map();
 const userLastMsg = new Map();
 
+// Periodic cleanup to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, timestamps] of userMessages.entries()) {
+    if (timestamps.length === 0 || now - timestamps[timestamps.length - 1] > 60000) {
+      userMessages.delete(key);
+    }
+  }
+  for (const [key, data] of userLastMsg.entries()) {
+    if (now - data.ts > 60000) {
+      userLastMsg.delete(key);
+    }
+  }
+}, 600000); // Cleanup every 10 minutes
+
 /**
  * Handle message spam and duplicate detection.
  * @param {object} message 

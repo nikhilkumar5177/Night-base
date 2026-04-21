@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
 const { LIMITS, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
-const { sendAutoDelete } = require('../../utils/messageHelper');
+const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
 
 
 module.exports = {
@@ -8,6 +8,7 @@ module.exports = {
   aliases: ['clear', 'prune'],
   description: 'Purge messages with filters',
   usage: 'purge <count | bots | embeds | @user> [count]',
+  example: 'purge 50\npurge bots 20\npurge @User 10',
   cooldown: 5,
   enabled: true,
   staffOnly: true,
@@ -21,19 +22,20 @@ module.exports = {
         return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageMessages** permission.`).setTimestamp()] }, 5000);
       }
       if (!args[0]) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}purge <count | bots | embeds | @user> [count]\n\`\`\`` }, { name: '\u2501\u2501 Examples', value: `\`\`\`\n${client.config.prefix}purge 50\n${client.config.prefix}purge bots\n${client.config.prefix}purge @User 20\n\`\`\`` }, { name: 'Aliases', value: '`clear`, `prune`', inline: true }, { name: 'Cooldown', value: '`5s`', inline: true }, { name: 'Max', value: '`100 msgs`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp()] }, 15000);
+        return sendUsage(message, module.exports);
       }
 
       let count = Math.min(parseInt(args[0]) || parseInt(args[1]) || 50, LIMITS.MAX_PURGE);
       const type = args[0].toLowerCase();
-      await message.delete().catch(() => {});
 
       const loadEmbed = new EmbedBuilder()
         .setColor('#EB459E')
         .setAuthor({ name: 'Wild Wolf \u2502 Purging', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Scanning and deleting messages...**\n\n\`\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\` Processing\n${SEP}`)
         .setTimestamp();
-      const progressMsg = await message.reply({ embeds: [loadEmbed] });
+      
+      const progressMsg = await sendAutoDelete(message, { embeds: [loadEmbed] }, 0);
+      await message.delete().catch(() => {});
 
       let fetched = await message.channel.messages.fetch({ limit: count });
       let filtered;
@@ -51,7 +53,7 @@ module.exports = {
         count = parseInt(type);
         if (isNaN(count) || count < 1) {
           await progressMsg.delete().catch(() => {});
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Invalid count.`).setTimestamp()] });
+          return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Invalid count.`).setTimestamp()] }, 5000);
         }
         filtered = fetched;
       }
@@ -79,7 +81,7 @@ module.exports = {
       await progressMsg.edit({ embeds: [embed] });
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] }, 5000);
     }
   }
 };

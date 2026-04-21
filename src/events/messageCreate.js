@@ -26,6 +26,8 @@ module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
+    if (message.author.bot) return;
+
     // Run AutoMod
     await handleAutoMod(client, message);
 
@@ -67,7 +69,7 @@ module.exports = {
       }
     }
 
-    if (message.author.bot) return;
+
 
     if (message.content === 'update') {
       if (message.author.id !== process.env.DEV_ID) return
@@ -308,6 +310,15 @@ module.exports = {
       logger.cmd(message.author.tag, command.name);
     } catch (error) {
       logger.error(`Command ${command.name} failed: ${error.message}`);
+      sendAutoDelete(message, {
+        embeds: [
+          new EmbedBuilder()
+            .setColor('#ED4245')
+            .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+            .setDescription(`${EMOJI_ERROR} An error occurred while executing this command.\n\`\`\`\n${error.message}\n\`\`\``)
+            .setTimestamp()
+        ]
+      }, 5000);
     }
 
     const analytics = storage.read('analytics.json');

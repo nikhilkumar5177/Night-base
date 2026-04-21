@@ -1,12 +1,14 @@
 const { EmbedBuilder } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO } = require('../../utils/constants');
+const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'aliasrole',
   aliases: ['ar', 'setalias'],
   description: 'Configure alias-based role assignment',
   usage: 'aliasrole <add|remove|list> <alias> [roleId] [requiredRoleId]',
+  example: 'aliasrole add gg 123456789\naliasrole addalias gg goodgame\naliasrole list',
   cooldown: 3,
   enabled: true,
   staffOnly: true,
@@ -34,8 +36,7 @@ module.exports = {
         const alias = args[1]?.toLowerCase();
         const roleId = args[2];
         if (!alias || !roleId) {
-          const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}aliasrole add <alias> <roleId> [requiredRoleId]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}aliasrole add gg 123456789 987654321\n\`\`\`` }, { name: 'Aliases', value: '`ar`, `setalias`', inline: true }, { name: 'Permission', value: '`ManageRoles`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-          return message.reply({ embeds: [usageEmbed] });
+          return sendUsage(message, module.exports);
         }
         const { resolveRole } = require('../../utils/resolver');
         const role = resolveRole(message.guild, roleId);
@@ -59,8 +60,7 @@ module.exports = {
         const primary = args[1]?.toLowerCase();
         const newAlias = args[2]?.toLowerCase();
         if (!primary || !newAlias || !aliasData[primary]) {
-          const usageEmbed2 = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}aliasrole addalias <primary> <newalias>\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}aliasrole addalias gg goodgame\n\`\`\`` }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-          return message.reply({ embeds: [usageEmbed2] });
+          return sendUsage(message, module.exports);
         }
         if (!aliasData[primary].aliases) aliasData[primary].aliases = [];
         aliasData[primary].aliases.push(newAlias);

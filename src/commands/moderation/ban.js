@@ -1,5 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { sendAutoDelete } = require('../../utils/messageHelper');
+const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
 
 const { EMOJI_DOT, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_INFO, EMOJI_LOADING } = require('../../utils/constants');
 
@@ -8,6 +8,7 @@ module.exports = {
   aliases: ['b', 'bkl',],
   description: 'Ban a user with button confirmation',
   usage: 'ban <user> [reason]',
+  example: 'ban @User spamming\nban 123456789 raider',
   cooldown: 10,
   enabled: true,
   staffOnly: true,
@@ -37,8 +38,7 @@ module.exports = {
       const finalTargets = Array.from(targets).filter(t => t.id !== message.author.id);
 
       if (finalTargets.length === 0) {
-        const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}ban <@user> [reason]\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}ban @User Spamming\n\`\`\`` }, { name: 'Aliases', value: '`b`, `bkl`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-        return sendAutoDelete(message, { embeds: [usageEmbed] }, 15000);
+        return sendUsage(message, module.exports);
       }
 
       const reason = reasonArgs.join(' ') || 'No reason provided';

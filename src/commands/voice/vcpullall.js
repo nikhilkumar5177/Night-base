@@ -3,7 +3,7 @@ const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING, EMOJI_OWNER 
 
 module.exports = {
   name: 'vcpullall',
-  aliases: ['pullall'],
+  aliases: ['pullall', 'dragall'],
   description: 'Pull everyone into your voice channel (Owner Only)',
   usage: 'vcpullall',
   cooldown: 10,
@@ -34,7 +34,7 @@ module.exports = {
         .setColor('#ED4245')
         .setDescription(`${EMOJI_LOADING} **Pulling ${allMembers.length} members into ${channel}...**`)
         .setTimestamp();
-      
+
       const statusMsg = await message.reply({ embeds: [statusEmbed] });
 
       let count = 0;
@@ -42,7 +42,7 @@ module.exports = {
         try {
           await member.voice.setChannel(channel, `Pulled by ${message.author.tag}`);
           count++;
-        } catch (e) {}
+        } catch (e) { }
       }
 
       const embed = new EmbedBuilder()

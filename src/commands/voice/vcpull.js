@@ -4,7 +4,7 @@ const { resolveMember } = require('../../utils/resolver');
 
 module.exports = {
   name: 'vcpull',
-  aliases: ['pull'],
+  aliases: ['pull', 'drag'],
   description: 'Pull a user into your voice channel',
   usage: 'vcpull <@user/id>',
   cooldown: 3,

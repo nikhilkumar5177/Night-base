@@ -30,6 +30,7 @@ module.exports = {
         const sent = await message.reply({ embeds: [loadEmbed] });
 
         try {
+          // Stickers have a strict 500KB limit
           const name = args[0] || targetSticker.name;
           const newSticker = await message.guild.stickers.create({
             file: targetSticker.url,
@@ -51,7 +52,11 @@ module.exports = {
           
           return sent.edit({ embeds: [successEmbed] });
         } catch (err) {
-          return sent.edit({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Failed to add sticker: ${err.message}`)] });
+          let errorMsg = err.message;
+          if (err.message.includes('maximum size')) {
+            errorMsg = 'This sticker exceeds Discord\'s **500KB** size limit and cannot be stolen.';
+          }
+          return sent.edit({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} **Failed to add sticker:**\n${errorMsg}`)] });
         }
       }
 
@@ -85,7 +90,11 @@ module.exports = {
 
           return sent.edit({ embeds: [successEmbed] });
         } catch (err) {
-          return sent.edit({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Failed to add emoji: ${err.message}`)] });
+          let errorMsg = err.message;
+          if (err.message.includes('maximum size')) {
+            errorMsg = 'This emoji exceeds Discord\'s **256KB** size limit and cannot be stolen.';
+          }
+          return sent.edit({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} **Failed to add emoji:**\n${errorMsg}`)] });
         }
       }
 

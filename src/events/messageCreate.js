@@ -168,28 +168,39 @@ module.exports = {
       const parts = content.split(/\s+/);
       const firstWord = parts[0];
 
-      const aliasConfig = aliasTriggerMap.get(content) || (message.mentions.members.size > 0 ? aliasTriggerMap.get(firstWord) : null);
+      // Flexible check: Trigger if the first word is an alias
+      const aliasConfig = aliasTriggerMap.get(firstWord);
 
-      if (aliasConfig) {
+      if (aliasConfig && !message.content.startsWith(client.config.prefix)) {
         if (!aliasConfig.requiredRole || message.member.roles.cache.has(aliasConfig.requiredRole)) {
           const role = message.guild.roles.cache.get(aliasConfig.roleId);
           if (role) {
             try {
+              // Priority: Mentioned user -> Second word (ID/Tag) -> Author
               const targetInput = parts[1];
-              const target = targetInput ? (await resolver.resolveMember(message.guild, targetInput)) || message.member : message.member;
+              const target = message.mentions.members.first() || 
+                             (targetInput ? await resolver.resolveMember(message.guild, targetInput) : message.member);
+
+              if (!target) return; // Silent fail if input provided but user not found
+
+              // Hierarchy Check
+              if (role.position >= message.guild.members.me.roles.highest.position) {
+                return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} My role is not high enough to manage **${role.name}**.`)] });
+              }
 
               if (target.roles.cache.has(role.id)) {
-                await target.roles.remove(role);
+                await target.roles.remove(role, `Alias Role: ${aliasConfig.key}`);
+                const embed = new EmbedBuilder().setColor('#ff5252').setDescription(`${EMOJI_SUCCESS} Removed **${role.name}** from **${target.user.tag}**`).setTimestamp();
+                await message.reply({ embeds: [embed] });
               } else {
-                await target.roles.add(role);
+                await target.roles.add(role, `Alias Role: ${aliasConfig.key}`);
+                const embed = new EmbedBuilder().setColor('#00e676').setDescription(`${EMOJI_SUCCESS} Added **${role.name}** to **${target.user.tag}**`).setTimestamp();
+                await message.reply({ embeds: [embed] });
               }
-              const embed = new EmbedBuilder()
-                .setColor('#00e676')
-                .setDescription(`${EMOJI_SUCCESS} Role ${role.name} updated for ${target.user.tag}`)
-                .setTimestamp();
-              await message.reply({ embeds: [embed] });
               return;
-            } catch { }
+            } catch (err) {
+              logger.error(`Alias Role Toggle Error: ${err.message}`);
+            }
           }
         }
       }

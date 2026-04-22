@@ -10,7 +10,9 @@ module.exports = {
     logger.info(`Wild Wolf online as ${client.user.tag}`);
     logger.info(`Serving ${client.guilds.cache.size} guilds`);
 
-    let configData = storage.read('config.json');
+    const configData = storage.read('config.json');
+    const prefix = configData.prefix || client.config.prefix;
+    
     if (configData.maintenance) {
       client.user.setPresence({
         activities: [{ name: 'System Maintenance', type: 0 }], // Playing
@@ -18,7 +20,7 @@ module.exports = {
       });
     } else {
       client.user.setPresence({
-        activities: [{ name: `${client.config.prefix}help`, type: 3 }], // Watching
+        activities: [{ name: `${prefix}help`, type: 3 }], // Watching
         status: 'online'
       });
     }

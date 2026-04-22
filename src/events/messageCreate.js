@@ -28,6 +28,9 @@ module.exports = {
   execute: async (client, message) => {
     if (message.author.bot) return;
 
+    const runtimeConfig = storage.read('config.json');
+    const prefix = runtimeConfig.prefix || client.config.prefix;
+
     // Run AutoMod
     await handleAutoMod(client, message);
 
@@ -45,7 +48,7 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setColor(client.config.embedColor || '#5865F2')
         .setAuthor({ name: 'Wild Wolf \u2502 System Info', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n\u25B8 My prefix for this server is \`${client.config.prefix}\`\n\u25B8 Use \`${client.config.prefix}help\` to see all commands.\n${SEP}`)
+        .setDescription(`${SEP}\n\u25B8 My prefix for this server is \`${prefix}\`\n\u25B8 Use \`${prefix}help\` to see all commands.\n${SEP}`)
         .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
         .setTimestamp();
 
@@ -234,7 +237,6 @@ module.exports = {
       }
     }
 
-    const prefix = client.config.prefix;
     let isNoPrefixUser = false;
     if (runtimeConfig.noPrefixUsers && Array.isArray(runtimeConfig.noPrefixUsers)) {
       const entry = runtimeConfig.noPrefixUsers.find(u => {

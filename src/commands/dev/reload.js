@@ -25,7 +25,7 @@ module.exports = {
             const fullPath = path.join(dir, file);
             if (fs.statSync(fullPath).isDirectory()) {
               sweep(fullPath);
-            } else if (file.endsWith('.js')) {
+            } else if (file.endsWith('.js') || file.endsWith('.json')) {
               try {
                 delete require.cache[require.resolve(fullPath)];
               } catch (e) { }
@@ -33,6 +33,23 @@ module.exports = {
           }
         };
         sweep(srcPath);
+
+        // Sync config from files
+        try {
+          const storage = require('../../utils/storageManager');
+          const rootConfigPath = path.resolve(srcPath, '..', 'config.json');
+          
+          if (fs.existsSync(rootConfigPath)) {
+            delete require.cache[require.resolve(rootConfigPath)];
+            client.config = require(rootConfigPath);
+          }
+
+          // Override with runtime config from storage
+          const runtimeConfig = storage.read('config.json');
+          if (runtimeConfig) {
+            client.config = { ...client.config, ...runtimeConfig };
+          }
+        } catch (e) { }
 
         client.commands.clear();
         client.aliases.clear();

@@ -182,7 +182,6 @@ module.exports = {
       return;
     }
 
-    const runtimeConfig = storage.read('config.json');
     if (runtimeConfig.maintenance && message.author.id !== process.env.DEV_ID) return;
 
 

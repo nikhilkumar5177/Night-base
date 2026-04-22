@@ -32,11 +32,10 @@ module.exports = {
         vcData[oldState.guild.id].currentChannelId = null;
         storage.write('vcjoiner.json', vcData);
         
-        // Reset Status
-        client.user.setPresence({
-          activities: [{ name: `${client.config.prefix}help`, type: 3 }], // Watching
-          status: 'online'
-        });
+        const { joinRandomVC } = require('../utils/vcJoiner');
+        if (vcData[oldState.guild.id].enabled) {
+          joinRandomVC(oldState.guild).catch(() => {});
+        }
       }
     }
   }

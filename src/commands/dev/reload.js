@@ -65,7 +65,7 @@ module.exports = {
           slashMsg = `\n${EMOJI_ERROR} Failed to re-deploy slash commands: ${e.message}`;
         }
 
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_OWNER} Wild Wolf \u2502 System Reload`).setDescription(`${SEP}\n${EMOJI_SUCCESS} **System reloaded successfully.**\n${SEP}`).addFields({ name: 'Details', value: `\u25B8 Commands: \`${count}\`\n\u25B8 Events: \`${client.eventNames().length}\`${slashMsg}` }).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_OWNER} Wild Wolf \u2502 System Reload`).setDescription(`${SEP}\n${EMOJI_SUCCESS} **System reloaded successfully.**\n${SEP}`).addFields({ name: 'Details', value: `\u25B8 Commands: \`${count}\`\n\u25B8 Events: \`${client.eventNames().length}\`${slashMsg}` }).setTimestamp()] }).catch(() => {});
       }
       const cmdName = args[0].toLowerCase();
       const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));
@@ -77,9 +77,9 @@ module.exports = {
       const reloaded = require(commandPath);
       reloaded.category = command.category;
       client.commands.set(reloaded.name, reloaded);
-      message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Command Reloaded`).setDescription(`\`${reloaded.name}\` has been reloaded.`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Command Reloaded`).setDescription(`\`${reloaded.name}\` has been reloaded.`).setTimestamp()] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Reload Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Reload Error`).setDescription(error.message).setTimestamp()] }).catch(() => {});
     }
   }
 };

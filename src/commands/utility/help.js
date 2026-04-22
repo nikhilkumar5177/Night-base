@@ -49,10 +49,10 @@ module.exports = {
         const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));
         if (!command) {
           const errEmbed = new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} No command found with name \`${cmdName}\`.`).setTimestamp();
-          return isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }) : message.reply({ embeds: [errEmbed] });
+          return isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }).catch(() => {}) : message.reply({ embeds: [errEmbed] }).catch(() => {});
         }
         const embed = buildCommandEmbed(client, message, command);
-        return isInteraction ? message.reply({ embeds: [embed], components: [buildHomeButton()] }) : message.reply({ embeds: [embed], components: [buildHomeButton()] });
+        return isInteraction ? message.reply({ embeds: [embed], components: [buildHomeButton()] }).catch(() => {}) : message.reply({ embeds: [embed], components: [buildHomeButton()] }).catch(() => {});
       }
 
       // ── Build categories map (cached per invocation) ──
@@ -269,7 +269,8 @@ module.exports = {
       }
 
       // ── SEND INITIAL ──
-      const sent = isInteraction ? await message.reply({ ...render(), fetchReply: true }) : await message.reply(render());
+      const sent = isInteraction ? await message.reply({ ...render(), fetchReply: true }).catch(() => null) : await message.reply(render()).catch(() => null);
+      if (!sent) return;
       if (!isInteraction) message.delete().catch(() => { });
 
       // ══════════════════════════════════════════════
@@ -335,7 +336,7 @@ module.exports = {
 
     } catch (error) {
       const errEmbed = new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp();
-      isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }).catch(() => { }) : message.reply({ embeds: [errEmbed] });
+      isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }).catch(() => { }) : message.reply({ embeds: [errEmbed] }).catch(() => { });
     }
   }
 };

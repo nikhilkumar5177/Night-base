@@ -16,7 +16,7 @@ module.exports = {
       if (!args.length) {
         return message.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setDescription(`${EMOJI_ERROR} Please provide at least one custom emoji.`)
               .setTimestamp()
@@ -31,7 +31,7 @@ module.exports = {
       if (matches.length === 0) {
         return message.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setDescription(`${EMOJI_ERROR} No custom emojis found. Make sure they are server custom emojis.`)
               .setTimestamp()
@@ -88,7 +88,7 @@ module.exports = {
     } catch (error) {
       return message.reply({
         embeds: [
-          new EmbedBuilder().catch(() => {})
+          new EmbedBuilder()
             .setColor('#ED4245')
             .setDescription(`${EMOJI_ERROR} ${error.message}`)
             .setTimestamp()

@@ -93,7 +93,7 @@ module.exports = {
         // Update loading message for progress if multiple items
         if (items.length > 1) {
           await sent.edit({ 
-            embeds: [new EmbedBuilder().catch(() => {}).setColor('#EB459E').setDescription(`${EMOJI_LOADING} **Stealing items (${i + 1}/${items.length}): \`${item.name}\`...**`)] 
+            embeds: [new EmbedBuilder().setColor('#EB459E').setDescription(`${EMOJI_LOADING} **Stealing items (${i + 1}/${items.length}): \`${item.name}\`...**`)] 
           }).catch(() => {});
         }
 

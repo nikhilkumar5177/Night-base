@@ -14,7 +14,7 @@ module.exports = {
     if (message.author.id !== process.env.DEV_ID) return;
     const code = args.join(' ');
     if (!code) {
-      return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Code`).setDescription('Provide code to evaluate.').setTimestamp()] });
+      return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Code`).setDescription('Provide code to evaluate.').setTimestamp()] });
     }
     try {
       let result = eval(code);

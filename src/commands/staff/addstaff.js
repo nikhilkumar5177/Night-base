@@ -15,7 +15,7 @@ module.exports = {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
         return message.reply({ 
-          embeds: [new EmbedBuilder().catch(() => {})
+          embeds: [new EmbedBuilder()
             .setColor('#ff1744')
             .setTitle(`${EMOJI_OWNER} Owner Only`)
             .setDescription('Only the server owner can manage staff roles.')
@@ -29,13 +29,13 @@ module.exports = {
       }
       const staffData = storage.read('staff.json');
       if (staffData.roles.includes(role.id)) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ffab00').setTitle(`${EMOJI_WARN} Already Staff`).setDescription(`${role.name} is already a staff role.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle(`${EMOJI_WARN} Already Staff`).setDescription(`${role.name} is already a staff role.`).setTimestamp()] });
       }
       staffData.roles.push(role.id);
       storage.write('staff.json', staffData);
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Staff Role Added`).setDescription(`**${role.name}** has been added as a staff role.`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Staff Role Added`).setDescription(`**${role.name}** has been added as a staff role.`).setTimestamp()] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
     }
   }
 };

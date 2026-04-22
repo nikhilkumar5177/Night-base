@@ -13,10 +13,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
       }
       if (!message.guild.members.me.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageMessages** permission.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageMessages** permission.`).setTimestamp()] });
       }
 
       let count = Math.min(parseInt(args[0]) || 50, LIMITS.MAX_PURGE);
@@ -36,7 +36,7 @@ module.exports = {
       const deletable = filtered.filter(m => m.createdTimestamp > twoWeeks).first(count);
 
       if (deletable.length === 0) {
-        return progressMsg.edit({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Purge Bot', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No bot messages found.**\n${SEP}`).setTimestamp()] });
+        return progressMsg.edit({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Purge Bot', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No bot messages found.**\n${SEP}`).setTimestamp()] });
       }
 
       const deleted = await message.channel.bulkDelete(deletable, true);
@@ -55,7 +55,7 @@ module.exports = {
       await progressMsg.edit({ embeds: [embed] }).catch(() => {});
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

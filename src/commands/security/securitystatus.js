@@ -16,7 +16,7 @@ module.exports = {
       const securityConfig = storage.read('security.json');
       const logs = securityConfig.logs || [];
       if (logs.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#0099ff').setTitle(`${EMOJI_INFO} Security Logs`).setDescription('No security events recorded.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle(`${EMOJI_INFO} Security Logs`).setDescription('No security events recorded.').setTimestamp()] });
       }
       const perPage = 5;
       const pages = [];
@@ -36,11 +36,11 @@ module.exports = {
         r.users.remove(message.author.id).catch(() => {});
         if (r.emoji.name === '\u25B6\uFE0F' && page < pages.length - 1) page++;
         else if (r.emoji.name === '\u25C0\uFE0F' && page > 0) page--;
-        sent.edit({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff6d00').setTitle(`${EMOJI_WARN} Security Logs`).setDescription(pages[page]).setFooter({ text: `Page ${page + 1}/${pages.length} | ${logs.length} total events` }).setTimestamp()] }).catch(() => {});
+        sent.edit({ embeds: [new EmbedBuilder().setColor('#ff6d00').setTitle(`${EMOJI_WARN} Security Logs`).setDescription(pages[page]).setFooter({ text: `Page ${page + 1}/${pages.length} | ${logs.length} total events` }).setTimestamp()] }).catch(() => {});
       });
       collector.on('end', () => sent.reactions.removeAll().catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
     }
   }
 };

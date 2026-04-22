@@ -16,10 +16,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageRoles** permission.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageRoles** permission.`).setTimestamp()] });
       }
       if (!message.guild.members.me.permissions.has('ManageRoles')) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageRoles** permission.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageRoles** permission.`).setTimestamp()] });
       }
 
       const autoroleData = storage.read('autorole.json');
@@ -135,7 +135,7 @@ module.exports = {
 
       const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[2]);
       if (!role) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Please mention a valid role or provide a role ID.\n\nUsage: \`${client.config.prefix}autorole ${action} ${type} @Role\``).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Please mention a valid role or provide a role ID.\n\nUsage: \`${client.config.prefix}autorole ${action} ${type} @Role\``).setTimestamp()] });
       }
 
       const key = type === 'human' ? 'humanRoles' : 'botRoles';
@@ -143,16 +143,16 @@ module.exports = {
 
       if (action === 'add') {
         if (role.managed) {
-          return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} That role is managed by an integration and cannot be auto-assigned.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} That role is managed by an integration and cannot be auto-assigned.`).setTimestamp()] });
         }
         if (role.position >= message.guild.members.me.roles.highest.position) {
-          return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} That role is above or equal to my highest role. I won't be able to assign it.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} That role is above or equal to my highest role. I won't be able to assign it.`).setTimestamp()] });
         }
         if (config[key].includes(role.id)) {
-          return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_WARN} ${role} is already in the ${type} autorole list.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_WARN} ${role} is already in the ${type} autorole list.`).setTimestamp()] });
         }
         if (config[key].length >= MAX_ROLES) {
-          return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Maximum of \`${MAX_ROLES}\` ${type} autoroles reached. Remove one first.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Maximum of \`${MAX_ROLES}\` ${type} autoroles reached. Remove one first.`).setTimestamp()] });
         }
 
         config[key].push(role.id);
@@ -174,7 +174,7 @@ module.exports = {
 
       if (action === 'remove') {
         if (!config[key].includes(role.id)) {
-          return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_WARN} ${role} is not in the ${type} autorole list.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_WARN} ${role} is not in the ${type} autorole list.`).setTimestamp()] });
         }
 
         config[key] = config[key].filter(id => id !== role.id);
@@ -194,7 +194,7 @@ module.exports = {
         return message.reply({ embeds: [embed] }).catch(() => {});
       }
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

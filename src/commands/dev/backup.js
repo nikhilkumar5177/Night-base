@@ -13,7 +13,7 @@ module.exports = {
   execute: async (client, message) => {
     const reply = await message.reply({
       embeds: [
-        new EmbedBuilder().catch(() => {})
+        new EmbedBuilder()
           .setColor('#EB459E')
           .setAuthor({ name: 'Wild Wolf \u2502 Backup', iconURL: client.user.displayAvatarURL() })
           .setDescription(`${EMOJI_OWNER} ${EMOJI_LOADING} **Generating backup...**`)
@@ -26,7 +26,7 @@ module.exports = {
     if (success) {
       await reply.edit({
         embeds: [
-          new EmbedBuilder().catch(() => {})
+          new EmbedBuilder()
             .setColor('#00e676')
             .setDescription(`${EMOJI_SUCCESS} **Backup generated and sent to the backup channel.**`)
             .setTimestamp()
@@ -35,7 +35,7 @@ module.exports = {
     } else {
       await reply.edit({
         embeds: [
-          new EmbedBuilder().catch(() => {})
+          new EmbedBuilder()
             .setColor('#ED4245')
             .setDescription(`${EMOJI_ERROR} **Failed to send backup. Check the logs and ensure backupChannelId is set.**`)
             .setTimestamp()

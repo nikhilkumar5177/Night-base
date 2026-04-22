@@ -14,12 +14,12 @@ module.exports = {
     try {
       const newName = args.join(' ');
       if (!newName) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a new name.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a new name.`).setTimestamp()] });
       }
 
       const channel = message.member.voice.channel;
       if (!channel) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to rename it.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to rename it.`).setTimestamp()] });
       }
 
       const oldName = channel.name;
@@ -38,7 +38,7 @@ module.exports = {
 
       message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

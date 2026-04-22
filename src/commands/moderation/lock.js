@@ -16,7 +16,7 @@ module.exports = {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} You need **ManageChannels** permission.`)
@@ -28,7 +28,7 @@ module.exports = {
       if (!message.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageChannels)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} I need **ManageChannels** permission.`)
@@ -56,7 +56,7 @@ module.exports = {
         } else {
           return message.reply({
             embeds: [
-              new EmbedBuilder().catch(() => {})
+              new EmbedBuilder()
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
                 .setDescription(`${EMOJI_ERROR} Can only lock text channels.`)
@@ -70,7 +70,7 @@ module.exports = {
 
       const load = await message.reply({
         embeds: [
-          new EmbedBuilder().catch(() => {})
+          new EmbedBuilder()
             .setColor('#EB459E')
             .setAuthor({ name: 'Wild Wolf │ Processing', iconURL: client.user.displayAvatarURL() })
             .setDescription(`${SEP}\n${EMOJI_LOADING} Locking ${channelList.length} channel(s)...\n${SEP}`)
@@ -92,7 +92,7 @@ module.exports = {
     } catch (error) {
       message.reply({
         embeds: [
-          new EmbedBuilder().catch(() => {})
+          new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
             .setDescription(`${EMOJI_ERROR} ${error.message}`)

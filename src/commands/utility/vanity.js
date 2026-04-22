@@ -14,7 +14,7 @@ module.exports = {
     try {
       const g = message.guild;
       if (!g.vanityURLCode) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Vanity URL', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **This server does not have a vanity URL.**\nVanity URLs require boost level 3.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Vanity URL', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **This server does not have a vanity URL.**\nVanity URLs require boost level 3.\n${SEP}`).setTimestamp()] });
       }
       const vanityData = await g.fetchVanityData().catch(() => null);
 
@@ -43,7 +43,7 @@ module.exports = {
       coll.on('collect', async i => { if (i.customId === 'v_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

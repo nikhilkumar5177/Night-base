@@ -34,7 +34,7 @@ module.exports = {
     } catch (error) {
       message.reply({
         embeds: [
-          new EmbedBuilder().catch(() => {})
+          new EmbedBuilder()
             .setColor('#ED4245')
             .setDescription(`${EMOJI_ERROR} ${error.message}`)
         ]

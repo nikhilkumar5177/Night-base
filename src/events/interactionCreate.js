@@ -21,7 +21,7 @@ module.exports = {
       if (runtimeConfig.maintenance && interaction.user.id !== process.env.DEV_ID) {
         return interaction.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ff1744')
               .setAuthor({ name: 'Wild Wolf \u2502 System Lockdown', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_OWNER} ${EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`)
@@ -42,7 +42,7 @@ module.exports = {
         if (!isStaff && !isDev) {
           return interaction.reply({
             embeds: [
-              new EmbedBuilder().catch(() => {})
+              new EmbedBuilder()
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
                 .setDescription(`${EMOJI_ERROR} You are not a **Staff member** of this server.`)
@@ -55,7 +55,7 @@ module.exports = {
       if (command.devOnly && interaction.user.id !== process.env.DEV_ID) {
         return interaction.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_OWNER} This is an **Owner Command**.`)

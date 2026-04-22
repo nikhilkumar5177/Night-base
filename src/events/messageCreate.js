@@ -112,7 +112,7 @@ module.exports = {
         if (err) {
           return msg.edit({
             embeds: [
-              new EmbedBuilder().catch(() => {})
+              new EmbedBuilder()
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
                 .setDescription(`${EMOJI_ERROR} ${err.message}`)
@@ -124,7 +124,7 @@ module.exports = {
         if (stderr) {
           return msg.edit({
             embeds: [
-              new EmbedBuilder().catch(() => {})
+              new EmbedBuilder()
                 .setColor('#ffab00')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
                 .setDescription(`${EMOJI_WARN} ${stderr}`)
@@ -151,7 +151,7 @@ module.exports = {
         global.activeVCTours.delete(message.guild.id);
         return message.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#57F287')
               .setDescription(`${EMOJI_SUCCESS} **VC Tour loop stopped.**`)
               .setTimestamp()
@@ -215,7 +215,7 @@ module.exports = {
 
               // Hierarchy Check
               if (role.position >= message.guild.members.me.roles.highest.position) {
-                return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} My role is not high enough to manage **${role.name}**.`)] });
+                return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} My role is not high enough to manage **${role.name}**.`)] });
               }
 
               if (target.roles.cache.has(role.id)) {

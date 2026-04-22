@@ -14,7 +14,7 @@ module.exports = {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
         return message.reply({ 
-          embeds: [new EmbedBuilder().catch(() => {})
+          embeds: [new EmbedBuilder()
             .setColor('#ff1744')
             .setTitle(`${EMOJI_OWNER} Owner Only`)
             .setDescription('Only the server owner can change the prefix.')
@@ -22,19 +22,19 @@ module.exports = {
         });
       }
       if (!args[0]) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#0099ff').setTitle(`${EMOJI_INFO} Current Prefix`).setDescription(`Current prefix: \`${client.config.prefix}\``).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle(`${EMOJI_INFO} Current Prefix`).setDescription(`Current prefix: \`${client.config.prefix}\``).setTimestamp()] });
       }
       const newPrefix = args[0];
       if (newPrefix.length > 5) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Too Long`).setDescription('Prefix cannot exceed 5 characters.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Too Long`).setDescription('Prefix cannot exceed 5 characters.').setTimestamp()] });
       }
       const fs = require('fs');
       const path = require('path');
       client.config.prefix = newPrefix;
       fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'config.json'), JSON.stringify(client.config, null, 2));
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Prefix Updated`).setDescription(`New prefix: \`${newPrefix}\``).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Prefix Updated`).setDescription(`New prefix: \`${newPrefix}\``).setTimestamp()] });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
     }
   }
 };

@@ -13,12 +13,12 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_OWNER} Only the server owner can use this command.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_OWNER} Only the server owner can use this command.`).setTimestamp()] });
       }
 
       const channel = message.member.voice.channel;
       if (!channel) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to pull people.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to pull people.`).setTimestamp()] });
       }
 
       const allMembers = [];
@@ -27,7 +27,7 @@ module.exports = {
       });
 
       if (allMembers.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setDescription(`${EMOJI_WARN} No other users found in voice channels.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} No other users found in voice channels.`).setTimestamp()] });
       }
 
       const statusEmbed = new EmbedBuilder()
@@ -57,7 +57,7 @@ module.exports = {
 
       statusMsg.edit({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

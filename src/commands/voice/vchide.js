@@ -14,7 +14,7 @@ module.exports = {
     try {
       const channel = message.mentions.channels.first() || message.member.voice.channel;
       if (!channel || !channel.isVoiceBased()) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please mention a voice channel or join one.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please mention a voice channel or join one.`).setTimestamp()] });
       }
 
       await channel.permissionOverwrites.edit(message.guild.roles.everyone, {
@@ -33,7 +33,7 @@ module.exports = {
 
       message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

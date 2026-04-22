@@ -24,7 +24,7 @@ module.exports = {
       user = await user.fetch(true);
       const bannerUrl = user.bannerURL({ dynamic: true, size: 1024 });
       if (!bannerUrl) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Banner', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **${user.tag}** does not have a banner.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Banner', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **${user.tag}** does not have a banner.\n${SEP}`).setTimestamp()] });
       }
 
       const member = message.guild.members.cache.get(user.id);
@@ -47,7 +47,7 @@ module.exports = {
       coll.on('collect', async i => { if (i.customId === 'bn_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

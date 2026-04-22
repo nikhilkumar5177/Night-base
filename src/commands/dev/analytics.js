@@ -19,7 +19,7 @@ module.exports = {
         const cmdName = args[0].toLowerCase();
         const data = analytics[cmdName];
         if (!data) {
-          return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No analytics data for \`${cmdName}\`.\n${SEP}`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No analytics data for \`${cmdName}\`.\n${SEP}`).setTimestamp()] });
         }
         const embed = new EmbedBuilder()
           .setColor('#5865F2')
@@ -33,7 +33,7 @@ module.exports = {
       const totalUses = entries.reduce((a, [, v]) => a + (v.uses || 0), 0);
 
       if (entries.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No analytics data collected yet.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No analytics data collected yet.\n${SEP}`).setTimestamp()] });
       }
 
       const perPage = 10;
@@ -90,7 +90,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

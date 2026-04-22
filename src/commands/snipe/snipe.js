@@ -14,7 +14,7 @@ module.exports = {
     try {
       const snipes = client.snipeCache.get(message.channel.id);
       if (!snipes || snipes.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Snipe', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No recently deleted messages in this channel.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Snipe', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No recently deleted messages in this channel.\n${SEP}`).setTimestamp()] });
       }
 
       const perPage = 3;
@@ -55,7 +55,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

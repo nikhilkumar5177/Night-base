@@ -15,7 +15,7 @@ module.exports = {
     try {
       const staffData = storage.read('staff.json');
       if (!staffData.roles || staffData.roles.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Staff List', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No staff roles configured.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Staff List', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No staff roles configured.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.\n${SEP}`).setTimestamp()] });
       }
 
       const cleaned = [];
@@ -58,7 +58,7 @@ module.exports = {
       coll.on('collect', async i => { if (i.customId === 'sl_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

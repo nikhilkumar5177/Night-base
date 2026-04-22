@@ -16,7 +16,7 @@ module.exports = {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} You need **ManageGuildExpressions** permission to manage emojis.`)
@@ -28,7 +28,7 @@ module.exports = {
       if (!message.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} I need **ManageGuildExpressions** permission to manage emojis.`)
@@ -75,7 +75,7 @@ module.exports = {
       if (emojisToDelete.length === 0) {
         return sentMsg.edit({
           embeds: [
-            new EmbedBuilder().catch(() => {})
+            new EmbedBuilder()
               .setColor('#00e676')
               .setAuthor({ name: 'Wild Wolf \u2502 Dedupe Emojis', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${SEP}\n${EMOJI_SUCCESS} **No duplicate emojis found!**\nAll ${uniqueCount} emojis are unique.\n${SEP}`)
@@ -164,7 +164,7 @@ module.exports = {
         if (reason === 'time') {
           sentMsg.edit({
             embeds: [
-              new EmbedBuilder().catch(() => {})
+              new EmbedBuilder()
                 .setColor('#ED4245')
                 .setDescription(`${SEP}\n${EMOJI_ERROR} **Deduplication timed out.**\n${SEP}`)
             ],
@@ -176,7 +176,7 @@ module.exports = {
     } catch (error) {
       message.reply({
         embeds: [
-          new EmbedBuilder().catch(() => {})
+          new EmbedBuilder()
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
             .setDescription(`${EMOJI_ERROR} ${error.message}`)

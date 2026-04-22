@@ -13,7 +13,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Missing Permissions`).setDescription('You need **ModerateMembers** permission.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Missing Permissions`).setDescription('You need **ModerateMembers** permission.').setTimestamp()] });
       }
       const target = message.mentions.users.first() || client.users.cache.get(args[0]);
       if (!target) {
@@ -22,7 +22,7 @@ module.exports = {
       }
       const content = args.slice(1).join(' ');
       if (!content) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Message`).setDescription('Please provide a message.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Message`).setDescription('Please provide a message.').setTimestamp()] });
       }
       const dmEmbed = new EmbedBuilder()
         .setColor(client.config.embedColor || '#0099ff')
@@ -38,7 +38,7 @@ module.exports = {
         .setTimestamp();
       message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(`Could not DM user. They may have DMs disabled.`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(`Could not DM user. They may have DMs disabled.`).setTimestamp()] });
     }
   }
 };

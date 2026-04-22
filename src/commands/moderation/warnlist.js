@@ -18,7 +18,7 @@ module.exports = {
       const userWarns = warns[target.id] || [];
 
       if (userWarns.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Warn History', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_SUCCESS} **${target.tag}** has no warnings.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Warn History', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_SUCCESS} **${target.tag}** has no warnings.\n${SEP}`).setTimestamp()] });
       }
 
       const perPage = 5;
@@ -71,7 +71,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

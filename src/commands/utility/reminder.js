@@ -20,14 +20,14 @@ module.exports = {
       const timeStr = args[0].toLowerCase();
       const timeMatch = timeStr.match(/^(\d+)(s|m|h|d)$/);
       if (!timeMatch) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Invalid Time`).setDescription('Use format: `10m`, `2h`, `1d`').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Invalid Time`).setDescription('Use format: `10m`, `2h`, `1d`').setTimestamp()] });
       }
       const amount = parseInt(timeMatch[1]);
       const unit = timeMatch[2];
       const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
       const duration = amount * multipliers[unit];
       if (duration > 7 * 86400000) {
-        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Too Long`).setDescription('Maximum reminder duration is 7 days.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Too Long`).setDescription('Maximum reminder duration is 7 days.').setTimestamp()] });
       }
       const reminderMsg = args.slice(1).join(' ');
       const id = Date.now().toString(36);
@@ -58,7 +58,7 @@ module.exports = {
       const sent = await message.reply({ embeds: [embed] }).catch(() => {});
       setTimeout(() => { sent.delete().catch(() => { }); message.delete().catch(() => { }); }, 120000);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
     }
   }
 };

@@ -268,8 +268,29 @@ module.exports = {
     if (cmdBlacklist[message.channel.id] && cmdBlacklist[message.channel.id].includes(command.name)) return;
 
     const isDev = message.author.id === process.env.DEV_ID;
+    const staffData = storage.read('staff.json');
+    const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
+    const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
 
-    // Global Permission Check
+    // 1. Staff Check
+    if (command.staffOnly && !isStaff && !isDev) {
+      return sendAutoDelete(message, {
+        embeds: [
+          new EmbedBuilder()
+            .setColor('#ED4245')
+            .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+            .setDescription(`${EMOJI_ERROR} You are not a **Staff member** of this server.`)
+            .setTimestamp()
+        ]
+      }, 5000);
+    }
+
+    if (runtimeConfig.channelCommands) {
+      const channelConfig = runtimeConfig.channelCommands[message.channel.id];
+      if (channelConfig && channelConfig.disabled && channelConfig.disabled.includes(command.name)) return;
+    }
+
+    // 2. Permission Check
     if (command.userPermissions && !isDev) {
       const missing = command.userPermissions.filter(p => !message.member.permissions.has(p));
       if (missing.length > 0) {
@@ -279,29 +300,6 @@ module.exports = {
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} You need the following permission(s) to use this command: \`${missing.join(', ')}\``)
-              .setTimestamp()
-          ]
-        }, 5000);
-      }
-    }
-
-    if (runtimeConfig.channelCommands) {
-      const channelConfig = runtimeConfig.channelCommands[message.channel.id];
-      if (channelConfig && channelConfig.disabled && channelConfig.disabled.includes(command.name)) return;
-    }
-
-    if (command.staffOnly) {
-      const staffData = storage.read('staff.json');
-      const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
-      const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
-
-      if (!isStaff && !isDev) {
-        return sendAutoDelete(message, {
-          embeds: [
-            new EmbedBuilder()
-              .setColor('#ED4245')
-              .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription(`${EMOJI_ERROR} You are not a **Staff member** of this server.`)
               .setTimestamp()
           ]
         }, 5000);
@@ -340,6 +338,9 @@ module.exports = {
     }
 
     try {
+      if (command.staffOnly || command.userPermissions) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
       await command.execute(client, message, args);
       logger.cmd(message.author.tag, command.name);
     } catch (error) {

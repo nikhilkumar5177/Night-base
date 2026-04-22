@@ -269,7 +269,7 @@ module.exports = {
       }
 
       // ── SEND INITIAL ──
-      const sent = isInteraction ? await message.reply({ ...render().catch(() => {}), fetchReply: true }).catch(() => null) : await message.reply(render().catch(() => {})).catch(() => null);
+      const sent = isInteraction ? await message.reply({ ...render(), fetchReply: true }).catch(() => null) : await message.reply(render()).catch(() => null);
       if (!sent) return;
       if (!isInteraction) message.delete().catch(() => { });
 

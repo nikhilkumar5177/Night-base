@@ -46,7 +46,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('gl_del').setLabel('Dismiss').setStyle(ButtonStyle.Danger)
       );
 
-      const sent = await message.reply({ embeds: [buildEmbed(page)], components: [buttons(page)] });
+      const sent = await message.reply({ embeds: [buildEmbed(page).catch(() => {})], components: [buttons(page)] });
       const collector = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 60000 });
 
       collector.on('collect', async i => {
@@ -67,7 +67,7 @@ module.exports = {
       });
 
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

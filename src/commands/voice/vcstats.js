@@ -27,9 +27,9 @@ module.exports = {
         )
         .setTimestamp();
 
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

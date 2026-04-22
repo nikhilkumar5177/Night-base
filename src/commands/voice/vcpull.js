@@ -15,20 +15,20 @@ module.exports = {
     try {
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a user to pull.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a user to pull.`).setTimestamp()] });
       }
 
       const moderatorChannel = message.member.voice.channel;
       if (!moderatorChannel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to pull someone.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to pull someone.`).setTimestamp()] });
       }
 
       if (!target.voice.channel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} That user is not in a voice channel.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} That user is not in a voice channel.`).setTimestamp()] });
       }
 
       if (target.voice.channel.id === moderatorChannel.id) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} User is already in your voice channel.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} User is already in your voice channel.`).setTimestamp()] });
       }
 
       await target.voice.setChannel(moderatorChannel, `Pulled into VC by ${message.author.tag}`);
@@ -44,9 +44,9 @@ module.exports = {
         )
         .setTimestamp();
 
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

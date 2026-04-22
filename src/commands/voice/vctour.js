@@ -19,24 +19,24 @@ module.exports = {
       // Handle stop command
       if (args[0]?.toLowerCase() === 'stop') {
         if (!global.activeVCTours.has(message.guild.id)) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} No active VC tour found in this server.`).setTimestamp()] });
+          return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setDescription(`${EMOJI_WARN} No active VC tour found in this server.`).setTimestamp()] });
         }
         global.activeVCTours.delete(message.guild.id);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#57F287').setDescription(`${EMOJI_SUCCESS} **VC Tour stopped.**`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#57F287').setDescription(`${EMOJI_SUCCESS} **VC Tour stopped.**`).setTimestamp()] });
       }
 
       // Check if already running
       if (global.activeVCTours.has(message.guild.id)) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} A VC tour is already running. Use \`!vctour stop\` to end it.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setDescription(`${EMOJI_WARN} A VC tour is already running. Use \`!vctour stop\` to end it.`).setTimestamp()] });
       }
 
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a user to start a tour.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a user to start a tour.`).setTimestamp()] });
       }
 
       if (!target.voice.channel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} **${target.user.tag}** is not in a voice channel.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} **${target.user.tag}** is not in a voice channel.`).setTimestamp()] });
       }
 
       let members = [target];
@@ -47,7 +47,7 @@ module.exports = {
         .values());
 
       if (otherChannels.length < 2) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} Need at least 2 accessible voice channels for a tour.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setDescription(`${EMOJI_WARN} Need at least 2 accessible voice channels for a tour.`).setTimestamp()] });
       }
 
       const startEmbed = new EmbedBuilder()
@@ -55,7 +55,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 VC Tour Started', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Starting 2-minute VC tour loop...**\nTarget: **${target ? target.user.tag : 'Everyone in VC'}**\nChannels: **${otherChannels.length}**\n\nUse \`!vctour stop\` to end it early.\n${SEP}`)
         .setTimestamp();
-      const statusMsg = await message.reply({ embeds: [startEmbed] });
+      const statusMsg = await message.reply({ embeds: [startEmbed] }).catch(() => {});
 
       global.activeVCTours.add(message.guild.id);
       const startTime = Date.now();
@@ -74,7 +74,7 @@ module.exports = {
         // Update status occasionally
         if (channelIndex === 0) {
           const remaining = Math.round((duration - (Date.now() - startTime)) / 1000);
-          statusMsg.edit({ embeds: [startEmbed.setDescription(`${SEP}\n${EMOJI_LOADING} **Touring...**\nTime Remaining: **${remaining}s**\nLooping through ${otherChannels.length} channels.\n${SEP}`)] }).catch(() => {});
+          statusMsg.edit({ embeds: [startEmbed.setDescription(`${SEP}\n${EMOJI_LOADING} **Touring...**\nTime Remaining: **${remaining}s**\nLooping through ${otherChannels.length} channels.\n${SEP}`).catch(() => {})] }).catch(() => {});
         }
 
         // Minimal delay to prevent instant API exhaustion while maintaining "non-stop" feel
@@ -93,7 +93,7 @@ module.exports = {
 
     } catch (error) {
       global.activeVCTours.delete(message.guild.id);
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

@@ -57,7 +57,7 @@ module.exports = {
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Processing unbans for ${idsToUnban.length} target(s)...**\n${SEP}`)
         .setTimestamp();
       
-      const statusMsg = await message.reply({ embeds: [loadEmbed] });
+      const statusMsg = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
 
       for (const id of idsToUnban) {
         if (!/^\d{17,20}$/.test(id)) {
@@ -89,10 +89,10 @@ module.exports = {
         .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
 
-      await statusMsg.edit({ embeds: [finalEmbed] });
+      await statusMsg.edit({ embeds: [finalEmbed] }).catch(() => {});
 
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

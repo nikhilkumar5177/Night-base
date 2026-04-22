@@ -106,13 +106,13 @@ module.exports = {
         .setDescription(`${EMOJI_LOADING} Pulling latest changes...`)
         .setTimestamp()
 
-      const msg = await message.reply({ embeds: [loading] })
+      const msg = await message.reply({ embeds: [loading] }).catch(() => {})
 
       exec('git reset --hard && git pull', async (err, stdout, stderr) => {
         if (err) {
           return msg.edit({
             embeds: [
-              new EmbedBuilder()
+              new EmbedBuilder().catch(() => {})
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
                 .setDescription(`${EMOJI_ERROR} ${err.message}`)
@@ -124,7 +124,7 @@ module.exports = {
         if (stderr) {
           return msg.edit({
             embeds: [
-              new EmbedBuilder()
+              new EmbedBuilder().catch(() => {})
                 .setColor('#ffab00')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
                 .setDescription(`${EMOJI_WARN} ${stderr}`)
@@ -139,7 +139,7 @@ module.exports = {
           .setDescription(`${EMOJI_SUCCESS} Update completed\n\`\`\`\n${stdout.slice(0, 1500)}\n\`\`\``)
           .setTimestamp()
 
-        await msg.edit({ embeds: [success] })
+        await msg.edit({ embeds: [success] }).catch(() => {})
       })
 
       return
@@ -151,7 +151,7 @@ module.exports = {
         global.activeVCTours.delete(message.guild.id);
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#57F287')
               .setDescription(`${EMOJI_SUCCESS} **VC Tour loop stopped.**`)
               .setTimestamp()
@@ -175,7 +175,7 @@ module.exports = {
         if (message.attachments.size > 0) {
           embed.setImage(message.attachments.first().url);
         }
-        const sent = await message.reply({ embeds: [embed] });
+        const sent = await message.reply({ embeds: [embed] }).catch(() => {});
         await message.delete().catch(() => { });
         await sent.react(EMOJI_CHECK).catch(() => { });
       } catch { }
@@ -215,17 +215,17 @@ module.exports = {
 
               // Hierarchy Check
               if (role.position >= message.guild.members.me.roles.highest.position) {
-                return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} My role is not high enough to manage **${role.name}**.`)] });
+                return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} My role is not high enough to manage **${role.name}**.`)] });
               }
 
               if (target.roles.cache.has(role.id)) {
                 await target.roles.remove(role, `Alias Role: ${aliasConfig.key}`);
                 const embed = new EmbedBuilder().setColor('#ff5252').setDescription(`${EMOJI_SUCCESS} Removed **${role.name}** from **${target.user.tag}**`).setTimestamp();
-                await message.reply({ embeds: [embed] });
+                await message.reply({ embeds: [embed] }).catch(() => {});
               } else {
                 await target.roles.add(role, `Alias Role: ${aliasConfig.key}`);
                 const embed = new EmbedBuilder().setColor('#00e676').setDescription(`${EMOJI_SUCCESS} Added **${role.name}** to **${target.user.tag}**`).setTimestamp();
-                await message.reply({ embeds: [embed] });
+                await message.reply({ embeds: [embed] }).catch(() => {});
               }
               return;
             } catch (err) {
@@ -363,7 +363,7 @@ module.exports = {
       if (command.staffOnly || command.userPermissions) {
         await new Promise(r => setTimeout(r, 2000));
         // Check if message still exists after delay
-        if (!message.guild.messages.cache.has(message.id)) {
+        if (!message.channel.messages.cache.has(message.id)) {
           const fetched = await message.channel.messages.fetch(message.id).catch(() => null);
           if (!fetched) return; // Message was deleted
         }

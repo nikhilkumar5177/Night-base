@@ -15,15 +15,15 @@ module.exports = {
     try {
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a user to unmute.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a user to unmute.`).setTimestamp()] });
       }
 
       if (!target.voice.channel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} That user is not in a voice channel.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} That user is not in a voice channel.`).setTimestamp()] });
       }
 
       if (!target.voice.serverMute) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} User is not server-muted.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} User is not server-muted.`).setTimestamp()] });
       }
 
       await target.voice.setMute(false, `Server-unmuted by ${message.author.tag}`);
@@ -38,9 +38,9 @@ module.exports = {
         )
         .setTimestamp();
 
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

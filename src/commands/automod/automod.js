@@ -29,7 +29,7 @@ module.exports = {
       // Initial Command Call (Slash Only)
       if (interaction.isChatInputCommand && interaction.isChatInputCommand()) {
         const dashboard = createDashboard(config);
-        return interaction.reply({ ...dashboard, ephemeral: true });
+        return interaction.reply({ ...dashboard, ephemeral: true }).catch(() => {});
       }
 
       // Handle Button Interactions

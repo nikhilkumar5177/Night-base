@@ -27,10 +27,10 @@ module.exports = {
         return sendUsage(message, module.exports);
       }
       if (!target.moderatable) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I cannot timeout this user.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I cannot timeout this user.`).setTimestamp()] });
       }
       if (target.roles.highest.position >= message.member.roles.highest.position) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has equal or higher role.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has equal or higher role.`).setTimestamp()] });
       }
 
       const timeStr = args[1]?.toLowerCase();
@@ -62,7 +62,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Applying timeout...**\n${SEP}`)
         .setTimestamp();
-      const sent = await message.reply({ embeds: [loadEmbed] });
+      const sent = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
 
       await target.timeout(durationMs, reason);
       await new Promise(r => setTimeout(r, 400));
@@ -81,7 +81,7 @@ module.exports = {
         )
         .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
-      await sent.edit({ embeds: [embed] });
+      await sent.edit({ embeds: [embed] }).catch(() => {});
 
       const dmEmbed = new EmbedBuilder()
         .setColor('#FEE75C')
@@ -90,7 +90,7 @@ module.exports = {
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => { });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

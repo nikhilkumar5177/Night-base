@@ -64,7 +64,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('ui_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.reply({ embeds: [embed], components: [row] });
+      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'ui_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
@@ -85,7 +85,7 @@ module.exports = {
           await u.fetch(true).catch(() => { });
           const bannerUrl = u.bannerURL({ dynamic: true, size: 1024 });
           if (!bannerUrl) {
-            await i.reply({ content: `${EMOJI_WARN} This user has no banner.`, ephemeral: true });
+            await i.reply({ content: `${EMOJI_WARN} This user has no banner.`, ephemeral: true }).catch(() => {});
             return;
           }
           const bnEmbed = new EmbedBuilder()
@@ -106,7 +106,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

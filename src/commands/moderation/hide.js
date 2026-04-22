@@ -15,10 +15,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageChannels** permission.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageChannels** permission.`).setTimestamp()] });
       }
       const channel = resolveChannel(message.guild, args[0]) || message.channel;
-      await channel.permissionOverwrites.edit(message.guild.roles.everyone, { ViewChannel: false });
+      await channel.permissionOverwrites.edit(message.guild.roles.everyone, { ViewChannel: false }).catch(() => {});
 
       const embed = new EmbedBuilder()
         .setColor('#5865F2')
@@ -30,9 +30,9 @@ module.exports = {
         )
         .setFooter({ text: 'Wild Wolf \u2022 Only permitted roles can view', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

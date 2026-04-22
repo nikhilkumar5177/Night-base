@@ -16,7 +16,7 @@ module.exports = {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} You need **ManageGuildExpressions** permission to manage emojis.`)
@@ -28,7 +28,7 @@ module.exports = {
       if (!message.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} I need **ManageGuildExpressions** permission to manage emojis.`)
@@ -43,7 +43,7 @@ module.exports = {
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Scanning server for duplicate emojis...**\n${SEP}`)
         .setTimestamp();
       
-      const sentMsg = await message.reply({ embeds: [loadEmbed] });
+      const sentMsg = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
 
       const emojis = await message.guild.emojis.fetch();
       
@@ -75,7 +75,7 @@ module.exports = {
       if (emojisToDelete.length === 0) {
         return sentMsg.edit({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#00e676')
               .setAuthor({ name: 'Wild Wolf \u2502 Dedupe Emojis', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${SEP}\n${EMOJI_SUCCESS} **No duplicate emojis found!**\nAll ${uniqueCount} emojis are unique.\n${SEP}`)
@@ -104,7 +104,7 @@ module.exports = {
           .setStyle(ButtonStyle.Secondary)
       );
 
-      await sentMsg.edit({ embeds: [confirmEmbed], components: [row] });
+      await sentMsg.edit({ embeds: [confirmEmbed], components: [row] }).catch(() => {});
 
       const collector = sentMsg.createMessageComponentCollector({
         componentType: ComponentType.Button,
@@ -140,7 +140,7 @@ module.exports = {
 
           for (const emoji of emojisToDelete) {
             try {
-              await emoji.delete();
+              await emoji.delete().catch(() => {});
               deleted++;
             } catch (err) {
               failed++;
@@ -156,7 +156,7 @@ module.exports = {
             .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
             .setTimestamp();
 
-          await sentMsg.edit({ embeds: [resultEmbed] });
+          await sentMsg.edit({ embeds: [resultEmbed] }).catch(() => {});
         }
       });
 
@@ -164,7 +164,7 @@ module.exports = {
         if (reason === 'time') {
           sentMsg.edit({
             embeds: [
-              new EmbedBuilder()
+              new EmbedBuilder().catch(() => {})
                 .setColor('#ED4245')
                 .setDescription(`${SEP}\n${EMOJI_ERROR} **Deduplication timed out.**\n${SEP}`)
             ],
@@ -176,7 +176,7 @@ module.exports = {
     } catch (error) {
       message.reply({
         embeds: [
-          new EmbedBuilder()
+          new EmbedBuilder().catch(() => {})
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
             .setDescription(`${EMOJI_ERROR} ${error.message}`)

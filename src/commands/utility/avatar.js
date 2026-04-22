@@ -60,7 +60,7 @@ module.exports = {
         ));
       }
 
-      const sent = await message.reply({ embeds: [buildEmbed(globalAv, 'Global Avatar')], components });
+      const sent = await message.reply({ embeds: [buildEmbed(globalAv, 'Global Avatar').catch(() => {})], components });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'av_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
@@ -69,7 +69,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

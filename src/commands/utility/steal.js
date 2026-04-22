@@ -82,7 +82,7 @@ module.exports = {
       const loadEmbed = new EmbedBuilder()
         .setColor('#EB459E')
         .setDescription(`${EMOJI_LOADING} **Stealing ${items.length} item(s)...**`);
-      const sent = await message.reply({ embeds: [loadEmbed] });
+      const sent = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
 
       const successes = [];
       const failures = [];
@@ -93,7 +93,7 @@ module.exports = {
         // Update loading message for progress if multiple items
         if (items.length > 1) {
           await sent.edit({ 
-            embeds: [new EmbedBuilder().setColor('#EB459E').setDescription(`${EMOJI_LOADING} **Stealing items (${i + 1}/${items.length}): \`${item.name}\`...**`)] 
+            embeds: [new EmbedBuilder().catch(() => {}).setColor('#EB459E').setDescription(`${EMOJI_LOADING} **Stealing items (${i + 1}/${items.length}): \`${item.name}\`...**`)] 
           }).catch(() => {});
         }
 
@@ -159,7 +159,7 @@ module.exports = {
       description += SEP;
       finalEmbed.setDescription(description);
 
-      return sent.edit({ embeds: [finalEmbed] });
+      return sent.edit({ embeds: [finalEmbed] }).catch(() => {});
 
     } catch (error) {
       console.error(error);

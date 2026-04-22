@@ -14,12 +14,12 @@ module.exports = {
     try {
       const channel = message.member.voice.channel;
       if (!channel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel.`).setTimestamp()] });
       }
 
       const members = channel.members.filter(m => !m.user.bot);
       if (members.size === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} No members to deafen.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setDescription(`${EMOJI_WARN} No members to deafen.`).setTimestamp()] });
       }
 
       for (const [, member] of members) {
@@ -36,9 +36,9 @@ module.exports = {
         )
         .setTimestamp();
 
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

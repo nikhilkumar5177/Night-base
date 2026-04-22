@@ -24,7 +24,7 @@ module.exports = {
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Measuring latency...**\n\n\`\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\` 0%\n${SEP}`)
         .setTimestamp();
 
-      const sent = await message.reply({ embeds: [loadEmbed] });
+      const sent = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
       await new Promise(r => setTimeout(r, 600));
 
       const rt = sent.createdTimestamp - message.createdTimestamp;
@@ -51,7 +51,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('ping_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      await sent.edit({ embeds: [embed], components: [row] });
+      await sent.edit({ embeds: [embed], components: [row] }).catch(() => {});
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 60000 });
       coll.on('collect', async i => {
         if (i.customId === 'ping_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
@@ -69,7 +69,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] }).catch(() => {});
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] }).catch(() => {});
     }
   }
 };

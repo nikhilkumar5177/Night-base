@@ -25,13 +25,13 @@ module.exports = {
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Could not find the specified user.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Could not find the specified user.`).setTimestamp()] });
       }
       if (target.id === message.author.id) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You cannot warn yourself.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You cannot warn yourself.`).setTimestamp()] });
       }
       if (target.roles.highest.position >= message.member.roles.highest.position) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has equal or higher role.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has equal or higher role.`).setTimestamp()] });
       }
 
       const loadEmbed = new EmbedBuilder()
@@ -39,7 +39,7 @@ module.exports = {
         .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Issuing warning...**\n${SEP}`)
         .setTimestamp();
-      const sent = await message.reply({ embeds: [loadEmbed] });
+      const sent = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
 
       const reason = args.slice(1).join(' ') || 'No reason provided';
       const warns = storage.read('warns.json');
@@ -74,7 +74,7 @@ module.exports = {
         .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
         .setTimestamp();
 
-      await sent.edit({ embeds: [embed] });
+      await sent.edit({ embeds: [embed] }).catch(() => {});
 
       const dmEmbed = new EmbedBuilder()
         .setColor('#FEE75C')
@@ -84,7 +84,7 @@ module.exports = {
         .setTimestamp();
       target.send({ embeds: [dmEmbed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

@@ -16,7 +16,7 @@ module.exports = {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} You need **ManageGuildExpressions** permission to steal emojis.`)
@@ -28,7 +28,7 @@ module.exports = {
       if (!message.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageGuildExpressions)) {
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_ERROR} I need **ManageGuildExpressions** permission to add emojis.`)
@@ -58,7 +58,7 @@ module.exports = {
         } catch (err) {
           return message.reply({
             embeds: [
-              new EmbedBuilder()
+              new EmbedBuilder().catch(() => {})
                 .setColor('#ED4245')
                 .setDescription(`${EMOJI_ERROR} Could not fetch the replied message.`)
                 .setTimestamp()
@@ -70,7 +70,7 @@ module.exports = {
       if (!contentToParse) {
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ED4245')
               .setDescription(`${EMOJI_ERROR} Please provide emojis to steal or reply to a message containing emojis.`)
               .setTimestamp()
@@ -84,7 +84,7 @@ module.exports = {
       if (matches.length === 0) {
         return message.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ED4245')
               .setDescription(`${EMOJI_ERROR} No custom emojis found in the provided text or message.`)
               .setTimestamp()
@@ -101,7 +101,7 @@ module.exports = {
         .setDescription(`${SEP}\n${EMOJI_LOADING} **Stealing ${emojisToSteal.length} emoji(s)...**\n${SEP}`)
         .setTimestamp();
 
-      const sentMsg = await message.reply({ embeds: [loadEmbed] });
+      const sentMsg = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
 
       const successes = [];
       const failures = [];
@@ -159,12 +159,12 @@ module.exports = {
       desc += SEP;
       resultEmbed.setDescription(desc);
 
-      await sentMsg.edit({ embeds: [resultEmbed] });
+      await sentMsg.edit({ embeds: [resultEmbed] }).catch(() => {});
 
     } catch (error) {
       message.reply({
         embeds: [
-          new EmbedBuilder()
+          new EmbedBuilder().catch(() => {})
             .setColor('#ED4245')
             .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
             .setDescription(`${EMOJI_ERROR} ${error.message}`)

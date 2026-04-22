@@ -15,7 +15,7 @@ module.exports = {
     try {
       const staffData = storage.read('staff.json');
       if (!staffData.roles || staffData.roles.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Staff List', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No staff roles configured.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Staff List', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No staff roles configured.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.\n${SEP}`).setTimestamp()] });
       }
 
       const cleaned = [];
@@ -53,12 +53,12 @@ module.exports = {
         new ButtonBuilder().setCustomId('sl_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.reply({ embeds: [embed], components: [row] });
+      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => { if (i.customId === 'sl_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

@@ -79,7 +79,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('ban_no').setLabel('Cancel').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.reply({ embeds: [confirmEmbed], components: [row] });
+      const sent = await message.reply({ embeds: [confirmEmbed], components: [row] }).catch(() => {});
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 30000, max: 1 });
 
       coll.on('collect', async i => {
@@ -92,7 +92,7 @@ module.exports = {
 
           for (const target of validTargets) {
             try {
-              await target.send({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_ERROR} **You have been banned from ${message.guild.name}**\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Moderator:** ${message.author.tag}\n${SEP}`).setTimestamp()] }).catch(() => { });
+              await target.send({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_ERROR} **You have been banned from ${message.guild.name}**\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Moderator:** ${message.author.tag}\n${SEP}`).setTimestamp()] }).catch(() => { });
               await target.ban({ reason, deleteMessageSeconds: 604800 });
               successCount++;
             } catch (err) {
@@ -111,7 +111,7 @@ module.exports = {
             )
             .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
             .setTimestamp();
-          await sent.edit({ embeds: [successEmbed] });
+          await sent.edit({ embeds: [successEmbed] }).catch(() => {});
         } else {
           await i.update({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf \u2502 Cancelled', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **Mass ban action cancelled.**\n${SEP}`).setTimestamp()], components: [] });
           setTimeout(() => sent.delete().catch(() => { }), 5000);
@@ -119,10 +119,10 @@ module.exports = {
       });
 
       coll.on('end', c => {
-        if (c.size === 0) sent.edit({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **Mass ban confirmation timed out.**\n${SEP}`).setTimestamp()], components: [] }).catch(() => { });
+        if (c.size === 0) sent.edit({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **Mass ban confirmation timed out.**\n${SEP}`).setTimestamp()], components: [] }).catch(() => { });
       });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

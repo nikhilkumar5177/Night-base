@@ -16,14 +16,14 @@ module.exports = {
       const guildId = args[0];
       if (!guildId) {
         return message.reply({ 
-          embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please provide a Guild ID.`)] 
+          embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please provide a Guild ID.`)] 
         });
       }
 
       const guild = client.guilds.cache.get(guildId);
       if (!guild) {
         return message.reply({ 
-          embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} I am not in a server with that ID.`)] 
+          embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} I am not in a server with that ID.`)] 
         });
       }
 
@@ -40,11 +40,11 @@ module.exports = {
         )
         .setTimestamp();
 
-      await message.reply({ embeds: [successEmbed] });
+      await message.reply({ embeds: [successEmbed] }).catch(() => {});
 
     } catch (error) {
       message.reply({ 
-        embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`)] 
+        embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`)] 
       });
     }
   }

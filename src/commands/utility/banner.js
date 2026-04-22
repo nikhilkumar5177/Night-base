@@ -24,7 +24,7 @@ module.exports = {
       user = await user.fetch(true);
       const bannerUrl = user.bannerURL({ dynamic: true, size: 1024 });
       if (!bannerUrl) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Banner', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **${user.tag}** does not have a banner.\n${SEP}`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Banner', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **${user.tag}** does not have a banner.\n${SEP}`).setTimestamp()] });
       }
 
       const member = message.guild.members.cache.get(user.id);
@@ -42,12 +42,12 @@ module.exports = {
       }
       buttons.push(new ButtonBuilder().setCustomId('bn_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716'));
 
-      const sent = await message.reply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(...buttons)] });
+      const sent = await message.reply({ embeds: [embed], components: [new ActionRowBuilder().catch(() => {}).addComponents(...buttons)] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => { if (i.customId === 'bn_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

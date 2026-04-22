@@ -52,7 +52,7 @@ module.exports = {
           return isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }).catch(() => {}) : message.reply({ embeds: [errEmbed] }).catch(() => {});
         }
         const embed = buildCommandEmbed(client, message, command);
-        return isInteraction ? message.reply({ embeds: [embed], components: [buildHomeButton()] }).catch(() => {}) : message.reply({ embeds: [embed], components: [buildHomeButton()] }).catch(() => {});
+        return isInteraction ? message.reply({ embeds: [embed], components: [buildHomeButton().catch(() => {})] }).catch(() => {}) : message.reply({ embeds: [embed], components: [buildHomeButton().catch(() => {})] }).catch(() => {});
       }
 
       // ── Build categories map (cached per invocation) ──
@@ -269,7 +269,7 @@ module.exports = {
       }
 
       // ── SEND INITIAL ──
-      const sent = isInteraction ? await message.reply({ ...render(), fetchReply: true }).catch(() => null) : await message.reply(render()).catch(() => null);
+      const sent = isInteraction ? await message.reply({ ...render().catch(() => {}), fetchReply: true }).catch(() => null) : await message.reply(render().catch(() => {})).catch(() => null);
       if (!sent) return;
       if (!isInteraction) message.delete().catch(() => { });
 
@@ -313,7 +313,7 @@ module.exports = {
           await i.update(render());
         } catch (err) {
           try {
-            await i.reply({ content: `${EMOJI_ERROR} Interaction failed. Try again.`, ephemeral: true });
+            await i.reply({ content: `${EMOJI_ERROR} Interaction failed. Try again.`, ephemeral: true }).catch(() => {});
           } catch { }
         }
       });

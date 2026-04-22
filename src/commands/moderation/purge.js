@@ -63,7 +63,7 @@ module.exports = {
       const deletable = filtered.filter(m => m.createdTimestamp > twoWeeks && m.id !== progressMsg.id);
 
       if (deletable.size === 0) {
-        return progressMsg.edit({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Purge', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No deletable messages found.**\nMessages older than 14 days cannot be bulk deleted.\n${SEP}`).setTimestamp()] });
+        return progressMsg.edit({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Purge', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No deletable messages found.**\nMessages older than 14 days cannot be bulk deleted.\n${SEP}`).setTimestamp()] });
       }
 
       const deleted = await message.channel.bulkDelete(deletable, true);
@@ -79,7 +79,7 @@ module.exports = {
         )
         .setFooter({ text: 'Wild Wolf \u2022 This message will auto-delete in 5s' })
         .setTimestamp();
-      await progressMsg.edit({ embeds: [embed] });
+      await progressMsg.edit({ embeds: [embed] }).catch(() => {});
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
     } catch (error) {
       sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] }, 5000);

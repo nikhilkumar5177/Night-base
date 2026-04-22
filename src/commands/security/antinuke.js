@@ -15,7 +15,7 @@ module.exports = {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
         return message.reply({ 
-          embeds: [new EmbedBuilder()
+          embeds: [new EmbedBuilder().catch(() => {})
             .setColor('#ff1744')
             .setTitle(`${EMOJI_OWNER} Owner Only`)
             .setDescription('Only the server owner can configure anti-nuke.')
@@ -27,12 +27,12 @@ module.exports = {
       if (action === 'on') {
         securityConfig.enabled = true;
         storage.write('security.json', securityConfig);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Anti-Nuke Enabled`).setDescription('Security monitoring is now active.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Anti-Nuke Enabled`).setDescription('Security monitoring is now active.').setTimestamp()] });
       }
       if (action === 'off') {
         securityConfig.enabled = false;
         storage.write('security.json', securityConfig);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle(`${EMOJI_WARN} Anti-Nuke Disabled`).setDescription('Security monitoring has been turned off.').setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ffab00').setTitle(`${EMOJI_WARN} Anti-Nuke Disabled`).setDescription('Security monitoring has been turned off.').setTimestamp()] });
       }
       if (action === 'config') {
         const threshold = parseInt(args[1]) || securityConfig.nukeThreshold || 3;
@@ -40,7 +40,7 @@ module.exports = {
         securityConfig.nukeThreshold = threshold;
         securityConfig.nukeWindow = window;
         storage.write('security.json', securityConfig);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Config Updated`).addFields({ name: 'Threshold', value: `${threshold} actions`, inline: true }, { name: 'Window', value: `${window / 1000}s`, inline: true }).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Config Updated`).addFields({ name: 'Threshold', value: `${threshold} actions`, inline: true }, { name: 'Window', value: `${window / 1000}s`, inline: true }).setTimestamp()] });
       }
       const embed = new EmbedBuilder()
         .setColor(client.config.embedColor || '#0099ff')
@@ -53,9 +53,9 @@ module.exports = {
         )
         .setDescription(`Usage:\n\`${client.config.prefix}antinuke on\` - Enable\n\`${client.config.prefix}antinuke off\` - Disable\n\`${client.config.prefix}antinuke config <threshold> <window_ms>\` - Configure`)
         .setTimestamp();
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
     }
   }
 };

@@ -16,12 +16,12 @@ module.exports = {
       const runtimeConfig = storage.read('config.json');
       const disabledCommands = runtimeConfig.disabledCommands || [];
       if (disabledCommands.includes(command.name)) {
-        return interaction.reply({ content: `${EMOJI_ERROR} This command is currently disabled.`, ephemeral: true });
+        return interaction.reply({ content: `${EMOJI_ERROR} This command is currently disabled.`, ephemeral: true }).catch(() => {});
       }
       if (runtimeConfig.maintenance && interaction.user.id !== process.env.DEV_ID) {
         return interaction.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ff1744')
               .setAuthor({ name: 'Wild Wolf \u2502 System Lockdown', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_OWNER} ${EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`)
@@ -42,7 +42,7 @@ module.exports = {
         if (!isStaff && !isDev) {
           return interaction.reply({
             embeds: [
-              new EmbedBuilder()
+              new EmbedBuilder().catch(() => {})
                 .setColor('#ED4245')
                 .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
                 .setDescription(`${EMOJI_ERROR} You are not a **Staff member** of this server.`)
@@ -55,7 +55,7 @@ module.exports = {
       if (command.devOnly && interaction.user.id !== process.env.DEV_ID) {
         return interaction.reply({
           embeds: [
-            new EmbedBuilder()
+            new EmbedBuilder().catch(() => {})
               .setColor('#ED4245')
               .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
               .setDescription(`${EMOJI_OWNER} This is an **Owner Command**.`)
@@ -73,7 +73,7 @@ module.exports = {
           const expiresAt = client.cooldowns.get(key);
           if (now < expiresAt) {
             const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            return interaction.reply({ content: `${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`, ephemeral: true });
+            return interaction.reply({ content: `${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`, ephemeral: true }).catch(() => {});
           }
         }
         client.cooldowns.set(key, now + cooldownAmount);

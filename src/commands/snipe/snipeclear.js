@@ -15,7 +15,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
+        return message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
       }
 
       const isAll = args[0]?.toLowerCase() === 'all';
@@ -30,7 +30,7 @@ module.exports = {
           new ButtonBuilder().setCustomId('sc_yes').setLabel('Clear All').setStyle(ButtonStyle.Danger),
           new ButtonBuilder().setCustomId('sc_no').setLabel('Cancel').setStyle(ButtonStyle.Secondary)
         );
-        const sent = await message.reply({ embeds: [confirmEmbed], components: [row] });
+        const sent = await message.reply({ embeds: [confirmEmbed], components: [row] }).catch(() => {});
         const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 15000, max: 1 });
         coll.on('collect', async i => {
           if (i.customId === 'sc_yes') {
@@ -57,9 +57,9 @@ module.exports = {
         .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Cleared \`${count}\` sniped messages from this channel.**\n${SEP}`)
         .setFooter({ text: `Wild Wolf \u2022 Use ${client.config.prefix}snipeclear all for global clear` })
         .setTimestamp();
-      message.reply({ embeds: [embed] });
+      message.reply({ embeds: [embed] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

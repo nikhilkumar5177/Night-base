@@ -59,7 +59,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('si_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
       );
 
-      const sent = await message.reply({ embeds: [embed], components: [row] });
+      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'si_del') { await sent.delete().catch(() => {}); coll.stop(); return; }
@@ -84,7 +84,7 @@ module.exports = {
       });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ embeds: [new EmbedBuilder().catch(() => {}).setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
     }
   }
 };

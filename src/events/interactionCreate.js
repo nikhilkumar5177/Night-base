@@ -95,6 +95,21 @@ module.exports = {
         storage.write('analytics.json', analytics);
       } catch (error) {
         logger.error(`Slash Command ${command.name} failed: ${error.message}`);
+        
+        // Log to error channel if configured
+        const errLogId = client.config.errorLogChannelId;
+        if (errLogId) {
+          const errLogCh = client.channels.cache.get(errLogId);
+          if (errLogCh) {
+            const logEmbed = new EmbedBuilder()
+              .setColor('#ff1744')
+              .setAuthor({ name: 'Wild Wolf │ Slash Error Log', iconURL: client.user.displayAvatarURL() })
+              .setDescription(`${EMOJI_ERROR} **Slash Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${interaction.user.tag} (${interaction.user.id})\n\u25B8 **Guild:** ${interaction.guild.name}\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``)
+              .setTimestamp();
+            errLogCh.send({ embeds: [logEmbed] }).catch(() => {});
+          }
+        }
+
         if (interaction.replied || interaction.deferred) {
           interaction.followUp({ content: `${EMOJI_ERROR} Error: ${error.message}`, ephemeral: true }).catch(() => { });
         } else {

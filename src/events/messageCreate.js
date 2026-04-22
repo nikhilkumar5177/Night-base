@@ -360,18 +360,24 @@ module.exports = {
     }
 
     try {
-      if (command.staffOnly || command.userPermissions) {
-        await new Promise(r => setTimeout(r, 2000));
-        // Check if message still exists after delay
-        if (!message.channel.messages.cache.has(message.id)) {
-          const fetched = await message.channel.messages.fetch(message.id).catch(() => null);
-          if (!fetched) return; // Message was deleted
-        }
-      }
       await command.execute(client, message, args);
       logger.cmd(message.author.tag, command.name);
     } catch (error) {
       logger.error(`Command ${command.name} failed: ${error.message}`);
+      
+      const errLogId = client.config.errorLogChannelId;
+      if (errLogId) {
+        const errLogCh = client.channels.cache.get(errLogId);
+        if (errLogCh) {
+          const logEmbed = new EmbedBuilder()
+            .setColor('#ff1744')
+            .setAuthor({ name: 'Wild Wolf │ Error Log', iconURL: client.user.displayAvatarURL() })
+            .setDescription(`${EMOJI_ERROR} **Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${message.author.tag} (${message.author.id})\n\u25B8 **Guild:** ${message.guild.name}\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``)
+            .setTimestamp();
+          errLogCh.send({ embeds: [logEmbed] }).catch(() => {});
+        }
+      }
+
       await sendAutoDelete(message, {
         embeds: [
           new EmbedBuilder()
@@ -380,7 +386,7 @@ module.exports = {
             .setDescription(`${EMOJI_ERROR} An error occurred while executing this command.\n\`\`\`\n${error.message}\n\`\`\``)
             .setTimestamp()
         ]
-      }, 5000);
+      }, 5000).catch(() => {});
     }
 
     const analytics = storage.read('analytics.json');

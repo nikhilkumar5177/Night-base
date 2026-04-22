@@ -2,7 +2,8 @@ const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 const storage = require('./storageManager');
 const logger = require('./logger');
 
-const ROTATION_INTERVAL = 30 * 60 * 1000; // 30 minutes
+const ROTATION_INTERVAL = 10 * 60 * 1000; // 10 minutes
+
 
 /**
  * VC Joiner Utility
@@ -18,8 +19,8 @@ module.exports = {
     if (!guildConfig || !guildConfig.enabled) return;
 
     // Filter channels
-    const channels = guild.channels.cache.filter(c => 
-      c.isVoiceBased() && 
+    const channels = guild.channels.cache.filter(c =>
+      c.isVoiceBased() &&
       !guildConfig.blacklistedCategories.includes(c.parentId) &&
       c.members.filter(m => !m.user.bot).size === 0 && // Inactive
       c.viewable &&
@@ -46,7 +47,7 @@ module.exports = {
         guildId: guild.id,
         adapterCreator: guild.voiceAdapterCreator,
         selfMute: false,
-        selfDeaf: false
+        selfDeaf: true
       });
 
       // Update storage
@@ -55,12 +56,6 @@ module.exports = {
       vcData[guild.id].lastJoined = Date.now();
       vcData[guild.id].currentChannelId = channel.id;
       storage.write('vcjoiner.json', vcData);
-
-      // Set Status
-      client.user.setPresence({
-        activities: [{ name: `VC: ${channel.name.slice(0, 100)}`, type: 0 }], // Playing
-        status: 'online'
-      });
 
       logger.info(`VCJoiner: Joined ${channel.name} in ${guild.name}`);
       return true;
@@ -78,19 +73,12 @@ module.exports = {
     const connection = getVoiceConnection(guild.id);
     if (connection) {
       connection.destroy();
-      
+
       const vcData = storage.read('vcjoiner.json');
       if (vcData[guild.id]) {
         vcData[guild.id].currentChannelId = null;
         storage.write('vcjoiner.json', vcData);
       }
-
-      // Reset Status
-      guild.client.user.setPresence({
-        activities: [{ name: `${guild.client.config.prefix}help`, type: 3 }],
-        status: 'online'
-      });
-      
       return true;
     }
     return false;

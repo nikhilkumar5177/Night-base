@@ -61,6 +61,7 @@ module.exports = {
       vcData[guild.id].lastJoined = Date.now();
       vcData[guild.id].currentChannelId = channel.id;
       storage.write('vcjoiner.json', vcData);
+      await storage.flushFile('vcjoiner.json').catch(() => {});
 
       logger.info(`VCJoiner: Joined ${channel.name} in ${guild.name}`);
       return true;

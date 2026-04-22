@@ -45,6 +45,7 @@ module.exports = {
         case 'on':
           guildConfig.enabled = true;
           storage.write('vcjoiner.json', vcData);
+          await storage.flushFile('vcjoiner.json').catch(() => {});
           await joinRandomVC(message.guild);
           await message.react('\u2705').catch(() => { }); // ✅
           break;
@@ -52,6 +53,7 @@ module.exports = {
         case 'off':
           guildConfig.enabled = false;
           storage.write('vcjoiner.json', vcData);
+          await storage.flushFile('vcjoiner.json').catch(() => {});
           leaveVC(message.guild);
           await message.react('\u2705').catch(() => { }); // ✅
           break;
@@ -62,6 +64,7 @@ module.exports = {
           if (!guildConfig.blacklistedCategories.includes(blId)) {
             guildConfig.blacklistedCategories.push(blId);
             storage.write('vcjoiner.json', vcData);
+            await storage.flushFile('vcjoiner.json').catch(() => {});
           }
           await message.react('\u2705').catch(() => { }); // ✅
           break;
@@ -71,6 +74,7 @@ module.exports = {
           if (!unblId) throw new Error('Missing ID');
           guildConfig.blacklistedCategories = guildConfig.blacklistedCategories.filter(id => id !== unblId);
           storage.write('vcjoiner.json', vcData);
+          await storage.flushFile('vcjoiner.json').catch(() => {});
           await message.react('\u2705').catch(() => { }); // ✅
           break;
 

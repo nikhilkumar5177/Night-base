@@ -13,12 +13,12 @@ module.exports = {
     let configData = storage.read('config.json');
     if (configData.maintenance) {
       client.user.setPresence({
-        activities: [{ name: 'System Maintenance', type: 0 }],
+        activities: [{ name: 'System Maintenance', type: 0 }], // Playing
         status: 'dnd'
       });
     } else {
       client.user.setPresence({
-        activities: [{ name: `${client.config.prefix}help`, type: 3 }],
+        activities: [{ name: `${client.config.prefix}help`, type: 3 }], // Watching
         status: 'online'
       });
     }

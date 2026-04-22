@@ -120,12 +120,13 @@ module.exports = {
           } else {
             let emojiName = item.name;
             if (items.length === 1 && args[1]) {
-              emojiName = args[1];
+              emojiName = args[1].replace(/\s+/g, '_');
             }
             
+            emojiName = emojiName.replace(/[^a-zA-Z0-9_]/g, '');
             if (emojiName.length < 2) emojiName += '_';
 
-            const newEmoji = await message.guild.emojis.create({ attachment: buffer, name: emojiName });
+            const newEmoji = await message.guild.emojis.create({ attachment: buffer, name: emojiName.slice(0, 32) });
             successes.push(`<${item.animated ? 'a' : ''}:${newEmoji.name}:${newEmoji.id}> \`${newEmoji.name}\``);
           }
         } catch (err) {

@@ -60,6 +60,10 @@ module.exports = {
       const statusMsg = await message.reply({ embeds: [loadEmbed] });
 
       for (const id of idsToUnban) {
+        if (!/^\d{17,20}$/.test(id)) {
+          failure.push(`\`${id}\` (Invalid ID format)`);
+          continue;
+        }
         try {
           await message.guild.members.unban(id, reason);
           success.push(`\`${id}\``);

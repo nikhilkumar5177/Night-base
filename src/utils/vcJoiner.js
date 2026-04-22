@@ -58,7 +58,7 @@ module.exports = {
 
       // Set Status
       client.user.setPresence({
-        activities: [{ name: `VC: ${channel.name}`, type: 0 }],
+        activities: [{ name: `VC: ${channel.name.slice(0, 100)}`, type: 0 }], // Playing
         status: 'online'
       });
 

@@ -18,7 +18,8 @@ const DEFAULT_FILES = {
   'security.json': { enabled: false, logs: [], nukeThreshold: 3, nukeWindow: 10000 },
   'config.json': { channelCommands: {}, disabledCommands: [], noPrefixUsers: [], aliasMode: true, maintenance: false },
   'autorole.json': {},
-  'privateChannels.json': {}
+  'privateChannels.json': {},
+  'vcjoiner.json': {}
 };
 
 let flushInterval = null;

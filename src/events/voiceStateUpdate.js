@@ -24,5 +24,20 @@ module.exports = {
         } catch {}
       }
     }
+
+    // VC Joiner: Track bot leaving VC
+    if (oldState.member.id === client.user.id && !newState.channelId) {
+      const vcData = storage.read('vcjoiner.json');
+      if (vcData[oldState.guild.id]) {
+        vcData[oldState.guild.id].currentChannelId = null;
+        storage.write('vcjoiner.json', vcData);
+        
+        // Reset Status
+        client.user.setPresence({
+          activities: [{ name: `${client.config.prefix}help`, type: 3 }],
+          status: 'online'
+        });
+      }
+    }
   }
 };

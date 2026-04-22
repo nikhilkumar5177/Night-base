@@ -1,6 +1,7 @@
 const logger = require('../utils/logger');
 const storage = require('../utils/storageManager');
 const { EMOJI_INFO } = require('../utils/constants');
+const { runRotation } = require('../utils/vcJoiner');
 
 module.exports = {
   name: 'clientReady',
@@ -100,5 +101,13 @@ module.exports = {
     setInterval(() => {
       sendBackup(client);
     }, 3600000);
+
+    // VC Joiner Rotation (runs every 1 minute to check for 30m intervals/disconnections)
+    setInterval(() => {
+      runRotation(client);
+    }, 60000);
+
+    // Initial run
+    runRotation(client);
   }
 };

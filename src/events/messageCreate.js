@@ -31,6 +31,27 @@ module.exports = {
     // Run AutoMod
     await handleAutoMod(client, message);
 
+    // Mention Response (Prefix Reminder)
+    const mentionRegex = new RegExp(`^<@!?${client.user.id}>$`);
+    if (mentionRegex.test(message.content)) {
+      if (!client._mentionCooldowns) client._mentionCooldowns = new Map();
+      const now = Date.now();
+      const cooldown = 60000;
+      const lastUsed = client._mentionCooldowns.get(message.author.id) || 0;
+
+      if (now - lastUsed < cooldown) return;
+      client._mentionCooldowns.set(message.author.id, now);
+
+      const embed = new EmbedBuilder()
+        .setColor(client.config.embedColor || '#5865F2')
+        .setAuthor({ name: 'Wild Wolf \u2502 System Info', iconURL: client.user.displayAvatarURL() })
+        .setDescription(`${SEP}\n\u25B8 My prefix for this server is \`${client.config.prefix}\`\n\u25B8 Use \`${client.config.prefix}help\` to see all commands.\n${SEP}`)
+        .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
+        .setTimestamp();
+
+      return message.reply({ embeds: [embed] });
+    }
+
     if (message.webhookId && message.guild) {
       const securityConfig = storage.read('security.json');
       if (securityConfig.enabled) {

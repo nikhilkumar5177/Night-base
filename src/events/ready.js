@@ -4,7 +4,7 @@ const { EMOJI_INFO } = require('../utils/constants');
 const { runRotation } = require('../utils/vcJoiner');
 
 module.exports = {
-  name: 'ready',
+  name: 'clientReady',
   once: true,
   execute: (client) => {
     logger.info(`Wild Wolf online as ${client.user.tag}`);
@@ -108,6 +108,10 @@ module.exports = {
     }, 60000);
 
     // Initial run
-    runRotation(client);
+    try {
+      runRotation(client);
+    } catch (err) {
+      logger.error(`Initial VC rotation failed: ${err.message}`);
+    }
   }
 };

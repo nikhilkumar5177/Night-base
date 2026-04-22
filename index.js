@@ -49,6 +49,12 @@ process.on('unhandledRejection', (error) => {
   logger.error(`Unhandled Rejection: ${error.stack || error}`);
 });
 
+process.on('uncaughtException', (error) => {
+  logger.error(`Uncaught Exception: ${error.stack || error}`);
+  // We don't want to exit immediately, but Node might be in an unstable state.
+  // For debugging, we'll keep it alive if possible or let it crash after logging.
+});
+
 process.on('SIGINT', async () => {
   await storage.stopPeriodicFlush();
   process.exit(0);

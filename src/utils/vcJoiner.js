@@ -27,9 +27,14 @@ module.exports = {
       c.permissionsFor(guild.members.me).has(['Connect', 'Speak']) // Public/Accessible
     );
 
-    if (channels.size === 0) return;
+    // Exclude current channel if there are others
+    let filtered = channels;
+    if (guildConfig.currentChannelId && channels.size > 1) {
+      filtered = channels.filter(c => c.id !== guildConfig.currentChannelId);
+    }
 
-    const randomChannel = channels.random();
+    if (filtered.size === 0) return;
+    const randomChannel = filtered.random();
     await module.exports.joinSpecificVC(randomChannel);
   },
 
@@ -100,9 +105,10 @@ module.exports = {
 
       const lastJoined = config.lastJoined || 0;
       const connection = getVoiceConnection(guildId);
+      const timeRemaining = ROTATION_INTERVAL - (now - lastJoined);
 
-      // If disconnected or 30 mins passed
-      if (!connection || (now - lastJoined >= ROTATION_INTERVAL)) {
+      if (!connection || timeRemaining <= 0) {
+        logger.info(`VCJoiner: Rotating VC for ${guild.name} (Time since last join: ${Math.floor((now - lastJoined)/1000)}s)`);
         await module.exports.joinRandomVC(guild);
       }
     }

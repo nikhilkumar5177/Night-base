@@ -12,20 +12,20 @@ module.exports = {
   cooldown: 5,
   enabled: true,
   staffOnly: false, // Custom check inside execute
-  devOnly: false,
+  devOnly: true,
   execute: async (client, message, args) => {
     // Only Server Owner and Bot Owner
     const isOwner = message.author.id === message.guild.ownerId;
     const isDev = message.author.id === process.env.DEV_ID;
 
     if (!isOwner && !isDev) {
-      return message.react('\u274C').catch(() => {}); // ❌
+      return message.react('\u274C').catch(() => { }); // ❌
     }
 
     const sub = args[0]?.toLowerCase();
     if (!sub) {
-       // React with error if no sub command
-       return message.react('\u274C').catch(() => {});
+      // React with error if no sub command
+      return message.react('\u274C').catch(() => { });
     }
 
     let vcData = storage.read('vcjoiner.json');
@@ -46,14 +46,14 @@ module.exports = {
           guildConfig.enabled = true;
           storage.write('vcjoiner.json', vcData);
           await joinRandomVC(message.guild);
-          await message.react('\u2705').catch(() => {}); // ✅
+          await message.react('\u2705').catch(() => { }); // ✅
           break;
 
         case 'off':
           guildConfig.enabled = false;
           storage.write('vcjoiner.json', vcData);
           leaveVC(message.guild);
-          await message.react('\u2705').catch(() => {}); // ✅
+          await message.react('\u2705').catch(() => { }); // ✅
           break;
 
         case 'bl':
@@ -63,7 +63,7 @@ module.exports = {
             guildConfig.blacklistedCategories.push(blId);
             storage.write('vcjoiner.json', vcData);
           }
-          await message.react('\u2705').catch(() => {}); // ✅
+          await message.react('\u2705').catch(() => { }); // ✅
           break;
 
         case 'unbl':
@@ -71,7 +71,7 @@ module.exports = {
           if (!unblId) throw new Error('Missing ID');
           guildConfig.blacklistedCategories = guildConfig.blacklistedCategories.filter(id => id !== unblId);
           storage.write('vcjoiner.json', vcData);
-          await message.react('\u2705').catch(() => {}); // ✅
+          await message.react('\u2705').catch(() => { }); // ✅
           break;
 
         case 'join':
@@ -79,18 +79,18 @@ module.exports = {
           if (!chId) throw new Error('Missing ID');
           const channel = message.guild.channels.cache.get(chId);
           if (!channel || !channel.isVoiceBased()) throw new Error('Invalid Channel');
-          
+
           guildConfig.enabled = true; // Auto-enable if forced join
           await joinSpecificVC(channel);
-          await message.react('\u2705').catch(() => {}); // ✅
+          await message.react('\u2705').catch(() => { }); // ✅
           break;
 
         default:
-          await message.react('\u274C').catch(() => {}); // ❌
+          await message.react('\u274C').catch(() => { }); // ❌
           break;
       }
     } catch (error) {
-      await message.react('\u274C').catch(() => {}); // ❌
+      await message.react('\u274C').catch(() => { }); // ❌
     }
   }
 };

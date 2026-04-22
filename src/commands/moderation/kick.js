@@ -13,6 +13,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  userPermissions: ['KickMembers'],
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('KickMembers')) {

@@ -1,6 +1,5 @@
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 const axios = require('axios');
-const sharp = require('sharp');
 const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_LOADING, SEP, EMOJI_DOT } = require('../../utils/constants');
 const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
 
@@ -12,6 +11,7 @@ module.exports = {
   example: 'steal :emoji1: :emoji2:\nsteal (replying to a message with emojis)\nsteal :emoji: custom_name',
   cooldown: 5,
   staffOnly: true,
+  userPermissions: ['ManageEmojisAndStickers'],
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageEmojisAndStickers)) {
@@ -102,13 +102,6 @@ module.exports = {
           let buffer = Buffer.from(response.data);
 
           if (item.type === 'sticker') {
-            if (item.format !== 3) { // 3 = Lottie
-              buffer = await sharp(buffer)
-                .resize(320, 320, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                .png({ quality: 80, compressionLevel: 9 })
-                .toBuffer();
-            }
-            
             // If only one item and args provide a name, use it
             // Note: If args[0] was the emoji/sticker, args[1] might be name. 
             // For stickers, they don't appear in args usually, so args[0] is name.
@@ -125,21 +118,6 @@ module.exports = {
             });
             successes.push(`Sticker: \`${newSticker.name}\``);
           } else {
-            // Emoji compression
-            if (buffer.length > 256 * 1024) {
-              if (item.animated) {
-                buffer = await sharp(buffer, { animated: true })
-                  .resize(128, 128, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                  .gif()
-                  .toBuffer();
-              } else {
-                buffer = await sharp(buffer)
-                  .resize(128, 128, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
-                  .png({ quality: 75, compressionLevel: 9 })
-                  .toBuffer();
-              }
-            }
-
             let emojiName = item.name;
             if (items.length === 1 && args[1]) {
               emojiName = args[1];

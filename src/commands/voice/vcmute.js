@@ -11,6 +11,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  userPermissions: ['MuteMembers'],
   execute: async (client, message, args) => {
     try {
       const target = await resolveMember(message.guild, args[0]);

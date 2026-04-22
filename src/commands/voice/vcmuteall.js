@@ -10,6 +10,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  userPermissions: ['MuteMembers'],
   execute: async (client, message, args) => {
     try {
       const channel = message.member.voice.channel;

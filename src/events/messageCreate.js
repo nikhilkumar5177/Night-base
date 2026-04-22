@@ -159,6 +159,8 @@ module.exports = {
     }
 
     const runtimeConfig = storage.read('config.json');
+    if (runtimeConfig.maintenance && message.author.id !== process.env.DEV_ID) return;
+
 
     if (runtimeConfig.aliasMode !== false) {
       const aliasData = storage.read('aliases.json');
@@ -172,6 +174,11 @@ module.exports = {
       const aliasConfig = aliasTriggerMap.get(firstWord);
 
       if (aliasConfig && !message.content.startsWith(client.config.prefix)) {
+        const isDev = message.author.id === process.env.DEV_ID;
+        const hasManageRoles = message.member.permissions.has(PermissionsBitField.Flags.ManageRoles);
+
+        if (!isDev && !hasManageRoles) return;
+
         if (!aliasConfig.requiredRole || message.member.roles.cache.has(aliasConfig.requiredRole)) {
           const role = message.guild.roles.cache.get(aliasConfig.roleId);
           if (role) {
@@ -249,7 +256,6 @@ module.exports = {
     const command = client.commands.get(commandName) || client.commands.get(client.aliases.get(commandName));
     if (!command) return;
 
-    if (runtimeConfig.maintenance && message.author.id !== process.env.DEV_ID) return;
 
     const disabledCommands = runtimeConfig.disabledCommands || [];
     if (disabledCommands.includes(command.name)) return;
@@ -261,6 +267,24 @@ module.exports = {
     const cmdBlacklist = storage.read('cmdBlacklist.json');
     if (cmdBlacklist[message.channel.id] && cmdBlacklist[message.channel.id].includes(command.name)) return;
 
+    const isDev = message.author.id === process.env.DEV_ID;
+
+    // Global Permission Check
+    if (command.userPermissions && !isDev) {
+      const missing = command.userPermissions.filter(p => !message.member.permissions.has(p));
+      if (missing.length > 0) {
+        return sendAutoDelete(message, {
+          embeds: [
+            new EmbedBuilder()
+              .setColor('#ED4245')
+              .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
+              .setDescription(`${EMOJI_ERROR} You need the following permission(s) to use this command: \`${missing.join(', ')}\``)
+              .setTimestamp()
+          ]
+        }, 5000);
+      }
+    }
+
     if (runtimeConfig.channelCommands) {
       const channelConfig = runtimeConfig.channelCommands[message.channel.id];
       if (channelConfig && channelConfig.disabled && channelConfig.disabled.includes(command.name)) return;
@@ -270,7 +294,6 @@ module.exports = {
       const staffData = storage.read('staff.json');
       const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
       const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
-      const isDev = message.author.id === process.env.DEV_ID;
 
       if (!isStaff && !isDev) {
         return sendAutoDelete(message, {

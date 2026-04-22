@@ -26,7 +26,7 @@ module.exports = {
     }
 
     // VC Joiner: Track bot leaving VC
-    if (oldState.member.id === client.user.id && !newState.channelId) {
+    if (oldState.id === client.user.id && !newState.channelId) {
       const vcData = storage.read('vcjoiner.json');
       if (vcData[oldState.guild.id]) {
         vcData[oldState.guild.id].currentChannelId = null;

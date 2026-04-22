@@ -4,7 +4,7 @@ const { EMOJI_INFO } = require('../utils/constants');
 const { runRotation } = require('../utils/vcJoiner');
 
 module.exports = {
-  name: 'clientReady',
+  name: 'ready',
   once: true,
   execute: (client) => {
     logger.info(`Wild Wolf online as ${client.user.tag}`);

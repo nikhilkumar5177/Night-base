@@ -16,9 +16,17 @@ module.exports = (client) => {
     try {
       const event = require(path.join(eventsPath, file));
       if (event.once) {
-        client.once(event.name, (...args) => event.execute(client, ...args));
+        client.once(event.name, (...args) => {
+          Promise.resolve(event.execute(client, ...args)).catch(err => {
+            logger.error(`Error in once event ${event.name}: ${err.stack || err}`);
+          });
+        });
       } else {
-        client.on(event.name, (...args) => event.execute(client, ...args));
+        client.on(event.name, (...args) => {
+          Promise.resolve(event.execute(client, ...args)).catch(err => {
+            logger.error(`Error in event ${event.name}: ${err.stack || err}`);
+          });
+        });
       }
     } catch (err) {
       logger.error(`Failed to load event ${file}: ${err.message}`);

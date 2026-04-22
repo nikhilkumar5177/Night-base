@@ -49,7 +49,7 @@ module.exports = {
         .setFooter({ text: `Requested by ${message.author.tag}`, iconURL: message.author.displayAvatarURL({ dynamic: true }) })
         .setTimestamp();
 
-      return message.reply({ embeds: [embed] });
+      return message.reply({ embeds: [embed] }).catch(() => {});
     }
 
     if (message.webhookId && message.guild) {
@@ -361,12 +361,17 @@ module.exports = {
     try {
       if (command.staffOnly || command.userPermissions) {
         await new Promise(r => setTimeout(r, 2000));
+        // Check if message still exists after delay
+        if (!message.guild.messages.cache.has(message.id)) {
+          const fetched = await message.channel.messages.fetch(message.id).catch(() => null);
+          if (!fetched) return; // Message was deleted
+        }
       }
       await command.execute(client, message, args);
       logger.cmd(message.author.tag, command.name);
     } catch (error) {
       logger.error(`Command ${command.name} failed: ${error.message}`);
-      sendAutoDelete(message, {
+      await sendAutoDelete(message, {
         embeds: [
           new EmbedBuilder()
             .setColor('#ED4245')

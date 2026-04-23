@@ -39,8 +39,8 @@ module.exports = {
       if (target.roles.highest.position >= message.guild.members.me.roles.highest.position) {
         return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Cannot Change`).setDescription('That user has a higher or equal role than me.').setTimestamp()] });
       }
-      if (target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Hierarchy Error`).setDescription('Target has equal or higher role.').setTimestamp()] });
+      if (target.roles.highest.position > message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Hierarchy Error`).setDescription('Target has a higher role.').setTimestamp()] });
       }
       const newNick = args.slice(1).join(' ');
       const oldNick = target.displayName;

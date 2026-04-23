@@ -27,7 +27,6 @@ module.exports = {
       c.permissionsFor(guild.members.me).has(['Connect', 'Speak']) // Public/Accessible
     );
 
-    logger.info(`VCJoiner Debug: Found ${channels.size} eligible inactive channels in ${guild.name}`);
 
     // Exclude current channel if there are others
     let filtered = channels;
@@ -65,7 +64,6 @@ module.exports = {
       storage.write('vcjoiner.json', vcData);
       await storage.flushFile('vcjoiner.json').catch(() => { });
 
-      logger.info(`VCJoiner: Joined ${channel.name} in ${guild.name}`);
       return true;
     } catch (err) {
       logger.error(`VCJoiner Error in ${guild.name}: ${err.message}`);
@@ -111,10 +109,7 @@ module.exports = {
       const timeRemaining = ROTATION_INTERVAL - (now - lastJoined);
 
       if (!connection || timeRemaining <= 0) {
-        logger.info(`VCJoiner: Rotating VC for ${guild.name} (Time since last join: ${Math.floor((now - lastJoined) / 1000)}s)`);
         await module.exports.joinRandomVC(guild);
-      } else {
-        logger.info(`VCJoiner: Guild ${guild.name} is waiting. Next rotation in ${Math.floor(timeRemaining / 1000)}s`);
       }
     }
   }

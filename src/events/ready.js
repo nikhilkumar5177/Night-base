@@ -10,7 +10,7 @@ module.exports = {
     logger.info(`Wild Wolf online as ${client.user.tag}`);
     logger.info(`Serving ${client.guilds.cache.size} guilds`);
 
-    const configData = storage.read('config.json');
+    let configData = storage.read('config.json');
     const prefix = configData.prefix || client.config.prefix;
     
     if (configData.maintenance) {

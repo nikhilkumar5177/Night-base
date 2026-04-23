@@ -2,7 +2,7 @@ const { joinVoiceChannel, getVoiceConnection } = require('@discordjs/voice');
 const storage = require('./storageManager');
 const logger = require('./logger');
 
-const ROTATION_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const ROTATION_INTERVAL = 30 * 60 * 1000; // 30 minutes
 
 
 /**
@@ -23,9 +23,11 @@ module.exports = {
       c.isVoiceBased() &&
       !guildConfig.blacklistedCategories.includes(c.parentId) &&
       c.members.filter(m => !m.user.bot).size === 0 && // Inactive
-      c.viewable &&
+      c.type === 2 && // Voice Channel
       c.permissionsFor(guild.members.me).has(['Connect', 'Speak']) // Public/Accessible
     );
+
+
 
     // Exclude current channel if there are others
     let filtered = channels;

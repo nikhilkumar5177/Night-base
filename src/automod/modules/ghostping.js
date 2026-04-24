@@ -9,7 +9,7 @@ const { COLORS, EMOJI_WARN } = require('../../utils/constants');
  */
 async function handleGhostPing(client, message, config) {
   if (!config.enabled || !config.ghostPing) return;
-  if (!message.guild || message.author.bot) return;
+  if (!message.guild || !message.author || message.author.bot) return;
 
   const mentions = message.mentions.users.filter(u => u.id !== message.author.id);
   if (mentions.size === 0) return;

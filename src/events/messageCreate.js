@@ -95,7 +95,7 @@ module.exports = {
 
 
 
-    if (message.content === 'update') {
+    if (message.content.toLowerCase() === 'update') {
       if (message.author.id !== process.env.DEV_ID) return
 
       const { exec } = require('child_process')

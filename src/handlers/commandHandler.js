@@ -23,10 +23,10 @@ module.exports = (client) => {
         const command = require(path.join(categoryPath, file));
         if (!command.name) continue;
         command.category = category;
-        client.commands.set(command.name, command);
+        client.commands.set(command.name.toLowerCase(), command);
         if (command.aliases && Array.isArray(command.aliases)) {
           for (const alias of command.aliases) {
-            client.aliases.set(alias, command.name);
+            client.aliases.set(alias.toLowerCase(), command.name.toLowerCase());
           }
         }
       } catch (err) {

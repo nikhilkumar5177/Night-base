@@ -52,7 +52,7 @@ module.exports = {
           return isInteraction ? message.reply({ embeds: [errEmbed], ephemeral: true }).catch(() => {}) : message.reply({ embeds: [errEmbed] }).catch(() => {});
         }
         const embed = buildCommandEmbed(client, message, command);
-        return isInteraction ? message.reply({ embeds: [embed], components: [buildHomeButton().catch(() => {})] }).catch(() => {}) : message.reply({ embeds: [embed], components: [buildHomeButton().catch(() => {})] }).catch(() => {});
+        return isInteraction ? message.reply({ embeds: [embed], components: [buildHomeButton()] }).catch(() => {}) : message.reply({ embeds: [embed], components: [buildHomeButton()] }).catch(() => {});
       }
 
       // ── Build categories map (cached per invocation) ──
@@ -353,7 +353,7 @@ function buildCommandEmbed(client, message, command) {
   const permStr = [];
   if (command.staffOnly) permStr.push('\`Staff Only\`');
   if (command.devOnly) permStr.push('\`Developer Only\`');
-  if (command.userPerms?.length) permStr.push(...command.userPerms.map(p => `\`${p}\``));
+  if (command.userPermissions?.length) permStr.push(...command.userPermissions.map(p => `\`${p}\``));
   if (permStr.length === 0) permStr.push('\`Everyone\`');
 
   const trigger = command.slash ? '/' : client.config.prefix;

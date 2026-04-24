@@ -42,7 +42,7 @@ module.exports = {
       }
       buttons.push(new ButtonBuilder().setCustomId('bn_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716'));
 
-      const sent = await message.reply({ embeds: [embed], components: [new ActionRowBuilder().catch(() => {}).addComponents(...buttons)] });
+      const sent = await message.reply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(...buttons)] });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => { if (i.customId === 'bn_del') { await sent.delete().catch(() => {}); coll.stop(); } });
       coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));

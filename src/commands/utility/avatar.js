@@ -60,7 +60,7 @@ module.exports = {
         ));
       }
 
-      const sent = await message.reply({ embeds: [buildEmbed(globalAv, 'Global Avatar').catch(() => {})], components });
+      const sent = await message.reply({ embeds: [buildEmbed(globalAv, 'Global Avatar')], components });
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'av_del') { await sent.delete().catch(() => {}); coll.stop(); return; }

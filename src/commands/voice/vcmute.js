@@ -23,6 +23,10 @@ module.exports = {
         return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} That user is not in a voice channel.`).setTimestamp()] });
       }
 
+      if (target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Target has a higher or equal role.`).setTimestamp()] });
+      }
+
       if (target.voice.serverMute) {
         return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} User is already server-muted.`).setTimestamp()] });
       }

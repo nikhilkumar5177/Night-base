@@ -22,6 +22,10 @@ module.exports = {
         return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} That user is not in a voice channel.`).setTimestamp()] });
       }
 
+      if (target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
+        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Target has a higher or equal role.`).setTimestamp()] });
+      }
+
       await target.voice.setDeaf(false, `Server-undeafened by ${message.author.tag}`);
 
       const embed = new EmbedBuilder()

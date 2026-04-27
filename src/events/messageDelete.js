@@ -8,15 +8,16 @@ module.exports = {
   once: false,
   execute: async (client, message) => {
     if (!message.guild) return;
-    const config = await getConfig(message.guild.id);
-    await handleGhostPing(client, message, config.modules.content);
-
-    if (message.author && message.author.bot) return;
 
     if (client.ignoredDeletes && client.ignoredDeletes.has(message.id)) {
       client.ignoredDeletes.delete(message.id);
       return;
     }
+
+    const config = await getConfig(message.guild.id);
+    await handleGhostPing(client, message, config.modules.content);
+
+    if (message.author && message.author.bot) return;
 
     const channelId = message.channel.id;
 

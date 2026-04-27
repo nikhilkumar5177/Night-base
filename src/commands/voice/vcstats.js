@@ -29,9 +29,9 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-      message.reply({ components: [container], flags: 32768 }).catch(() => {});
+      message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      message.reply({ components: [cv2Error(error.message)], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
     }
   }
 };

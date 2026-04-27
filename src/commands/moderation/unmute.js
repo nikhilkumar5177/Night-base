@@ -15,10 +15,10 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return message.reply({ components: [cv2Error('You need **ModerateMembers** permission.')], flags: 32768 });
+        return message.reply({ components: [cv2Error('You need **ModerateMembers** permission.')], flags: MessageFlags.IsComponentsV2 });
       }
       if (!message.guild.members.me.permissions.has('ModerateMembers')) {
-        return message.reply({ components: [cv2Error('I need **ModerateMembers** permission.')], flags: 32768 });
+        return message.reply({ components: [cv2Error('I need **ModerateMembers** permission.')], flags: MessageFlags.IsComponentsV2 });
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
@@ -27,12 +27,12 @@ module.exports = {
       if (!target.isCommunicationDisabled()) {
         const warnContainer = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **This user is not currently timed out.**`));
-        return message.reply({ components: [warnContainer], flags: 32768 });
+        return message.reply({ components: [warnContainer], flags: MessageFlags.IsComponentsV2 });
       }
 
       const loadContainer = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Removing timeout...**`));
-      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
+      const sent = await message.reply({ components: [loadContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
 
       await target.timeout(null);
       await new Promise(r => setTimeout(r, 400));
@@ -53,7 +53,7 @@ module.exports = {
 
       await sent.edit({ components: [container] }).catch(() => {});
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      message.reply({ components: [cv2Error(error.message)], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
     }
   }
 };

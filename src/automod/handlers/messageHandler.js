@@ -6,6 +6,8 @@ const { checkContent } = require('../modules/content');
 const { checkSecurity } = require('../modules/security');
 const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
+const warningCooldowns = new Map();
+
 /**
  * Handle AutoMod logic for every message.
  */
@@ -58,30 +60,37 @@ async function executeActions(client, message, violation, moduleConfig) {
     }
 
     if (actions.includes('warn')) {
-      const response = moduleConfig.responseMessage || `${EMOJI_ERROR} **{user}**, your message was flagged for **{violation}**.`;
-      const formatted = response
-        .replace(/{user}/g, `<@${message.author.id}>`)
-        .replace(/{violation}/g, violation);
+      const cooldownKey = `${message.author.id}-${message.channel.id}`;
+      const now = Date.now();
+      const lastWarn = warningCooldowns.get(cooldownKey) || 0;
 
-      const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Violation`))
-        .addSeparatorComponents(new SeparatorBuilder())
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-          `${EMOJI_WARN} **Violation Detected**\n\n` +
-          `${EMOJI_DOT} **User:** <@${message.author.id}>\n` +
-          `${EMOJI_DOT} **Rule:** ${violation}\n` +
-          `${EMOJI_DOT} **Notice:** ${formatted}`
-        ));
+      if (now - lastWarn >= 5000) {
+        warningCooldowns.set(cooldownKey, now);
+        const response = moduleConfig.responseMessage || `${EMOJI_ERROR} **{user}**, your message was flagged for **{violation}**.`;
+        const formatted = response
+          .replace(/{user}/g, `<@${message.author.id}>`)
+          .replace(/{violation}/g, violation);
 
-      let msg;
-      const payload = { components: [container], flags: 32768, allowedMentions: { repliedUser: true } };
-      try {
-        msg = await message.reply(payload).catch(async () => {
-          return await message.channel.send(payload);
-        });
-      } catch (e) {}
-      
-      if (msg) setTimeout(() => msg.delete().catch(() => {}), 10000);
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Violation`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_WARN} **Violation Detected**\n\n` +
+            `${EMOJI_DOT} **User:** <@${message.author.id}>\n` +
+            `${EMOJI_DOT} **Rule:** ${violation}\n` +
+            `${EMOJI_DOT} **Notice:** ${formatted}`
+          ));
+
+        let msg;
+        const payload = { components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: { repliedUser: true } };
+        try {
+          msg = await message.reply(payload).catch(async () => {
+            return await message.channel.send(payload);
+          });
+        } catch (e) { }
+
+        if (msg) setTimeout(() => msg.delete().catch(() => { }), 10000);
+      }
     }
 
     const majorActions = actions.filter(a => ['warn', 'mute', 'kick', 'ban'].includes(a));
@@ -129,7 +138,7 @@ async function logToChannel(client, message, data) {
       `**Content:**\n\`\`\`\n${message.content.slice(0, 500) || 'None'}\n\`\`\``
     ));
 
-  await channel.send({ components: [logContainer], flags: 32768 }).catch(() => {});
+  await channel.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
 }
 
 module.exports = { handleAutoMod };

@@ -1,4 +1,4 @@
-const { EmbedBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder } = require('discord.js');
+const { EmbedBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const { LIMITS, SEP, EMOJI_ERROR, EMOJI_ARROW, FOOTER_TEXT } = require('./constants');
 
 /**
@@ -74,7 +74,7 @@ async function sendUsage(message, command) {
     container.addSeparatorComponents(new SeparatorBuilder());
     container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-    return sendAutoDelete(message, { components: [container], flags: 1 << 14 }, 15000); // 1 << 14 is IsComponentsV2
+    return sendAutoDelete(message, { components: [container], flags: MessageFlags.IsComponentsV2 }, 15000);
 }
 
 /**

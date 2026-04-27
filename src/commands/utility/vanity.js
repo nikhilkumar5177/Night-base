@@ -9,7 +9,7 @@ module.exports = {
   usage: 'vanity',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
+  staffOnly: true,
   devOnly: false,
   execute: async (client, message) => {
     try {
@@ -43,9 +43,9 @@ module.exports = {
         new ButtonBuilder().setLabel('Open Invite').setStyle(ButtonStyle.Link).setURL(`https://discord.gg/${g.vanityURLCode}`)
       );
 
-      message.reply({ components: [container, row], flags: 32768 }).catch(() => {});
+      message.reply({ components: [container, row], flags: 32768 }).catch(() => { });
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => { });
     }
   }
 };

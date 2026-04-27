@@ -1,6 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder, MediaGalleryBuilder, MediaBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
-const { SEP, EMOJI_DOT, EMOJI_ARROW, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_ARROW, EMOJI_WARN, FOOTER_TEXT } = require('../../utils/constants');
+const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'userinfo',
@@ -16,9 +17,8 @@ module.exports = {
   staffOnly: false,
   devOnly: false,
   execute: async (client, message, args) => {
-    const isInteraction = !message.author;
     try {
-      const target = isInteraction 
+      const target = !message.author
         ? (message.options.getMember('user') || message.member)
         : (await resolveMember(message.guild, args[0]) || message.member);
       const u = target.user;
@@ -26,87 +26,110 @@ module.exports = {
       const roles = target.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== message.guild.id);
       const roleList = roles.size > 0 ? roles.map(r => `${r}`).join(', ') : 'None';
       const truncRoles = roleList.length > 900 ? roleList.substring(0, 900) + '...' : roleList;
-      const status = target.presence?.status || 'offline';
       const statusMap = { online: '\u25CF Online', idle: '\u25CB Idle', dnd: '\u25CF DND', offline: '\u25CB Offline' };
-      const isOwner = u.id === message.guild.ownerId;
-      const isBot = u.bot;
+      const status = target.presence?.status || 'offline';
+      
       let tags = [];
-      if (isOwner) tags.push('\`\uD83D\uDC51 Owner\`');
-      if (isBot) tags.push('\`\uD83E\uDD16 Bot\`');
+      if (u.id === message.guild.ownerId) tags.push('\`\uD83D\uDC51 Owner\`');
+      if (u.bot) tags.push('\`\uD83E\uDD16 Bot\`');
       if (target.premiumSinceTimestamp) tags.push('\`\uD83D\uDC8E Booster\`');
 
-      const embed = new EmbedBuilder()
-        .setColor(target.displayHexColor !== '#000000' ? target.displayHexColor : '#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 User Profile', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(u.displayAvatarURL({ dynamic: true, size: 512 }))
-        .setDescription(
-          `${SEP}\n` +
-          `${EMOJI_DOT} **User:** ${u.tag} ${tags.length ? tags.join(' ') : ''}\n` +
-          `${EMOJI_DOT} **ID:** \`${u.id}\`\n` +
-          `${EMOJI_DOT} **Status:** ${statusMap[status] || '\u25CB Offline'}\n` +
-          `${SEP}`
-        )
-        .addFields(
-          { name: `${EMOJI_ARROW} Account Created`, value: `<t:${Math.floor(u.createdTimestamp / 1000)}:F>\n<t:${Math.floor(u.createdTimestamp / 1000)}:R>`, inline: true },
-          { name: `${EMOJI_ARROW} Joined Server`, value: `<t:${Math.floor(target.joinedTimestamp / 1000)}:F>\n<t:${Math.floor(target.joinedTimestamp / 1000)}:R>`, inline: true },
-          { name: `${EMOJI_ARROW} Nickname`, value: target.nickname || 'None', inline: true },
-          { name: `${EMOJI_ARROW} Highest Role`, value: `${target.roles.highest}`, inline: true },
-          { name: `${EMOJI_ARROW} Display Color`, value: `\`${target.displayHexColor}\``, inline: true },
-          { name: `${EMOJI_ARROW} Badges`, value: flags, inline: true },
-          { name: `${EMOJI_ARROW} Roles [${roles.size}]`, value: truncRoles }
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 User Analytics', iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
+      const buildProfileContainer = () => {
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 User Profile`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_DOT} **User:** ${u.tag} ${tags.length ? tags.join(' ') : ''}\n` +
+            `${EMOJI_DOT} **ID:** \`${u.id}\`\n` +
+            `${EMOJI_DOT} **Status:** ${statusMap[status] || '\u25CB Offline'}`
+          ))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_ARROW} **Account Dates**\n` +
+            `Created: <t:${Math.floor(u.createdTimestamp / 1000)}:R>\n` +
+            `Joined: <t:${Math.floor(target.joinedTimestamp / 1000)}:R>`
+          ))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_ARROW} **Server Info**\n` +
+            `Nickname: ${target.nickname || 'None'}\n` +
+            `Highest Role: ${target.roles.highest}\n` +
+            `Roles [${roles.size}]: ${truncRoles}`
+          ))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_ARROW} **Badges:** ${flags}`
+          ))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('ui_avatar').setLabel('Avatar').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId('ui_banner').setLabel('Banner').setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId('ui_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
-      );
+        container.addActionRowComponents(new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('ui_avatar').setLabel('View Avatar').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('ui_banner').setLabel('View Banner').setStyle(ButtonStyle.Primary)
+        ));
+        return container;
+      };
 
-      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
+      const sent = await message.reply({ components: [buildProfileContainer()], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+      if (!sent) return;
+
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (message.author?.id || message.user.id), time: 120000 });
+      
       coll.on('collect', async i => {
-        if (i.customId === 'ui_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
-        if (i.customId === 'ui_avatar') {
-          const avEmbed = new EmbedBuilder()
-            .setColor(target.displayHexColor !== '#000000' ? target.displayHexColor : '#5865F2')
-            .setAuthor({ name: `${u.tag} \u2502 Avatar`, iconURL: client.user.displayAvatarURL() })
-            .setImage(u.displayAvatarURL({ dynamic: true, size: 1024 }))
-            .setFooter({ text: 'Wild Wolf' }).setTimestamp();
-          const bk = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('ui_back').setLabel('Back').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setLabel('Download').setStyle(ButtonStyle.Link).setURL(u.displayAvatarURL({ dynamic: true, size: 1024 })),
-            new ButtonBuilder().setCustomId('ui_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
-          );
-          await i.update({ embeds: [avEmbed], components: [bk] });
+        if (i.customId === 'ui_back') {
+          return i.update({ components: [buildProfileContainer()] });
         }
+        
+        if (i.customId === 'ui_avatar') {
+          const avUrl = u.displayAvatarURL({ dynamic: true, size: 1024 });
+          const avContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Avatar`))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+              `${EMOJI_DOT} **User:** ${u.username}\n` +
+              `${EMOJI_DOT} **Type:** \`Global Avatar\``
+            ))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addMediaGalleryComponents(new MediaGalleryBuilder().addMedia(new MediaBuilder().setURL(avUrl)))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+          
+          avContainer.addActionRowComponents(new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('ui_back').setLabel('Back').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setLabel('Download').setStyle(ButtonStyle.Link).setURL(avUrl)
+          ));
+          return i.update({ components: [avContainer] });
+        }
+
         if (i.customId === 'ui_banner') {
-          await u.fetch(true).catch(() => { });
+          await u.fetch(true).catch(() => {});
           const bannerUrl = u.bannerURL({ dynamic: true, size: 1024 });
           if (!bannerUrl) {
-            await i.reply({ content: `${EMOJI_WARN} This user has no banner.`, ephemeral: true }).catch(() => {});
-            return;
+            return i.reply({ content: `${EMOJI_WARN} This user has no banner.`, ephemeral: true }).catch(() => {});
           }
-          const bnEmbed = new EmbedBuilder()
-            .setColor(target.displayHexColor !== '#000000' ? target.displayHexColor : '#5865F2')
-            .setAuthor({ name: `${u.tag} \u2502 Banner`, iconURL: client.user.displayAvatarURL() })
-            .setImage(bannerUrl)
-            .setFooter({ text: 'Wild Wolf' }).setTimestamp();
-          const bk = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('ui_back').setLabel('Back').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setLabel('Download').setStyle(ButtonStyle.Link).setURL(bannerUrl),
-            new ButtonBuilder().setCustomId('ui_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
-          );
-          await i.update({ embeds: [bnEmbed], components: [bk] });
-        }
-        if (i.customId === 'ui_back') {
-          await i.update({ embeds: [embed], components: [row] });
+          const bnContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Banner`))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+              `${EMOJI_DOT} **User:** ${u.username}\n` +
+              `${EMOJI_DOT} **Type:** \`User Banner\``
+            ))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addMediaGalleryComponents(new MediaGalleryBuilder().addMedia(new MediaBuilder().setURL(bannerUrl)))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+          
+          bnContainer.addActionRowComponents(new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('ui_back').setLabel('Back').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setLabel('Download').setStyle(ButtonStyle.Link).setURL(bannerUrl)
+          ));
+          return i.update({ components: [bnContainer] });
         }
       });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
+
+      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
     }
   }
 };

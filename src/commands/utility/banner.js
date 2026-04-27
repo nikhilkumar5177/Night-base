@@ -1,5 +1,6 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { SEP, EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MediaGalleryBuilder, MediaBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder } = require('discord.js');
+const { EMOJI_DOT, EMOJI_WARN, FOOTER_TEXT } = require('../../utils/constants');
+const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'banner',
@@ -15,39 +16,46 @@ module.exports = {
   staffOnly: false,
   devOnly: false,
   execute: async (client, message, args) => {
-    const isInteraction = !message.author;
     try {
-      let user = isInteraction
+      let user = !message.author
         ? (message.options.getUser('user') || message.user)
         : (message.mentions.users.first() || client.users.cache.get(args[0]) || message.author);
       
       user = await user.fetch(true);
       const bannerUrl = user.bannerURL({ dynamic: true, size: 1024 });
       if (!bannerUrl) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Banner', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **${user.tag}** does not have a banner.\n${SEP}`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Banner`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${user.tag}** does not have a banner.`));
+        return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
-      const member = message.guild.members.cache.get(user.id);
-      const embed = new EmbedBuilder()
-        .setColor(member?.displayHexColor !== '#000000' ? member?.displayHexColor || '#5865F2' : '#5865F2')
-        .setAuthor({ name: `Wild Wolf \u2502 Banner Viewer`, iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_DOT} **User:** ${user.tag}\n${SEP}`)
-        .setImage(bannerUrl)
-        .setFooter({ text: 'Wild Wolf \u2022 Banner Viewer', iconURL: (isInteraction ? message.guild : message.guild).iconURL({ dynamic: true }) })
-        .setTimestamp();
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Banner Viewer`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_DOT} **User:** ${user.username}\n` +
+          `${EMOJI_DOT} **Type:** \`User Banner\``
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addMediaGalleryComponents(new MediaGalleryBuilder().addMedia(new MediaBuilder().setURL(bannerUrl)))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-      const buttons = [new ButtonBuilder().setLabel('Download').setStyle(ButtonStyle.Link).setURL(bannerUrl)];
+      const formatRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setLabel('PNG').setStyle(ButtonStyle.Link).setURL(user.bannerURL({ extension: 'png', size: 1024 })),
+        new ButtonBuilder().setLabel('JPG').setStyle(ButtonStyle.Link).setURL(user.bannerURL({ extension: 'jpg', size: 1024 })),
+        new ButtonBuilder().setLabel('WEBP').setStyle(ButtonStyle.Link).setURL(user.bannerURL({ extension: 'webp', size: 1024 }))
+      );
+
       if (user.banner?.startsWith('a_')) {
-        buttons.push(new ButtonBuilder().setLabel('GIF').setStyle(ButtonStyle.Link).setURL(user.bannerURL({ extension: 'gif', size: 1024 })));
+        formatRow.addComponents(new ButtonBuilder().setLabel('GIF').setStyle(ButtonStyle.Link).setURL(user.bannerURL({ extension: 'gif', size: 1024 })));
       }
-      buttons.push(new ButtonBuilder().setCustomId('bn_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716'));
 
-      const sent = await message.reply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(...buttons)] });
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
-      coll.on('collect', async i => { if (i.customId === 'bn_del') { await sent.delete().catch(() => {}); coll.stop(); } });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      message.reply({ components: [container, formatRow], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

@@ -1,32 +1,29 @@
-const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { COLORS, SEP, EMOJI_SPAM, EMOJI_LINK, EMOJI_RAID, EMOJI_CONTENT, EMOJI_SECURITY, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS, EMOJI_ACTIVE, EMOJI_INACTIVE } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { COLORS, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS, EMOJI_ACTIVE, EMOJI_INACTIVE } = require('../../utils/constants');
 
 /**
  * Create the main AutoMod dashboard.
  * @param {object} config 
- * @returns {object} { embeds, components }
+ * @returns {object} { components }
  */
 function createDashboard(config) {
-  const embed = new EmbedBuilder()
-    .setColor(COLORS.DEFAULT)
-    .setAuthor({ name: 'Wild Wolf \u2502 AutoMod Dashboard', iconURL: config.clientAvatar || '' }) // Avatar passed from command
-    .setDescription(
-      `${SEP}\n` +
-      `Welcome to the **Wild Wolf** advanced automoderation system. ` +
-      `Configure protection rules to keep your server safe.\n` +
-      `${SEP}`
-    )
-    .addFields(
-      { name: `${EMOJI_LIST} Module Status`, value: getModuleStatus(config), inline: false },
-      { name: `${EMOJI_SETTINGS} Global Settings`, value: 
-        `${EMOJI_DOT} **Status:** ${config.enabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``}\n` +
-        `${EMOJI_DOT} **Log Channel:** ${config.logChannel ? `<#${config.logChannel}>` : '`Not Set`'}\n` +
-        `${EMOJI_DOT} **Bypasses:** \`${config.bypassRoles.length}\` Roles, \`${config.bypassUsers.length}\` Users`,
-        inline: false 
-      }
-    )
-    .setTimestamp()
-    .setFooter({ text: 'Wild Wolf \u2022 Advanced Protection System' });
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Dashboard`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `Welcome to the **Wild Wolf** advanced automoderation system. Configure protection rules to keep your server safe.`
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_LIST} **Module Status**\n` + getModuleStatus(config)
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_SETTINGS} **Global Settings**\n` +
+      `${EMOJI_DOT} **Status:** ${config.enabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``}\n` +
+      `${EMOJI_DOT} **Log Channel:** ${config.logChannel ? `<#${config.logChannel}>` : '`Not Set`'}\n` +
+      `${EMOJI_DOT} **Bypasses:** \`${config.bypassRoles.length}\` Roles, \`${config.bypassUsers.length}\` Users`
+    ));
 
   const menu = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
@@ -54,17 +51,11 @@ function createDashboard(config) {
     new ButtonBuilder()
       .setCustomId('automod_reset')
       .setLabel('Reset Defaults')
-      .setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder()
-      .setCustomId('automod_dismiss')
-      .setLabel('Dismiss')
       .setStyle(ButtonStyle.Secondary)
-      .setEmoji('\u2716')
   );
 
   return {
-    embeds: [embed],
-    components: [menu, buttons]
+    components: [container, buttons, menu]
   };
 }
 

@@ -1,9 +1,8 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, MessageFlags } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
-const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
-
-const { EMOJI_DOT, EMOJI_ARROW, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
+const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING } = require('../../utils/constants');
 
 module.exports = {
   name: 'warn',
@@ -18,28 +17,25 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ModerateMembers** permission.`).setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { components: [cv2Error('You need **ModerateMembers** permission.')], flags: 32768 }, 5000);
       }
       if (!args[0]) {
         return sendUsage(message, module.exports);
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Could not find the specified user.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Could not find the specified user.')], flags: 32768 });
       }
       if (target.id === message.author.id) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You cannot warn yourself.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('You cannot warn yourself.')], flags: 32768 });
       }
       if (target.roles.highest.position > message.member.roles.highest.position) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has a higher role.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Target has a higher role.')], flags: 32768 });
       }
 
-      const loadEmbed = new EmbedBuilder()
-        .setColor('#EB459E')
-        .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_LOADING} **Issuing warning...**\n${SEP}`)
-        .setTimestamp();
-      const sent = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
+      const loadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Issuing warning...**`));
+      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
 
       const reason = args.slice(1).join(' ') || 'No reason provided';
       const warns = storage.read('warns.json');
@@ -55,36 +51,30 @@ module.exports = {
       const warnBar = totalWarns >= 10 ? '\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588' : '\u2588'.repeat(totalWarns) + '\u2591'.repeat(10 - totalWarns);
       const severity = totalWarns >= 10 ? 'CRITICAL' : totalWarns >= 5 ? 'HIGH' : totalWarns >= 3 ? 'MODERATE' : 'LOW';
 
-      const embed = new EmbedBuilder()
-        .setColor(totalWarns >= 5 ? '#ED4245' : '#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Warning Issued', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
-        .setDescription(
-          `${SEP}\n` +
-          `${EMOJI_SUCCESS} **Warning has been recorded.**\n` +
-          `${SEP}`
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Warning Issued`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addSectionComponents(new SectionBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_SUCCESS} **Warning recorded.**\n` +
+            `${EMOJI_DOT} **User:** ${target.user.tag} \`${target.id}\`\n` +
+            `${EMOJI_DOT} **Moderator:** ${message.author.tag}\n` +
+            `${EMOJI_DOT} **Case:** \`${caseId}\``
+          ))
+          .setThumbnailAccessory(new ThumbnailBuilder().setURL(target.user.displayAvatarURL({ dynamic: true })))
         )
-        .addFields(
-          { name: `${EMOJI_ARROW} User`, value: `${target.user.tag}\n\`${target.id}\``, inline: true },
-          { name: `${EMOJI_ARROW} Moderator`, value: `${message.author.tag}`, inline: true },
-          { name: `${EMOJI_ARROW} Case ID`, value: `\`${caseId}\``, inline: true },
-          { name: `${EMOJI_ARROW} Reason`, value: reason },
-          { name: `${EMOJI_ARROW} Warn Level [${totalWarns}/10]`, value: `\`${warnBar}\` **${severity}**` }
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_DOT} **Reason:** ${reason}\n` +
+          `${EMOJI_DOT} **Warn Level [${totalWarns}/10]:** \`${warnBar}\` **${severity}**`
+        ));
 
-      await sent.edit({ embeds: [embed] }).catch(() => {});
+      await sent.edit({ components: [container] }).catch(() => {});
 
-      const dmEmbed = new EmbedBuilder()
-        .setColor('#FEE75C')
-        .setAuthor({ name: 'Wild Wolf \u2502 Warning Received', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_WARN} **You received a warning in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Case ID:** \`${caseId}\`\n${EMOJI_DOT} **Total Warnings:** \`${totalWarns}\``)
-        .setFooter({ text: 'Repeated violations may result in further action' })
-        .setTimestamp();
-      target.send({ embeds: [dmEmbed] }).catch(() => {});
+      // DM notice — plain content (V2 not supported in DMs)
+      target.send({ content: `\u26A0\uFE0F **You received a warning in ${message.guild.name}**\n\u2022 Reason: ${reason}\n\u2022 Case: \`${caseId}\`\n\u2022 Total: \`${totalWarns}\`` }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

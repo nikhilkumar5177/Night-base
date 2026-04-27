@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
-const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
+const { AttachmentBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('./storageManager');
 const logger = require('./logger');
-const { EMOJI_SUCCESS, EMOJI_ERROR } = require('./constants');
+const { EMOJI_SUCCESS } = require('./constants');
 
 /**
  * Creates a ZIP buffer containing the storage directory.
@@ -32,9 +32,8 @@ async function createBackupBuffer() {
 async function sendBackup(client) {
   try {
     const channelId = client.config.backupChannelId;
-
     if (!channelId) {
-      logger.warn('Backup system triggered, but no backupChannelId is configured in config.json.');
+      logger.warn('Backup system triggered, but no backupChannelId is configured.');
       return false;
     }
 
@@ -48,23 +47,22 @@ async function sendBackup(client) {
       }
     }
 
-    if (!channel) {
-      logger.error(`Backup channel ${channelId} could not be found.`);
-      return false;
-    }
+    if (!channel) return false;
 
     const buffer = await createBackupBuffer();
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const attachment = new AttachmentBuilder(buffer, { name: `backup-${timestamp}.zip` });
 
-    const embed = new EmbedBuilder()
-      .setColor('#00e676')
-      .setTitle(`${EMOJI_SUCCESS} Database Backup`)
-      .setDescription(`Automated database backup completed successfully at <t:${Math.floor(Date.now() / 1000)}:f>.`)
-      .addFields({ name: 'File Size', value: `${(buffer.length / 1024).toFixed(2)} KB` })
-      .setTimestamp();
+    const container = new ContainerBuilder()
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Database Backup`))
+      .addSeparatorComponents(new SeparatorBuilder())
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+        `${EMOJI_SUCCESS} Automated database backup completed successfully.\n\n` +
+        `**Timestamp:** <t:${Math.floor(Date.now() / 1000)}:f>\n` +
+        `**File Size:** \`${(buffer.length / 1024).toFixed(2)} KB\``
+      ));
 
-    await channel.send({ embeds: [embed], files: [attachment] });
+    await channel.send({ components: [container], files: [attachment], flags: 32768 });
     logger.info('Database backup sent successfully.');
     return true;
   } catch (error) {
@@ -73,7 +71,4 @@ async function sendBackup(client) {
   }
 }
 
-module.exports = {
-  createBackupBuffer,
-  sendBackup
-};
+module.exports = { createBackupBuffer, sendBackup };

@@ -1,28 +1,32 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { COLORS, SEP, EMOJI_TOOL, EMOJI_DOT, EMOJI_INFO, EMOJI_ACTIVE, EMOJI_INACTIVE, EMOJI_WARN, EMOJI_BYPASS } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { EMOJI_TOOL, EMOJI_DOT, EMOJI_INFO, EMOJI_ACTIVE, EMOJI_INACTIVE, EMOJI_WARN, EMOJI_BYPASS } = require('../../utils/constants');
 
 /**
  * Create a generic category panel.
  * @param {string} category 
  * @param {object} config 
- * @returns {object} { embed, components }
+ * @returns {object} { components }
  */
 function createCategoryPanel(category, config) {
   const categoryData = config.modules[category.toLowerCase()];
   const isEnabled = categoryData.enabled;
 
-  const embed = new EmbedBuilder()
-    .setColor(isEnabled ? COLORS.SUCCESS : COLORS.ERROR)
-    .setAuthor({ name: `Wild Wolf \u2502 ${category.charAt(0).toUpperCase() + category.slice(1)} Module`, iconURL: config.clientAvatar || '' })
-    .setDescription(`${SEP}\nManage detailed settings and exemptions for **${category}**.\n${SEP}`)
-    .addFields(
-      { name: `${EMOJI_INFO} Status`, value: isEnabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``, inline: true },
-      { name: `${EMOJI_WARN} Actions`, value: categoryData.actions?.length ? categoryData.actions.map(a => `\`${a.toUpperCase()}\``).join(', ') : '`None`', inline: true },
-      { name: `${EMOJI_BYPASS} Exemptions`, value: `${EMOJI_DOT} Roles: \`${categoryData.exemptRoles.length}\` \u2502 Channels: \`${categoryData.exemptChannels.length}\``, inline: false },
-      { name: `${EMOJI_TOOL} Module Settings`, value: formatConfig(category, categoryData) }
-    )
-    .setTimestamp()
-    .setFooter({ text: `Wild Wolf \u2022 ${category.toUpperCase()} Configuration` });
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${category.charAt(0).toUpperCase() + category.slice(1)} Module`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `Manage detailed settings and exemptions for **${category}**.`
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_INFO} **Status:** ${isEnabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``}\n` +
+      `${EMOJI_WARN} **Actions:** ${categoryData.actions?.length ? categoryData.actions.map(a => `\`${a.toUpperCase()}\``).join(', ') : '`None`'}\n` +
+      `${EMOJI_BYPASS} **Exemptions:** Roles: \`${categoryData.exemptRoles.length}\` \u2502 Channels: \`${categoryData.exemptChannels.length}\``
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_TOOL} **Module Settings**\n` + formatConfig(category, categoryData)
+    ));
 
   const buttons = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
@@ -36,13 +40,12 @@ function createCategoryPanel(category, config) {
       .setStyle(ButtonStyle.Primary),
     new ButtonBuilder()
       .setCustomId('automod_home')
-      .setLabel('Back to Dashboard')
+      .setLabel('Back')
       .setStyle(ButtonStyle.Secondary)
   );
 
   return { 
-    embeds: [embed], 
-    components: [buttons] 
+    components: [container, buttons] 
   };
 }
 

@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, MessageFlags } = require('discord.js');
 const { sendBackup } = require('../../utils/backupManager');
-const { EMOJI_OWNER, EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_LOADING, EMOJI_SUCCESS } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'backup',
@@ -11,36 +12,20 @@ module.exports = {
   staffOnly: false,
   devOnly: true,
   execute: async (client, message) => {
-    const reply = await message.reply({
-      embeds: [
-        new EmbedBuilder()
-          .setColor('#EB459E')
-          .setAuthor({ name: 'Wild Wolf \u2502 Backup', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${EMOJI_OWNER} ${EMOJI_LOADING} **Generating backup...**`)
-          .setTimestamp()
-      ]
-    });
+    const loadContainer = new ContainerBuilder()
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} ${EMOJI_LOADING} **Generating backup...**`));
+    
+    const reply = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
+    if (!reply) return;
 
     const success = await sendBackup(client);
 
     if (success) {
-      await reply.edit({
-        embeds: [
-          new EmbedBuilder()
-            .setColor('#00e676')
-            .setDescription(`${EMOJI_SUCCESS} **Backup generated and sent to the backup channel.**`)
-            .setTimestamp()
-        ]
-      });
+      const successContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Backup generated and sent to the backup channel.**`));
+      await reply.edit({ components: [successContainer] }).catch(() => {});
     } else {
-      await reply.edit({
-        embeds: [
-          new EmbedBuilder()
-            .setColor('#ED4245')
-            .setDescription(`${EMOJI_ERROR} **Failed to send backup. Check the logs and ensure backupChannelId is set.**`)
-            .setTimestamp()
-        ]
-      });
+      await reply.edit({ components: [cv2Error('Failed to send backup. Check logs and ensure backupChannelId is configured.')] }).catch(() => {});
     }
   }
 };

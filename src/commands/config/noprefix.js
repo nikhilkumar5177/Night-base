@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER, EMOJI_INFO, EMOJI_ERROR, EMOJI_WARN, EMOJI_SUCCESS } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_INFO, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'noprefix',
@@ -14,7 +15,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_OWNER} Owner Only`).setDescription('Only the server owner can manage no-prefix access.').setTimestamp()] });
+        return message.reply({ components: [cv2Error('Only the server owner can manage no-prefix access.')], flags: 32768 });
       }
 
       const action = args[0]?.toLowerCase();
@@ -23,7 +24,9 @@ module.exports = {
 
       if (action === 'list') {
         if (configData.noPrefixUsers.length === 0) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor(client.config.embedColor || '#0099ff').setTitle(`${EMOJI_INFO} No-Prefix Users`).setDescription('No users have no-prefix access.').setTimestamp()] });
+          const container = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **No users have no-prefix access.**`));
+          return message.reply({ components: [container], flags: 32768 });
         }
 
         const now = Date.now();
@@ -42,9 +45,7 @@ module.exports = {
           }
 
           const remaining = entry.expiresAt - now;
-          if (remaining <= 0) {
-            return `**${i + 1}.** ${name} \u2014 \`EXPIRED\``;
-          }
+          if (remaining <= 0) return `**${i + 1}.** ${name} \u2014 \`EXPIRED\``;
 
           const months = Math.floor(remaining / 2592000000);
           const days = Math.floor((remaining % 2592000000) / 86400000);
@@ -60,31 +61,16 @@ module.exports = {
           return `**${i + 1}.** ${name} \u2014 \`${timeStr.trim()}\` remaining\nAdded by: ${addedByTag} \u2014 Expires: <t:${Math.floor(entry.expiresAt / 1000)}:R>`;
         }).join('\n\n');
 
-        const embed = new EmbedBuilder()
-          .setColor(client.config.embedColor || '#0099ff')
-          .setTitle(`${EMOJI_OWNER} No-Prefix Users`)
-          .setDescription(list)
-          .setFooter({ text: `${configData.noPrefixUsers.length} total entries` })
-          .setTimestamp();
-        return message.reply({ embeds: [embed] }).catch(() => {});
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 No-Prefix Users`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
+        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
       }
 
       const target = message.mentions.users.first() || client.users.cache.get(args[1]);
       if (!target) {
-        const usageEmbed = new EmbedBuilder()
-          .setColor('#8B0000')
-          .setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() })
-          .setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.')
-          .addFields(
-            { name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}noprefix <add|remove|list> <@user> [duration]\n\`\`\`` },
-            { name: '\u2501\u2501 Examples', value: `\`\`\`\n${client.config.prefix}noprefix add @User\n${client.config.prefix}noprefix add @User 7d\n${client.config.prefix}noprefix add @User 24h\n${client.config.prefix}noprefix add @User 2mo\n${client.config.prefix}noprefix remove @User\n${client.config.prefix}noprefix list\n\`\`\`` },
-            { name: 'No Duration', value: '`= Permanent`', inline: true },
-            { name: 'Aliases', value: '`np`, `nopre`', inline: true },
-            { name: 'Time Formats', value: '`m` `h` `d` `mo`', inline: true }
-          )
-          .setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
-          .setTimestamp();
-        return message.reply({ embeds: [usageEmbed] }).catch(() => {});
+        return sendUsage(message, module.exports);
       }
 
       if (action === 'add') {
@@ -103,55 +89,37 @@ module.exports = {
         let entry;
 
         if (!durationStr) {
-          entry = {
-            id: target.id,
-            permanent: true,
-            addedBy: message.author.id,
-            addedAt: Date.now()
-          };
+          entry = { id: target.id, permanent: true, addedBy: message.author.id, addedAt: Date.now() };
         } else {
           const match = durationStr.match(/^(\d+)(mo|m|h|d)$/);
           if (!match) {
-            return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Invalid Duration`).setDescription('Use format: `30m`, `12h`, `7d`, `2mo`').setTimestamp()] });
+            return message.reply({ components: [cv2Error('Use format: `30m`, `12h`, `7d`, `2mo`')], flags: 32768 });
           }
-
           const amount = parseInt(match[1]);
           const unit = match[2];
           const multipliers = { m: 60000, h: 3600000, d: 86400000, mo: 2592000000 };
           const duration = amount * multipliers[unit];
-
           if (duration > 365 * 86400000) {
-            return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Too Long`).setDescription('Maximum duration is 365 days.').setTimestamp()] });
+            return message.reply({ components: [cv2Error('Maximum duration is 365 days.')], flags: 32768 });
           }
-
-          entry = {
-            id: target.id,
-            permanent: false,
-            expiresAt: Date.now() + duration,
-            addedBy: message.author.id,
-            addedAt: Date.now()
-          };
+          entry = { id: target.id, permanent: false, expiresAt: Date.now() + duration, addedBy: message.author.id, addedAt: Date.now() };
         }
 
         configData.noPrefixUsers.push(entry);
         storage.write('config.json', configData);
 
-        const embed = new EmbedBuilder()
-          .setColor('#00e676')
-          .setTitle(`${EMOJI_OWNER} No-Prefix Access Granted`)
-          .addFields(
-            { name: 'User', value: `${target.tag} (${target.id})`, inline: true },
-            { name: 'Type', value: entry.permanent ? '`Permanent`' : '`Timed`', inline: true },
-            { name: 'Duration', value: entry.permanent ? '`Forever`' : `\`${durationStr}\``, inline: true },
-            { name: 'Granted By', value: message.author.tag }
-          );
-
-        if (!entry.permanent) {
-          embed.addFields({ name: 'Expires', value: `<t:${Math.floor(entry.expiresAt / 1000)}:F> (<t:${Math.floor(entry.expiresAt / 1000)}:R>)` });
-        }
-
-        embed.setFooter({ text: 'Wild Wolf \u2022 User can now use commands without prefix' }).setTimestamp();
-        return message.reply({ embeds: [embed] }).catch(() => {});
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 No-Prefix Granted`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_SUCCESS} **No-prefix access granted.**\n` +
+            `${EMOJI_DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
+            `${EMOJI_DOT} **Type:** ${entry.permanent ? '\`Permanent\`' : '\`Timed\`'}\n` +
+            `${EMOJI_DOT} **Duration:** ${entry.permanent ? '\`Forever\`' : `\`${durationStr}\``}\n` +
+            `${EMOJI_DOT} **By:** ${message.author.tag}` +
+            (entry.permanent ? '' : `\n${EMOJI_DOT} **Expires:** <t:${Math.floor(entry.expiresAt / 1000)}:R>`)
+          ));
+        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
       }
 
       if (action === 'remove') {
@@ -159,9 +127,10 @@ module.exports = {
           if (typeof u === 'string') return u === target.id;
           return u.id === target.id;
         });
-
         if (!exists) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle(`${EMOJI_WARN} Not Found`).setDescription(`**${target.tag}** does not have no-prefix access.`).setTimestamp()] });
+          const warnContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${target.tag}** does not have no-prefix access.`));
+          return message.reply({ components: [warnContainer], flags: 32768 });
         }
 
         configData.noPrefixUsers = configData.noPrefixUsers.filter(u => {
@@ -170,31 +139,20 @@ module.exports = {
         });
         storage.write('config.json', configData);
 
-        const embed = new EmbedBuilder()
-          .setColor('#ff6d00')
-          .setTitle(`${EMOJI_OWNER} No-Prefix Access Revoked`)
-          .addFields(
-            { name: 'User', value: `${target.tag} (${target.id})`, inline: true },
-            { name: 'Removed By', value: message.author.tag, inline: true }
-          )
-          .setFooter({ text: 'Wild Wolf \u2022 User must now use prefix for commands' })
-          .setTimestamp();
-        return message.reply({ embeds: [embed] }).catch(() => {});
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 No-Prefix Revoked`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_SUCCESS} **No-prefix access revoked.**\n` +
+            `${EMOJI_DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
+            `${EMOJI_DOT} **By:** ${message.author.tag}`
+          ));
+        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
       }
 
-      const usageEmbed = new EmbedBuilder()
-        .setColor('#8B0000')
-        .setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() })
-        .setDescription('**Invalid action.**\nUse `add`, `remove`, or `list`.')
-        .addFields(
-          { name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}noprefix <add|remove|list> <@user> [duration]\n\`\`\`` },
-          { name: '\u2501\u2501 Examples', value: `\`\`\`\n${client.config.prefix}noprefix add @User\n${client.config.prefix}noprefix add @User 7d\n${client.config.prefix}noprefix remove @User\n\`\`\`` }
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
-        .setTimestamp();
-      message.reply({ embeds: [usageEmbed] }).catch(() => {});
+      return sendUsage(message, module.exports);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

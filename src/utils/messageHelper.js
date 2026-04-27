@@ -1,5 +1,5 @@
-const { EmbedBuilder } = require('discord.js');
-const { LIMITS, SEP } = require('./constants');
+const { EmbedBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder } = require('discord.js');
+const { LIMITS, SEP, EMOJI_ERROR, EMOJI_ARROW, FOOTER_TEXT } = require('./constants');
 
 /**
  * Sends a message and automatically deletes it after a specified time.
@@ -18,7 +18,6 @@ async function sendAutoDelete(channelOrMessage, options, ms = LIMITS.AUTO_DELETE
             try {
                 sent = await channelOrMessage.reply(options);
             } catch (replyErr) {
-                // If reply fails (e.g. unknown message), fall back to channel.send
                 sent = await channel.send(options);
             }
         } else {
@@ -34,34 +33,61 @@ async function sendAutoDelete(channelOrMessage, options, ms = LIMITS.AUTO_DELETE
 }
 
 /**
- * Sends a premium "Wrong Syntax" embed.
+ * Creates a V2 Container for error messages.
+ * @param {string} text 
+ * @returns {import('discord.js').ContainerBuilder}
+ */
+function cv2Error(text) {
+    return new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Error`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_ERROR} ${text}`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+}
+
+/**
+ * Sends a premium "Wrong Syntax" V2 Container.
  * @param {import('discord.js').Message} message 
  * @param {object} command - The command module object
  */
 async function sendUsage(message, command) {
     const prefix = message.client.config.prefix;
-    const embed = new EmbedBuilder()
-        .setColor('#8B0000') // Dark red for errors
-        .setAuthor({ name: 'WRONG SYNTAX', iconURL: message.client.user.displayAvatarURL() })
-        .setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.')
-        .addFields(
-            { name: `${SEP}\n\u25B8 Correct Format`, value: `\`\`\`fix\n${prefix}${command.usage}\n\`\`\`` },
-            { name: '\u25B8 Examples', value: `\`\`\`\n${command.example ? command.example.split('\n').map(ex => prefix + ex).join('\n') : prefix + command.usage}\n\`\`\`` }
-        );
+    const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Wrong Syntax`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `**You used this command the wrong way.**\nRead the correct format below.\n\n` +
+            `${EMOJI_ARROW} **Correct Format:**\n\`\`\`fix\n${prefix}${command.usage}\n\`\`\`\n` +
+            `${EMOJI_ARROW} **Example:**\n\`\`\`\n${command.example ? command.example.split('\n').map(ex => prefix + ex).join('\n') : prefix + command.usage}\n\`\`\``
+        ));
 
     const info = [];
-    if (command.aliases?.length) info.push(`**Aliases:** \`${command.aliases.join(', ')}\``);
-    if (command.cooldown) info.push(`**Cooldown:** \`${command.cooldown}s\``);
-    if (command.category) info.push(`**Category:** \`${command.category}\``);
-
+    if (command.aliases?.length) info.push(`Aliases: \`${command.aliases.join(', ')}\``);
+    if (command.cooldown) info.push(`Cooldown: \`${command.cooldown}s\``);
+    
     if (info.length) {
-        embed.addFields({ name: '\u25B8 Command Info', value: info.join('\n') });
+        container.addSeparatorComponents(new SeparatorBuilder());
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(info.join(' \u2502 ')));
     }
 
-    embed.setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' })
-        .setTimestamp();
+    container.addSeparatorComponents(new SeparatorBuilder());
+    container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-    return sendAutoDelete(message, { embeds: [embed] }, 15000);
+    return sendAutoDelete(message, { components: [container], flags: 1 << 14 }, 15000); // 1 << 14 is IsComponentsV2
 }
 
-module.exports = { sendAutoDelete, sendUsage };
+/**
+ * Creates a V2 Container for expired sessions.
+ * @returns {import('discord.js').ContainerBuilder}
+ */
+function cv2Expire() {
+    return new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Session Expired`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`This interaction has expired due to inactivity.\nPlease use the command again to continue.`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+}
+
+module.exports = { sendAutoDelete, sendUsage, cv2Error, cv2Expire };

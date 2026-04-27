@@ -1,5 +1,5 @@
-const { EmbedBuilder } = require('discord.js');
-const { COLORS, EMOJI_WARN } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_WARN } = require('../../utils/constants');
 
 /**
  * Handle ghost ping detection (messageDelete).
@@ -14,21 +14,21 @@ async function handleGhostPing(client, message, config) {
   const mentions = message.mentions.users.filter(u => u.id !== message.author.id);
   if (mentions.size === 0) return;
 
-  const embed = new EmbedBuilder()
-    .setColor(COLORS.WARN)
-    .setTitle(`${EMOJI_WARN} Ghost Ping Detected`)
-    .setDescription(
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_WARN} **Ghost Ping Detected**\n\n` +
       `**User:** ${message.author.tag} (<@${message.author.id}>)\n` +
       `**Mentions:** ${mentions.map(u => `<@${u.id}>`).join(', ')}\n` +
       `**Content:** ${message.content || '*[Embed/Attachment only]*'}`
-    )
-    .setTimestamp();
+    ));
 
   const logChannelId = config.logChannel;
   const targetChannel = message.guild.channels.cache.get(logChannelId) || message.channel;
 
   if (targetChannel) {
-    await targetChannel.send({ embeds: [embed] }).catch(() => {});
+    await targetChannel.send({ components: [container], flags: 32768 }).catch(() => {});
   }
 }
 

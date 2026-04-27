@@ -1,5 +1,5 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'guildlist',
@@ -23,51 +23,43 @@ module.exports = {
       const totalPages = Math.ceil(guilds.length / perPage);
       let page = 0;
 
-      const buildEmbed = (p) => {
+      const buildContainer = (p) => {
         const start = p * perPage;
         const end = start + perPage;
         const slice = guilds.slice(start, end);
 
         const list = slice.map((g, i) => {
-          return `\`${start + i + 1}.\` **${g.name}** \n\u25B8 ID: \`${g.id}\` \u2502 Members: \`${g.members}\` \u2502 Owner: <@${g.owner}>`;
+          return `\`${start + i + 1}.\` **${g.name}**\n\u25B8 ID: \`${g.id}\` \u2502 Members: \`${g.members}\` \u2502 Owner: <@${g.owner}>`;
         }).join('\n\n');
 
-        return new EmbedBuilder()
-          .setColor('#5865F2')
-          .setAuthor({ name: 'Wild Wolf \u2502 Guild Directory', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n${list || 'No guilds found.'}\n${SEP}`)
-          .setFooter({ text: `Page ${p + 1} of ${totalPages} \u2502 Total Guilds: ${guilds.length}` })
-          .setTimestamp();
+        return new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Guild Directory`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(list || 'No guilds found.'));
       };
 
-      const buttons = (p) => new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('gl_prev').setLabel('Back').setStyle(ButtonStyle.Secondary).setDisabled(p === 0),
-        new ButtonBuilder().setCustomId('gl_next').setLabel('Next').setStyle(ButtonStyle.Secondary).setDisabled(p >= totalPages - 1),
+      const buildRow = (p) => new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('gl_prev').setEmoji('\u25C0').setStyle(ButtonStyle.Secondary).setDisabled(p === 0),
+        new ButtonBuilder().setCustomId('gl_page').setLabel(`${p + 1}/${totalPages}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
+        new ButtonBuilder().setCustomId('gl_next').setEmoji('\u25B6').setStyle(ButtonStyle.Secondary).setDisabled(p >= totalPages - 1),
         new ButtonBuilder().setCustomId('gl_del').setLabel('Dismiss').setStyle(ButtonStyle.Danger)
       );
 
-      const sent = await message.reply({ embeds: [buildEmbed(page).catch(() => {})], components: [buttons(page)] });
+      const sent = await message.reply({ components: [buildContainer(page), buildRow(page)], flags: 32768 });
+      if (!sent) return;
+
       const collector = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 60000 });
 
       collector.on('collect', async i => {
-        if (i.customId === 'gl_del') {
-          await sent.delete().catch(() => {});
-          collector.stop();
-          return;
-        }
-
+        if (i.customId === 'gl_del') { await sent.delete().catch(() => {}); collector.stop(); return; }
         if (i.customId === 'gl_prev') page--;
         if (i.customId === 'gl_next') page++;
-
-        await i.update({ embeds: [buildEmbed(page)], components: [buttons(page)] });
+        await i.update({ components: [buildContainer(page), buildRow(page)] });
       });
 
-      collector.on('end', () => {
-        sent.edit({ components: [] }).catch(() => {});
-      });
-
+      collector.on('end', () => sent.edit({ components: [] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`{EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 });
     }
   }
 };

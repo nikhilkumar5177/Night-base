@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER, EMOJI_ERROR } = require('../../utils/constants');
+const { EMOJI_OWNER } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'debug',
@@ -17,27 +18,25 @@ module.exports = {
       const mem = process.memoryUsage();
       const analytics = storage.read('analytics.json');
       const totalUses = Object.values(analytics).reduce((acc, cmd) => acc + (cmd.uses || 0), 0);
-      const embed = new EmbedBuilder()
-        .setColor('#0099ff')
-        .setTitle(`${EMOJI_OWNER} Debug Info`)
-        .addFields(
-          { name: 'Heap Used', value: `${(mem.heapUsed / 1024 / 1024).toFixed(2)} MB`, inline: true },
-          { name: 'Heap Total', value: `${(mem.heapTotal / 1024 / 1024).toFixed(2)} MB`, inline: true },
-          { name: 'RSS', value: `${(mem.rss / 1024 / 1024).toFixed(2)} MB`, inline: true },
-          { name: 'Commands Loaded', value: `${client.commands.size}`, inline: true },
-          { name: 'Aliases Loaded', value: `${client.aliases.size}`, inline: true },
-          { name: 'Total Cmd Uses', value: `${totalUses}`, inline: true },
-          { name: 'Cooldowns Active', value: `${client.cooldowns.size}`, inline: true },
-          { name: 'Snipe Channels', value: `${client.snipeCache.size}`, inline: true },
-          { name: 'Guilds Cached', value: `${client.guilds.cache.size}`, inline: true },
-          { name: 'WS Ping', value: `${client.ws.ping}ms`, inline: true },
-          { name: 'Uptime', value: `${(process.uptime() / 3600).toFixed(2)}h`, inline: true },
-          { name: 'Node', value: process.version, inline: true }
-        )
-        .setTimestamp();
-      message.reply({ embeds: [embed] }).catch(() => {});
+      
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} **System Debug Info**`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `**Memory:**\n` +
+          `\u25B8 Heap Used: \`${(mem.heapUsed / 1024 / 1024).toFixed(2)} MB\`\n` +
+          `\u25B8 RSS: \`${(mem.rss / 1024 / 1024).toFixed(2)} MB\`\n\n` +
+          `**Registry:**\n` +
+          `\u25B8 Commands: \`${client.commands.size}\` \u2502 Aliases: \`${client.aliases.size}\`\n` +
+          `\u25B8 Total Uses: \`${totalUses}\` \u2502 Cooldowns: \`${client.cooldowns.size}\`\n\n` +
+          `**Status:**\n` +
+          `\u25B8 Ping: \`${client.ws.ping}ms\` \u2502 Uptime: \`${(process.uptime() / 3600).toFixed(2)}h\`\n` +
+          `\u25B8 Snipe: \`${client.snipeCache.size} ch\` \u2502 Node: \`${process.version}\``
+        ));
+
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 });
     }
   }
 };

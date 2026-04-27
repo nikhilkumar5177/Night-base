@@ -1,6 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP, EMOJI_WARN, EMOJI_ERROR, EMOJI_DOT } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_WARN, EMOJI_DOT } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'stafflist',
@@ -15,7 +16,9 @@ module.exports = {
     try {
       const staffData = storage.read('staff.json');
       if (!staffData.roles || staffData.roles.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Staff List', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No staff roles configured.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.\n${SEP}`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No staff roles configured.** Use \`${client.config.prefix}addstaff @Role\` to add one.`));
+        return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
       const cleaned = [];
@@ -35,30 +38,19 @@ module.exports = {
         storage.write('staff.json', staffData);
       }
 
-      const embed = new EmbedBuilder()
-        .setColor('#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 Staff Dashboard', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(message.guild.iconURL({ dynamic: true, size: 256 }))
-        .setDescription(
-          `${SEP}\n` +
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Staff Dashboard`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Staff Roles:** \`${staffData.roles.length}\`\n` +
-          `${EMOJI_DOT} **Total Staff:** \`${totalStaff}\`\n` +
-          `${SEP}\n\n` +
-          sections.join('\n\n')
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 Staff Management', iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
+          `${EMOJI_DOT} **Total Staff:** \`${totalStaff}\``
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(sections.join('\n\n')));
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('sl_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
-      );
-
-      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
-      coll.on('collect', async i => { if (i.customId === 'sl_del') { await sent.delete().catch(() => {}); coll.stop(); } });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

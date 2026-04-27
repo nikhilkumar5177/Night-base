@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'setchannel',
@@ -14,17 +15,16 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Missing Permissions`).setDescription('You need **ManageChannels** permission.').setTimestamp()] });
+        return message.reply({ components: [cv2Error('You need **ManageChannels** permission.')], flags: 32768 });
       }
       const action = args[0]?.toLowerCase();
       if (!action || !['enable', 'disable'].includes(action)) {
-        const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}setchannel <enable|disable> [#channel] <command>\n\`\`\`` }, { name: '\u2501\u2501 Examples', value: `\`\`\`\n${client.config.prefix}setchannel disable #general warn\n${client.config.prefix}setchannel enable #general warn\n\`\`\`` }, { name: 'Aliases', value: '`channelcmd`', inline: true }, { name: 'Permission', value: '`ManageChannels`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-        return message.reply({ embeds: [usageEmbed] }).catch(() => {});
+        return sendUsage(message, module.exports);
       }
       const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
       const cmdName = args[2] || args[1];
       if (!cmdName || !client.commands.has(cmdName)) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Invalid Command`).setDescription('Specify a valid command name.').setTimestamp()] });
+        return message.reply({ components: [cv2Error('Specify a valid command name.')], flags: 32768 });
       }
       const configData = storage.read('config.json');
       if (!configData.channelCommands) configData.channelCommands = {};
@@ -34,13 +34,21 @@ module.exports = {
           configData.channelCommands[channel.id].disabled.push(cmdName);
         }
         storage.write('config.json', configData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Command Disabled`).setDescription(`\`${cmdName}\` is now disabled in ${channel}.`).setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Disabled`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${cmdName}\` is now disabled in ${channel}.`));
+        return message.reply({ components: [container], flags: 32768 });
       }
       configData.channelCommands[channel.id].disabled = configData.channelCommands[channel.id].disabled.filter(c => c !== cmdName);
       storage.write('config.json', configData);
-      message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Command Enabled`).setDescription(`\`${cmdName}\` is now enabled in ${channel}.`).setTimestamp()] });
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Enabled`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${cmdName}\` is now enabled in ${channel}.`));
+      message.reply({ components: [container], flags: 32768 });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

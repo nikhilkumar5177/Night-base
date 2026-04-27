@@ -1,8 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, MessageFlags } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
-const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
-
-const { EMOJI_DOT, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
+const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING } = require('../../utils/constants');
 
 module.exports = {
   name: 'mute',
@@ -17,20 +16,20 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ModerateMembers** permission.`).setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { components: [cv2Error('You need **ModerateMembers** permission.')], flags: 32768 }, 5000);
       }
       if (!message.guild.members.me.permissions.has('ModerateMembers')) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ModerateMembers** permission.`).setTimestamp()] }, 5000);
+        return sendAutoDelete(message, { components: [cv2Error('I need **ModerateMembers** permission.')], flags: 32768 }, 5000);
       }
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
         return sendUsage(message, module.exports);
       }
       if (!target.moderatable) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I cannot timeout this user.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('I cannot timeout this user.')], flags: 32768 });
       }
       if (target.roles.highest.position > message.member.roles.highest.position) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Target has a higher role.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Target has a higher role.')], flags: 32768 });
       }
 
       const timeStr = args[1]?.toLowerCase();
@@ -57,40 +56,37 @@ module.exports = {
       durationMs = Math.min(durationMs, 28 * 24 * 60 * 60 * 1000);
       const reason = args.slice(2).join(' ') || 'No reason provided';
 
-      const loadEmbed = new EmbedBuilder()
-        .setColor('#EB459E')
-        .setAuthor({ name: 'Wild Wolf \u2502 Processing', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_LOADING} **Applying timeout...**\n${SEP}`)
-        .setTimestamp();
-      const sent = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
+      const loadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Applying timeout...**`));
+      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
 
       await target.timeout(durationMs, reason);
       await new Promise(r => setTimeout(r, 400));
 
-      const embed = new EmbedBuilder()
-        .setColor('#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Timeout Applied', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(target.user.displayAvatarURL({ dynamic: true }))
-        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **User has been timed out.**\n${SEP}`)
-        .addFields(
-          { name: '\u25B8 User', value: `${target.user.tag}\n\`${target.id}\``, inline: true },
-          { name: '\u25B8 Duration', value: `\`${durationLabel}\``, inline: true },
-          { name: '\u25B8 Moderator', value: message.author.tag, inline: true },
-          { name: '\u25B8 Reason', value: reason },
-          { name: '\u25B8 Expires', value: `<t:${Math.floor((Date.now() + durationMs) / 1000)}:F> (<t:${Math.floor((Date.now() + durationMs) / 1000)}:R>)` }
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Timeout Applied`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addSectionComponents(new SectionBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_SUCCESS} **User has been timed out.**\n` +
+            `${EMOJI_DOT} **User:** ${target.user.tag} \`${target.id}\`\n` +
+            `${EMOJI_DOT} **Duration:** \`${durationLabel}\`\n` +
+            `${EMOJI_DOT} **Moderator:** ${message.author.tag}`
+          ))
+          .setThumbnailAccessory(new ThumbnailBuilder().setURL(target.user.displayAvatarURL({ dynamic: true })))
         )
-        .setFooter({ text: 'Wild Wolf \u2022 Moderation Log', iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
-      await sent.edit({ embeds: [embed] }).catch(() => {});
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_DOT} **Reason:** ${reason}\n` +
+          `${EMOJI_DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`
+        ));
 
-      const dmEmbed = new EmbedBuilder()
-        .setColor('#FEE75C')
-        .setAuthor({ name: 'Wild Wolf \u2502 Timeout Notice', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_WARN} **You have been timed out in ${message.guild.name}**\n${SEP}\n\n${EMOJI_DOT} **Duration:** \`${durationLabel}\`\n${EMOJI_DOT} **Reason:** ${reason}\n${EMOJI_DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`)
-        .setTimestamp();
-      target.send({ embeds: [dmEmbed] }).catch(() => { });
+      await sent.edit({ components: [container] }).catch(() => {});
+
+      // DM notice — stays as plain content (V2 not supported in DMs)
+      target.send({ content: `\u26A0\uFE0F **You have been timed out in ${message.guild.name}**\n\u2022 Duration: \`${durationLabel}\`\n\u2022 Reason: ${reason}\n\u2022 Expires: <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>` }).catch(() => { });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

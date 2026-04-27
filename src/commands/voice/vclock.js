@@ -1,5 +1,6 @@
-const { EmbedBuilder, PermissionsBitField } = require('discord.js');
-const { SEP, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'vclock',
@@ -14,30 +15,26 @@ module.exports = {
     try {
       const channel = message.mentions.channels.first() || message.member.voice.channel;
       if (!channel || !channel.isVoiceBased()) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please mention a voice channel or join one.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Please mention a voice channel or join one.')], flags: 32768 });
       }
-
       if (!channel.permissionsFor(message.guild.members.me).has('ManageRoles')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} I need **ManageRoles** permission for this channel.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('I need **ManageRoles** permission for this channel.')], flags: 32768 });
       }
 
-      await channel.permissionOverwrites.edit(message.guild.roles.everyone, {
-        Connect: false
-      }).catch(() => {});
+      await channel.permissionOverwrites.edit(message.guild.roles.everyone, { Connect: false }).catch(() => {});
 
-      const embed = new EmbedBuilder()
-        .setColor('#ED4245')
-        .setAuthor({ name: 'Wild Wolf \u2502 VC Locked', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Voice channel has been locked.**\n${SEP}`)
-        .addFields(
-          { name: '\u25B8 Channel', value: `${channel}`, inline: true },
-          { name: '\u25B8 Moderator', value: `${message.author.tag}`, inline: true }
-        )
-        .setTimestamp();
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Locked`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_SUCCESS} **Voice channel has been locked.**\n` +
+          `${EMOJI_DOT} **Channel:** ${channel}\n` +
+          `${EMOJI_DOT} **Moderator:** ${message.author.tag}`
+        ));
 
-      message.reply({ embeds: [embed] }).catch(() => {});
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

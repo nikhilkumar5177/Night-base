@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { SEP, EMOJI_OWNER, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_WARN, EMOJI_SUCCESS } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'maintenance',
@@ -17,39 +18,45 @@ module.exports = {
       configData.maintenance = !configData.maintenance;
       storage.write('config.json', configData);
 
+      const prefix = configData.prefix || client.config.prefix;
+
       if (configData.maintenance) {
         client.user.setPresence({
           activities: [{ name: 'System Maintenance', type: 0 }],
           status: 'dnd'
         });
         
-        const embed = new EmbedBuilder()
-          .setColor('#ffab00')
-          .setAuthor({ name: 'Wild Wolf \u2502 System Manager', iconURL: client.user.displayAvatarURL() })
-          .setTitle(`${EMOJI_OWNER} Maintenance Mode: ENABLED`)
-          .setDescription(`${SEP}\n${EMOJI_WARN} **The bot is now in maintenance mode.**\n\n\u25AA All non-owner commands will be ignored.\n\u25AA Bot status has been set to **Do Not Disturb**.\n\u25AA Maintenance activity is now active.\n${SEP}`)
-          .setTimestamp();
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Manager`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_OWNER} **Maintenance Mode: ENABLED**\n\n` +
+            `${EMOJI_WARN} The bot is now in maintenance mode.\n` +
+            `\u25B8 All non-owner commands will be ignored.\n` +
+            `\u25B8 Bot status set to **Do Not Disturb**.`
+          ));
         
-        await message.reply({ embeds: [embed] }).catch(() => {});
+        await message.reply({ components: [container], flags: 32768 }).catch(() => {});
       } else {
         client.user.setPresence({
-          activities: [{ name: `${client.config.prefix}help`, type: 3 }],
+          activities: [{ name: `${prefix}help`, type: 3 }],
           status: 'online'
         });
 
-        const embed = new EmbedBuilder()
-          .setColor('#00e676')
-          .setAuthor({ name: 'Wild Wolf \u2502 System Manager', iconURL: client.user.displayAvatarURL() })
-          .setTitle(`${EMOJI_OWNER} Maintenance Mode: DISABLED`)
-          .setDescription(`${SEP}\n${EMOJI_SUCCESS} **The bot has resumed normal operation.**\n\n\u25AA All commands are now available to users.\n\u25AA Bot status has been reset to **Online**.\n${SEP}`)
-          .setTimestamp();
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Manager`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_OWNER} **Maintenance Mode: DISABLED**\n\n` +
+            `${EMOJI_SUCCESS} The bot has resumed normal operation.\n` +
+            `\u25B8 All commands are now available.\n` +
+            `\u25B8 Bot status reset to **Online**.`
+          ));
 
-        await message.reply({ embeds: [embed] }).catch(() => {});
+        await message.reply({ components: [container], flags: 32768 }).catch(() => {});
       }
     } catch (error) {
-      message.reply({ 
-        embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`)] 
-      });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 });
     }
   }
 };

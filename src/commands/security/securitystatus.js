@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { LIMITS, EMOJI_INFO, EMOJI_WARN, EMOJI_ERROR } = require('../../utils/constants');
+const { EMOJI_INFO, EMOJI_WARN, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'securitystatus',
@@ -15,32 +16,56 @@ module.exports = {
     try {
       const securityConfig = storage.read('security.json');
       const logs = securityConfig.logs || [];
+      
       if (logs.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle(`${EMOJI_INFO} Security Logs`).setDescription('No security events recorded.').setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Logs`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No security events recorded.`));
+        return message.reply({ components: [container], flags: 32768 });
       }
+
       const perPage = 5;
       const pages = [];
       for (let i = 0; i < logs.length; i += perPage) {
         const chunk = logs.slice(i, i + perPage);
         pages.push(chunk.map((log, idx) => `**${i + idx + 1}.** Type: \`${log.type}\`\nTime: <t:${Math.floor(log.timestamp / 1000)}:R>${log.count ? `\nCount: ${log.count}` : ''}`).join('\n\n'));
       }
+
       let page = 0;
-      const embed = new EmbedBuilder().setColor('#ff6d00').setTitle(`${EMOJI_WARN} Security Logs`).setDescription(pages[page]).setFooter({ text: `Page ${page + 1}/${pages.length} | ${logs.length} total events` }).setTimestamp();
-      const sent = await message.reply({ embeds: [embed] }).catch(() => {});
+
+      const buildContainer = () => {
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Logs`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(pages[page]));
+
+        if (pages.length > 1) {
+          const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('sec_prev').setEmoji('\u25C0').setStyle(ButtonStyle.Primary).setDisabled(page === 0),
+            new ButtonBuilder().setCustomId('sec_page').setLabel(`${page + 1}/${pages.length}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
+            new ButtonBuilder().setCustomId('sec_next').setEmoji('\u25B6').setStyle(ButtonStyle.Primary).setDisabled(page >= pages.length - 1)
+          );
+          container.addActionRowComponents(row);
+        }
+
+        return container;
+      };
+
+      const sent = await message.reply({ components: [buildContainer()], flags: 32768 }).catch(() => {});
       if (pages.length <= 1) return;
-      await sent.react('\u25C0\uFE0F').catch(() => {});
-      await sent.react('\u25B6\uFE0F').catch(() => {});
-      const filter = (r, u) => ['\u25C0\uFE0F', '\u25B6\uFE0F'].includes(r.emoji.name) && u.id === message.author.id;
-      const collector = sent.createReactionCollector({ filter, time: LIMITS.PAGINATION_TIMEOUT });
-      collector.on('collect', (r) => {
-        r.users.remove(message.author.id).catch(() => {});
-        if (r.emoji.name === '\u25B6\uFE0F' && page < pages.length - 1) page++;
-        else if (r.emoji.name === '\u25C0\uFE0F' && page > 0) page--;
-        sent.edit({ embeds: [new EmbedBuilder().setColor('#ff6d00').setTitle(`${EMOJI_WARN} Security Logs`).setDescription(pages[page]).setFooter({ text: `Page ${page + 1}/${pages.length} | ${logs.length} total events` }).setTimestamp()] }).catch(() => {});
+
+      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 60000 });
+      coll.on('collect', async i => {
+        if (i.customId === 'sec_prev' && page > 0) page--;
+        if (i.customId === 'sec_next' && page < pages.length - 1) page++;
+        await i.update({ components: [buildContainer()] });
       });
-      collector.on('end', () => sent.reactions.removeAll().catch(() => {}));
+
+      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
+
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

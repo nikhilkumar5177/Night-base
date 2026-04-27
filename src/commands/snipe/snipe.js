@@ -1,5 +1,6 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP, EMOJI_WARN, EMOJI_ERROR, EMOJI_DOT } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { EMOJI_WARN, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'snipe',
@@ -14,7 +15,11 @@ module.exports = {
     try {
       const snipes = client.snipeCache.get(message.channel.id);
       if (!snipes || snipes.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Snipe', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} No recently deleted messages in this channel.\n${SEP}`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Snipe`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} No recently deleted messages in this channel.`));
+        return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
       const perPage = 3;
@@ -31,31 +36,38 @@ module.exports = {
       let page = parseInt(args[0]) - 1 || 0;
       if (page < 0 || page >= pages.length) page = 0;
 
-      const buildEmbed = () => new EmbedBuilder()
-        .setColor('#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 Message Sniper', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${pages[page]}\n${SEP}`)
-        .setFooter({ text: `Wild Wolf \u2022 Page ${page + 1}/${pages.length} \u2502 ${snipes.length} sniped`, iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
+      const buildContainer = () => {
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Message Sniper`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(pages[page]));
 
-      const buildRow = () => new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('sn_prev').setEmoji('\u25C0').setStyle(ButtonStyle.Primary).setDisabled(page === 0),
-        new ButtonBuilder().setCustomId('sn_page').setLabel(`${page + 1}/${pages.length}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
-        new ButtonBuilder().setCustomId('sn_next').setEmoji('\u25B6').setStyle(ButtonStyle.Primary).setDisabled(page >= pages.length - 1),
-        new ButtonBuilder().setCustomId('sn_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
-      );
+        if (pages.length > 1) {
+          const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('sn_prev').setEmoji('\u25C0').setStyle(ButtonStyle.Primary).setDisabled(page === 0),
+            new ButtonBuilder().setCustomId('sn_page').setLabel(`${page + 1}/${pages.length}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
+            new ButtonBuilder().setCustomId('sn_next').setEmoji('\u25B6').setStyle(ButtonStyle.Primary).setDisabled(page >= pages.length - 1)
+          );
+          container.addActionRowComponents(row);
+        }
 
-      const sent = await message.reply({ embeds: [buildEmbed().catch(() => {})], components: [buildRow()] });
+        return container;
+      };
+
+      const sent = await message.reply({ components: [buildContainer()], flags: 32768 });
+      if (pages.length <= 1) return;
+
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
-        if (i.customId === 'sn_del') { await sent.delete().catch(() => { }); coll.stop(); return; }
         if (i.customId === 'sn_prev' && page > 0) page--;
         if (i.customId === 'sn_next' && page < pages.length - 1) page++;
-        await i.update({ embeds: [buildEmbed()], components: [buildRow()] });
+        await i.update({ components: [buildContainer()] });
       });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => { }));
+
+      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
+
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

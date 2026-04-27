@@ -1,5 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { SEP, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'vcstats',
@@ -17,19 +18,18 @@ module.exports = {
 
       const list = activeChannels.map(c => `${EMOJI_DOT} **${c.name}** \u2022 \`${c.members.size}\` members`).join('\n') || 'No active voice channels.';
 
-      const embed = new EmbedBuilder()
-        .setColor('#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 VC Stats', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${list}\n${SEP}`)
-        .addFields(
-          { name: '\u25B8 Total Members in VC', value: `\`${totalMembers}\``, inline: true },
-          { name: '\u25B8 Active Channels', value: `\`${activeChannels.size}\``, inline: true }
-        )
-        .setTimestamp();
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Stats`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(list))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_DOT} **Total in VC:** \`${totalMembers}\` \u2022 **Active Channels:** \`${activeChannels.size}\``
+        ));
 
-      message.reply({ embeds: [embed] }).catch(() => {});
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

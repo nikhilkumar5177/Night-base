@@ -1,6 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_DOT } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
+const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'warnlist',
@@ -18,7 +19,11 @@ module.exports = {
       const userWarns = warns[target.id] || [];
 
       if (userWarns.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Warn History', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_SUCCESS} **${target.tag}** has no warnings.\n${SEP}`).setTimestamp()] });
+        const cleanContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Warn History`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **${target.tag}** has no warnings.`));
+        return message.reply({ components: [cleanContainer], flags: 32768 });
       }
 
       const perPage = 5;
@@ -36,29 +41,35 @@ module.exports = {
       const totalWarns = userWarns.length;
       const warnBar = totalWarns >= 10 ? '\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588' : '\u2588'.repeat(Math.min(totalWarns, 10)) + '\u2591'.repeat(Math.max(10 - totalWarns, 0));
 
-      const buildEmbed = () => new EmbedBuilder()
-        .setColor(totalWarns >= 5 ? '#ED4245' : '#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 Warn History', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(target.displayAvatarURL({ dynamic: true }))
-        .setDescription(
-          `${SEP}\n` +
-          `${EMOJI_DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
-          `${EMOJI_DOT} **Warn Level:** \`${warnBar}\` **${totalWarns}**/10\n` +
-          `${SEP}\n\n` +
-          pages[page]
-        )
-        .setFooter({ text: `Wild Wolf \u2022 Page ${page + 1}/${pages.length} \u2502 ${totalWarns} total warnings`, iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
+      const buildContainer = () => {
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Warn History`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addSectionComponents(new SectionBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+              `${EMOJI_DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
+              `${EMOJI_DOT} **Warn Level:** \`${warnBar}\` **${totalWarns}**/10`
+            ))
+            .setThumbnailAccessory(new ThumbnailBuilder().setURL(target.displayAvatarURL({ dynamic: true })))
+          )
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(pages[page]));
 
-      const buildRow = () => new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('wl_first').setEmoji('\u23EE').setStyle(ButtonStyle.Secondary).setDisabled(page === 0),
-        new ButtonBuilder().setCustomId('wl_prev').setEmoji('\u25C0').setStyle(ButtonStyle.Primary).setDisabled(page === 0),
-        new ButtonBuilder().setCustomId('wl_page').setLabel(`${page + 1}/${pages.length}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
-        new ButtonBuilder().setCustomId('wl_next').setEmoji('\u25B6').setStyle(ButtonStyle.Primary).setDisabled(page >= pages.length - 1),
-        new ButtonBuilder().setCustomId('wl_last').setEmoji('\u23ED').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages.length - 1)
-      );
+        if (pages.length > 1) {
+          const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('wl_first').setEmoji('\u23EE').setStyle(ButtonStyle.Secondary).setDisabled(page === 0),
+            new ButtonBuilder().setCustomId('wl_prev').setEmoji('\u25C0').setStyle(ButtonStyle.Primary).setDisabled(page === 0),
+            new ButtonBuilder().setCustomId('wl_page').setLabel(`${page + 1}/${pages.length}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
+            new ButtonBuilder().setCustomId('wl_next').setEmoji('\u25B6').setStyle(ButtonStyle.Primary).setDisabled(page >= pages.length - 1),
+            new ButtonBuilder().setCustomId('wl_last').setEmoji('\u23ED').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages.length - 1)
+          );
+          container.addActionRowComponents(row);
+        }
 
-      const sent = await message.reply({ embeds: [buildEmbed().catch(() => {})], components: pages.length > 1 ? [buildRow()] : [] });
+        return container;
+      };
+
+      const sent = await message.reply({ components: [buildContainer()], flags: 32768 });
       if (pages.length <= 1) return;
 
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
@@ -67,11 +78,11 @@ module.exports = {
         if (i.customId === 'wl_prev' && page > 0) page--;
         if (i.customId === 'wl_next' && page < pages.length - 1) page++;
         if (i.customId === 'wl_last') page = pages.length - 1;
-        await i.update({ embeds: [buildEmbed()], components: [buildRow()] });
+        await i.update({ components: [buildContainer()] });
       });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

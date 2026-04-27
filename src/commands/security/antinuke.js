@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_ERROR } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'antinuke',
@@ -14,48 +15,63 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ 
-          embeds: [new EmbedBuilder()
-            .setColor('#ff1744')
-            .setTitle(`${EMOJI_OWNER} Owner Only`)
-            .setDescription('Only the server owner can configure anti-nuke.')
-            .setTimestamp()] 
-        });
+        return message.reply({ components: [cv2Error('Only the server owner can configure anti-nuke.')], flags: 32768 });
       }
       const action = args[0]?.toLowerCase();
       const securityConfig = storage.read('security.json');
+
       if (action === 'on') {
         securityConfig.enabled = true;
         storage.write('security.json', securityConfig);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Anti-Nuke Enabled`).setDescription('Security monitoring is now active.').setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Anti-nuke enabled.** Security monitoring is now active.`));
+        return message.reply({ components: [container], flags: 32768 });
       }
+
       if (action === 'off') {
         securityConfig.enabled = false;
         storage.write('security.json', securityConfig);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle(`${EMOJI_WARN} Anti-Nuke Disabled`).setDescription('Security monitoring has been turned off.').setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Anti-nuke disabled.** Security monitoring is off.`));
+        return message.reply({ components: [container], flags: 32768 });
       }
+
       if (action === 'config') {
         const threshold = parseInt(args[1]) || securityConfig.nukeThreshold || 3;
         const window = parseInt(args[2]) || securityConfig.nukeWindow || 10000;
         securityConfig.nukeThreshold = threshold;
         securityConfig.nukeWindow = window;
         storage.write('security.json', securityConfig);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Config Updated`).addFields({ name: 'Threshold', value: `${threshold} actions`, inline: true }, { name: 'Window', value: `${window / 1000}s`, inline: true }).setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Config Updated`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_SUCCESS} **Anti-nuke config updated.**\n` +
+            `${EMOJI_DOT} **Threshold:** ${threshold} actions\n` +
+            `${EMOJI_DOT} **Window:** ${window / 1000}s`
+          ));
+        return message.reply({ components: [container], flags: 32768 });
       }
-      const embed = new EmbedBuilder()
-        .setColor(client.config.embedColor || '#0099ff')
-        .setTitle(`${EMOJI_INFO} Anti-Nuke Status`)
-        .addFields(
-          { name: 'Status', value: securityConfig.enabled ? 'Enabled' : 'Disabled', inline: true },
-          { name: 'Threshold', value: `${securityConfig.nukeThreshold || 3} actions`, inline: true },
-          { name: 'Window', value: `${(securityConfig.nukeWindow || 10000) / 1000}s`, inline: true },
-          { name: 'Logged Events', value: `${(securityConfig.logs || []).length}`, inline: true }
-        )
-        .setDescription(`Usage:\n\`${client.config.prefix}antinuke on\` - Enable\n\`${client.config.prefix}antinuke off\` - Disable\n\`${client.config.prefix}antinuke config <threshold> <window_ms>\` - Configure`)
-        .setTimestamp();
-      message.reply({ embeds: [embed] }).catch(() => {});
+
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke Status`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_DOT} **Status:** ${securityConfig.enabled ? '\`● Enabled\`' : '\`○ Disabled\`'}\n` +
+          `${EMOJI_DOT} **Threshold:** \`${securityConfig.nukeThreshold || 3} actions\`\n` +
+          `${EMOJI_DOT} **Window:** \`${(securityConfig.nukeWindow || 10000) / 1000}s\`\n` +
+          `${EMOJI_DOT} **Events:** \`${(securityConfig.logs || []).length}\`\n\n` +
+          `\`${client.config.prefix}antinuke on\` \u2022 Enable\n` +
+          `\`${client.config.prefix}antinuke off\` \u2022 Disable\n` +
+          `\`${client.config.prefix}antinuke config <threshold> <window_ms>\` \u2022 Configure`
+        ));
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

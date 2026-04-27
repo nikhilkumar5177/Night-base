@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_INFO } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
+const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'vouchsetup',
@@ -14,34 +15,57 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Missing Permissions`).setDescription('You need **ManageChannels** permission.').setTimestamp()] });
+        return message.reply({ components: [cv2Error('You need **ManageChannels** permission.')], flags: 32768 });
       }
       const action = args[0]?.toLowerCase();
       const vouchData = storage.read('vouch.json');
+
       if (action === 'list') {
         if (!vouchData.channels || vouchData.channels.length === 0) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle(`${EMOJI_INFO} Vouch Channels`).setDescription('No vouch channels configured.').setTimestamp()] });
+          const container = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channels`))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No vouch channels configured.`));
+          return message.reply({ components: [container], flags: 32768 });
         }
         const list = vouchData.channels.map((id, i) => `**${i + 1}.** <#${id}>`).join('\n');
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#0099ff').setTitle(`${EMOJI_INFO} Vouch Channels`).setDescription(list).setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channels`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
+        return message.reply({ components: [container], flags: 32768 });
       }
+
       const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
+      
       if (action === 'add') {
         if (vouchData.channels.includes(channel.id)) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle(`${EMOJI_WARN} Already Added`).setTimestamp()] });
+          const warnContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${channel}** is already a vouch channel.`));
+          return message.reply({ components: [warnContainer], flags: 32768 });
         }
         vouchData.channels.push(channel.id);
         storage.write('vouch.json', vouchData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Vouch Channel Added`).setDescription(`${channel} is now a vouch channel.`).setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channel Added`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} ${channel} is now a vouch channel.`));
+        return message.reply({ components: [container], flags: 32768 });
       }
+
       if (action === 'remove') {
         vouchData.channels = vouchData.channels.filter(id => id !== channel.id);
         storage.write('vouch.json', vouchData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Vouch Channel Removed`).setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channel Removed`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Vouch channel removed.`));
+        return message.reply({ components: [container], flags: 32768 });
       }
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Invalid Action`).setDescription('Use `add`, `remove`, or `list`.').setTimestamp()] });
+
+      return sendUsage(message, module.exports);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

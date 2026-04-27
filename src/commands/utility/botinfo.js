@@ -1,5 +1,6 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { SEP, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder } = require('discord.js');
+const { EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'botinfo',
@@ -14,42 +15,42 @@ module.exports = {
   staffOnly: false,
   devOnly: false,
   execute: async (client, message) => {
-    const isInteraction = !message.author;
     try {
       const mem = process.memoryUsage();
       const up = process.uptime();
       const totalMembers = client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
 
-      const embed = new EmbedBuilder()
-        .setColor('#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 Bot Dashboard', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(client.user.displayAvatarURL({ dynamic: true, size: 512 }))
-        .setDescription(
-          `${SEP}\n` +
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Bot Dashboard`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Bot:** ${client.user.tag}\n` +
           `${EMOJI_DOT} **ID:** \`${client.user.id}\`\n` +
-          `${EMOJI_DOT} **Created:** <t:${Math.floor(client.user.createdTimestamp / 1000)}:R>\n` +
-          `${SEP}`
-        )
-        .addFields(
-          { name: '\u25B8 Performance', value: `\`\`\`\nHeap:    ${(mem.heapUsed / 1024 / 1024).toFixed(1)} MB\nRSS:     ${(mem.rss / 1024 / 1024).toFixed(1)} MB\nUptime:  ${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m ${Math.floor(up%60)}s\nWS Ping: ${client.ws.ping}ms\n\`\`\``, inline: true },
-          { name: '\u25B8 Statistics', value: `\`\`\`\nGuilds:   ${client.guilds.cache.size}\nUsers:    ${totalMembers}\nChannels: ${client.channels.cache.size}\nCommands: ${client.commands.size}\n\`\`\``, inline: true },
-          { name: '\u25B8 System', value: `\`\`\`\nNode:    ${process.version}\ndjs:     v${require('discord.js').version}\nOS:      ${process.platform}\nPrefix:  ${client.config.prefix}\n\`\`\``, inline: false }
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 System Information', iconURL: (isInteraction ? message.guild : message.guild).iconURL({ dynamic: true }) })
-        .setTimestamp();
+          `${EMOJI_DOT} **Created:** <t:${Math.floor(client.user.createdTimestamp / 1000)}:R>`
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `**Performance**\n` +
+          `Heap: ${(mem.heapUsed / 1024 / 1024).toFixed(1)} MB\n` +
+          `RSS: ${(mem.rss / 1024 / 1024).toFixed(1)} MB\n` +
+          `Uptime: ${Math.floor(up/3600)}h ${Math.floor((up%3600)/60)}m\n` +
+          `WS Ping: ${client.ws.ping}ms`
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `**Statistics**\n` +
+          `Guilds: ${client.guilds.cache.size}\n` +
+          `Users: ${totalMembers}\n` +
+          `Channels: ${client.channels.cache.size}`
+        ));
 
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setLabel('Support Server').setStyle(ButtonStyle.Link).setURL(client.config.supportServer),
-        new ButtonBuilder().setCustomId('bi_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
+        new ButtonBuilder().setLabel('Support Server').setStyle(ButtonStyle.Link).setURL(client.config.supportServer)
       );
 
-      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
-      coll.on('collect', async i => { if (i.customId === 'bi_del') { await sent.delete().catch(() => {}); coll.stop(); } });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      message.reply({ components: [container, row], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

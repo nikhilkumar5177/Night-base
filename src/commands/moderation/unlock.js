@@ -1,6 +1,6 @@
-const { EmbedBuilder, ChannelType } = require('discord.js');
-const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_BYPASS } = require('../../utils/constants');
-
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ChannelType, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_BYPASS, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'unlock',
@@ -14,7 +14,7 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageChannels** permission.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('You need **ManageChannels** permission.')], flags: 32768 });
       }
 
       const channels = new Set();
@@ -34,7 +34,7 @@ module.exports = {
         if (message.channel.type === ChannelType.GuildText) {
           channels.add(message.channel);
         } else {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} Can only unlock text channels.`).setTimestamp()] });
+          return message.reply({ components: [cv2Error('Can only unlock text channels.')], flags: 32768 });
         }
       }
 
@@ -42,26 +42,27 @@ module.exports = {
 
       for (const channel of channelList) {
         await channel.permissionOverwrites.edit(message.guild.roles.everyone, { SendMessages: null }).catch(() => {});
-        
+
         if (channel.id !== message.channel.id) {
-          channel.send({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Unlocked', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_BYPASS} **This channel has been unlocked by ${message.author.tag}.**\n${SEP}`).setTimestamp()] }).catch(() => {});
+          const notifyContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_BYPASS} **This channel has been unlocked by ${message.author.tag}.**`));
+          channel.send({ components: [notifyContainer], flags: 32768 }).catch(() => {});
         }
         await new Promise(r => setTimeout(r, 200));
       }
 
-      const embed = new EmbedBuilder()
-        .setColor('#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Channel(s) Unlocked', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **${channelList.length} channel(s) have been unlocked.**\n${SEP}`)
-        .addFields(
-          { name: '\u25B8 Channels', value: channelList.map(c => `${c}`).join(', '), inline: false },
-          { name: '\u25B8 Moderator', value: message.author.tag, inline: true }
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 Members can send messages again', iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
-      message.reply({ embeds: [embed] }).catch(() => {});
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Channel Unlocked`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_SUCCESS} **${channelList.length} channel(s) unlocked.**\n` +
+          `${EMOJI_DOT} **Channels:** ${channelList.map(c => `${c}`).join(', ')}\n` +
+          `${EMOJI_DOT} **Moderator:** ${message.author.tag}`
+        ));
+
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

@@ -1,10 +1,10 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, EmbedBuilder } = require('discord.js');
 const { getConfig } = require('../database');
 const { checkSpam } = require('../modules/spam');
 const { checkLinks } = require('../modules/links');
 const { checkContent } = require('../modules/content');
 const { checkSecurity } = require('../modules/security');
-const { COLORS, SEP, EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 /**
  * Handle AutoMod logic for every message.
@@ -15,7 +15,6 @@ async function handleAutoMod(client, message) {
   const config = await getConfig(message.guild.id);
   if (!config.enabled) return;
 
-  // Global Bypass
   if (message.member.permissions.has('Administrator')) return;
   if (config.bypassRoles.some(roleId => message.member.roles.cache.has(roleId))) return;
   if (config.bypassUsers.includes(message.author.id)) return;
@@ -24,11 +23,8 @@ async function handleAutoMod(client, message) {
   let activeViolation = null;
   let activeModule = null;
 
-  // Check modules in priority order
   for (const [key, module] of Object.entries(modules)) {
     if (!module.enabled) continue;
-
-    // Module-specific bypasses
     if (module.exemptRoles?.some(roleId => message.member.roles.cache.has(roleId))) continue;
     if (module.exemptChannels?.includes(message.channel.id)) continue;
     if (module.exemptUsers?.includes(message.author.id)) continue;
@@ -44,7 +40,7 @@ async function handleAutoMod(client, message) {
     if (violation) {
       activeViolation = violation;
       activeModule = module;
-      break; // Stop at first violation
+      break;
     }
   }
 
@@ -57,121 +53,83 @@ async function executeActions(client, message, violation, moduleConfig) {
   const actions = moduleConfig.actions || [];
   
   try {
-    // 1. Delete Message
     if (actions.includes('delete')) {
       await message.delete().catch(() => {});
     }
 
-    // 2. Response / Warn
     if (actions.includes('warn')) {
       const response = moduleConfig.responseMessage || `${EMOJI_ERROR} **{user}**, your message was flagged for **{violation}**.`;
       const formatted = response
         .replace(/{user}/g, `<@${message.author.id}>`)
         .replace(/{violation}/g, violation);
 
-      const embed = new EmbedBuilder()
-        .setColor(COLORS.ERROR)
-        .setAuthor({ name: 'Wild Wolf \u2502 AutoMod Violation', iconURL: client.user.displayAvatarURL() })
-        .setDescription(
-          `${SEP}\n` +
-          `${EMOJI_WARN} **Violation Detected**\n` +
-          `${SEP}\n\n` +
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Violation`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_WARN} **Violation Detected**\n\n` +
           `${EMOJI_DOT} **User:** <@${message.author.id}>\n` +
           `${EMOJI_DOT} **Rule:** ${violation}\n` +
-          `${EMOJI_DOT} **Message:** ${formatted}\n` +
-          `${SEP}`
-        )
-        .setTimestamp();
+          `${EMOJI_DOT} **Notice:** ${formatted}`
+        ));
 
       let msg;
+      const payload = { components: [container], flags: 32768, allowedMentions: { repliedUser: true } };
       try {
-        msg = await message.reply({ 
-          embeds: [embed],
-          allowedMentions: { repliedUser: true },
-          failIfNotExists: false
+        msg = await message.reply(payload).catch(async () => {
+          return await message.channel.send(payload);
         });
-      } catch (e) {
-        msg = await message.channel.send({ 
-          embeds: [embed]
-        });
-      }
+      } catch (e) {}
       
       if (msg) setTimeout(() => msg.delete().catch(() => {}), 10000);
     }
 
-    // 3. Send DM to Violator (Before Kick/Ban)
     const majorActions = actions.filter(a => ['warn', 'mute', 'kick', 'ban'].includes(a));
     if (majorActions.length > 0) {
+      // DM stays Embed (V2 not supported in DMs)
       const dmEmbed = new EmbedBuilder()
         .setColor('#ff1744')
         .setAuthor({ name: `AutoMod Alert \u2502 ${message.guild.name}`, iconURL: message.guild.iconURL() })
         .setTitle(`${EMOJI_WARN} You have been flagged by AutoMod`)
         .setDescription(
-          `${SEP}\n` +
-          `Your recent activity in **${message.guild.name}** triggered the AutoModeration system.\n` +
-          `${SEP}\n\n` +
+          `Your recent activity in **${message.guild.name}** triggered the security system.\n\n` +
           `${EMOJI_DOT} **Rule Violated:** ${violation}\n` +
-          `${EMOJI_DOT} **Actions Taken:** ${majorActions.map(a => `\`${a.toUpperCase()}\``).join(', ')}\n\n` +
-          `${SEP}`
+          `${EMOJI_DOT} **Actions Taken:** ${majorActions.map(a => `\`${a.toUpperCase()}\``).join(', ')}`
         )
-        .setFooter({ text: 'This is an automated security alert' })
         .setTimestamp();
-
-      await message.author.send({ embeds: [dmEmbed] }).catch(() => {
-        // User has DMs closed
-      });
+      await message.author.send({ embeds: [dmEmbed] }).catch(() => {});
     }
 
-    // 4. Mod Actions
-    if (actions.includes('mute')) {
-      await message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {});
-    }
-    
-    if (actions.includes('kick')) {
-      await message.member.kick(`AutoMod: ${violation}`).catch(() => {});
-    }
+    if (actions.includes('mute')) await message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {});
+    if (actions.includes('kick')) await message.member.kick(`AutoMod: ${violation}`).catch(() => {});
+    if (actions.includes('ban')) await message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {});
 
-    if (actions.includes('ban')) {
-      await message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {});
-    }
-
-    // 5. Logging
     await logToChannel(client, message, { violation, actions });
-
   } catch (err) {
     console.error('Error executing AutoMod actions:', err);
   }
 }
 
-/**
- * Sends a detailed AutoMod log to the configured channel.
- */
 async function logToChannel(client, message, data) {
   const config = await getConfig(message.guild.id);
   const logChannelId = config.logChannel;
-
   if (!logChannelId) return;
 
   const channel = message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null);
   if (!channel) return;
 
-  const logEmbed = new EmbedBuilder()
-    .setColor('#2F3136')
-    .setAuthor({ name: 'AutoMod Log \u2502 Activity Detected', iconURL: message.author.displayAvatarURL() })
-    .setDescription(
-      `${SEP}\n` +
+  const logContainer = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Log`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${EMOJI_DOT} **User:** ${message.author} (\`${message.author.id}\`)\n` +
       `${EMOJI_DOT} **Channel:** ${message.channel}\n` +
       `${EMOJI_DOT} **Violation:** \`${data.violation}\`\n` +
-      `${EMOJI_DOT} **Actions:** ${data.actions.map(a => `\`${a.toUpperCase()}\``).join(', ')}\n` +
-      `${SEP}\n\n` +
-      `**Original Content:**\n\`\`\`\n${message.content.slice(0, 1024) || 'None'}\n\`\`\`\n` +
-      `${SEP}`
-    )
-    .setFooter({ text: `User ID: ${message.author.id}` })
-    .setTimestamp();
+      `${EMOJI_DOT} **Actions:** ${data.actions.map(a => `\`${a.toUpperCase()}\``).join(', ')}\n\n` +
+      `**Content:**\n\`\`\`\n${message.content.slice(0, 500) || 'None'}\n\`\`\``
+    ));
 
-  await channel.send({ embeds: [logEmbed] }).catch(() => {});
+  await channel.send({ components: [logContainer], flags: 32768 }).catch(() => {});
 }
 
 module.exports = { handleAutoMod };

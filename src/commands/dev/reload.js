@@ -1,8 +1,9 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const path = require('path');
 const fs = require('fs');
 const { deployCommands } = require('../../utils/deployer');
-const { SEP, EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_SUCCESS } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'reload',
@@ -34,21 +35,15 @@ module.exports = {
         };
         sweep(srcPath);
 
-        // Sync config from files
         try {
           const storage = require('../../utils/storageManager');
           const rootConfigPath = path.resolve(srcPath, '..', 'config.json');
-          
           if (fs.existsSync(rootConfigPath)) {
             delete require.cache[require.resolve(rootConfigPath)];
             client.config = require(rootConfigPath);
           }
-
-          // Override with runtime config from storage
           const runtimeConfig = storage.read('config.json');
-          if (runtimeConfig) {
-            client.config = { ...client.config, ...runtimeConfig };
-          }
+          if (runtimeConfig) client.config = { ...client.config, ...runtimeConfig };
         } catch (e) { }
 
         client.commands.clear();
@@ -60,43 +55,52 @@ module.exports = {
           for (const file of eventFiles) {
             try {
               const event = require(path.join(eventsPath, file));
-              if (event.name) {
-                client.removeAllListeners(event.name);
-              }
+              if (event.name) client.removeAllListeners(event.name);
             } catch (e) { }
           }
         }
 
-        const commandHandler = require('../../handlers/commandHandler');
-        const eventHandler = require('../../handlers/eventHandler');
-
-        commandHandler(client);
-        eventHandler(client);
+        require('../../handlers/commandHandler')(client);
+        require('../../handlers/eventHandler')(client);
 
         const count = client.commands.size;
         let slashMsg = '';
         try {
           const slashCount = await deployCommands(client);
-          slashMsg = `\n${EMOJI_SUCCESS} Also re-deployed **${slashCount}** slash commands.`;
+          slashMsg = `\n${EMOJI_SUCCESS} Re-deployed **${slashCount}** slash commands.`;
         } catch (e) {
-          slashMsg = `\n${EMOJI_ERROR} Failed to re-deploy slash commands: ${e.message}`;
+          slashMsg = `\nFailed to re-deploy slash: ${e.message}`;
         }
 
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_OWNER} Wild Wolf \u2502 System Reload`).setDescription(`${SEP}\n${EMOJI_SUCCESS} **System reloaded successfully.**\n${SEP}`).addFields({ name: 'Details', value: `\u25B8 Commands: \`${count}\`\n\u25B8 Events: \`${client.eventNames().length}\`${slashMsg}` }).setTimestamp()] }).catch(() => {});
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Reload`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_OWNER} **System reloaded successfully.**\n\n` +
+            `\u25B8 Commands: \`${count}\` \u2502 Events: \`${client.eventNames().length}\`${slashMsg}`
+          ));
+
+        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
       }
+
       const cmdName = args[0].toLowerCase();
       const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));
-      if (!command) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Command Not Found`).setTimestamp()] });
-      }
+      if (!command) return message.reply({ components: [cv2Error('Command not found.')], flags: 32768 });
+
       const commandPath = path.join(__dirname, '..', command.category, `${command.name}.js`);
       delete require.cache[require.resolve(commandPath)];
       const reloaded = require(commandPath);
       reloaded.category = command.category;
       client.commands.set(reloaded.name, reloaded);
-      message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_SUCCESS} Command Reloaded`).setDescription(`\`${reloaded.name}\` has been reloaded.`).setTimestamp()] }).catch(() => {});
+
+      const reloadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Reloaded`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`\`${reloaded.name}\` has been successfully reloaded.`));
+
+      message.reply({ components: [reloadContainer], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Reload Error`).setDescription(error.message).setTimestamp()] }).catch(() => {});
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

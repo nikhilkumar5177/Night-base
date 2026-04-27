@@ -1,100 +1,68 @@
-const { EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, PermissionsBitField } = require('discord.js');
 const axios = require('axios');
-const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_LOADING, SEP, EMOJI_DOT } = require('../../utils/constants');
-const { sendUsage, sendAutoDelete } = require('../../utils/messageHelper');
+const { EMOJI_SUCCESS, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'steal',
   aliases: ['addemoji', 'addsticker', 'stealemoji', 'steals'],
   description: 'Steal multiple emojis or stickers from another server',
   usage: 'steal <emojis | stickers> [name]',
-  example: 'steal :emoji1: :emoji2:\nsteal (replying to a message with emojis)\nsteal :emoji: custom_name',
   cooldown: 5,
   staffOnly: true,
   userPermissions: ['ManageEmojisAndStickers'],
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageEmojisAndStickers)) {
-        return sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You need **Manage Emojis and Stickers** permission.`)] }, 5000);
+        return message.reply({ components: [cv2Error('You need **Manage Emojis and Stickers** permission.')], flags: 32768 });
       }
 
-      // Collect stickers
       let stickers = [...message.stickers.values()];
       let repliedMsg = null;
       if (message.reference) {
         repliedMsg = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
-        if (repliedMsg) {
-          stickers = [...stickers, ...repliedMsg.stickers.values()];
-        }
+        if (repliedMsg) stickers = [...stickers, ...repliedMsg.stickers.values()];
       }
 
-      // Collect emojis
       const emojiRegex = /<(a?):(.+?):(\d+)>/g;
       const content = message.content + (repliedMsg ? ' ' + (repliedMsg.content || '') : '');
       const emojiMatches = [...content.matchAll(emojiRegex)];
 
       const itemsToSteal = [];
-
-      // Add stickers to items
       for (const sticker of stickers) {
-        itemsToSteal.push({
-          type: 'sticker',
-          name: sticker.name,
-          url: sticker.url,
-          format: sticker.format,
-          tags: sticker.tags,
-          id: sticker.id
-        });
+        itemsToSteal.push({ type: 'sticker', name: sticker.name, url: sticker.url, format: sticker.format, tags: sticker.tags, id: sticker.id });
       }
-
-      // Add emojis to items
       for (const match of emojiMatches) {
         const animated = match[1] === 'a';
         const name = match[2];
         const id = match[3];
-        itemsToSteal.push({
-          type: 'emoji',
-          name: name,
-          id: id,
-          animated: animated,
-          url: `https://cdn.discordapp.com/emojis/${id}.${animated ? 'gif' : 'png'}`
-        });
+        itemsToSteal.push({ type: 'emoji', name: name, id: id, animated: animated, url: `https://cdn.discordapp.com/emojis/${id}.${animated ? 'gif' : 'png'}` });
       }
 
-      // Remove duplicates by ID
       const uniqueItems = [];
       const seen = new Set();
       for (const item of itemsToSteal) {
-        if (!seen.has(item.id)) {
-          seen.add(item.id);
-          uniqueItems.push(item);
-        }
+        if (!seen.has(item.id)) { seen.add(item.id); uniqueItems.push(item); }
       }
 
-      if (uniqueItems.length === 0) {
-        return sendUsage(message, module.exports);
-      }
+      if (uniqueItems.length === 0) return sendUsage(message, module.exports);
 
-      // Limit items
       const maxItems = 10;
       const items = uniqueItems.slice(0, maxItems);
 
-      const loadEmbed = new EmbedBuilder()
-        .setColor('#EB459E')
-        .setDescription(`${EMOJI_LOADING} **Stealing ${items.length} item(s)...**`);
-      const sent = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
+      const loadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Stealing ${items.length} item(s)...**`));
+      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
 
       const successes = [];
       const failures = [];
 
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
-        
-        // Update loading message for progress if multiple items
         if (items.length > 1) {
-          await sent.edit({ 
-            embeds: [new EmbedBuilder().setColor('#EB459E').setDescription(`${EMOJI_LOADING} **Stealing items (${i + 1}/${items.length}): \`${item.name}\`...**`)] 
-          }).catch(() => {});
+          const progressContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Stealing items (${i + 1}/${items.length}): \`${item.name}\`...**`));
+          await sent.edit({ components: [progressContainer] }).catch(() => {});
         }
 
         try {
@@ -102,35 +70,17 @@ module.exports = {
           let buffer = Buffer.from(response.data);
 
           if (item.type === 'sticker') {
-            // If only one item and args provide a name, use it
-            // Note: If args[0] was the emoji/sticker, args[1] might be name. 
-            // For stickers, they don't appear in args usually, so args[0] is name.
-            let stickerName = item.name;
-            if (items.length === 1 && args[0] && !args[0].match(emojiRegex)) {
-                stickerName = args[0];
-            }
-
-            const newSticker = await message.guild.stickers.create({
-              file: buffer,
-              name: stickerName.slice(0, 30),
-              tags: item.tags || 'stolen',
-              description: `Stolen from ${message.guild.name}`
-            });
+            let stickerName = (items.length === 1 && args[0] && !args[0].match(emojiRegex)) ? args[0] : item.name;
+            const newSticker = await message.guild.stickers.create({ file: buffer, name: stickerName.slice(0, 30), tags: item.tags || 'stolen', description: `Steal command` });
             successes.push(`Sticker: \`${newSticker.name}\``);
           } else {
-            let emojiName = item.name;
-            if (items.length === 1 && args[1]) {
-              emojiName = args[1].replace(/\s+/g, '_');
-            }
-            
+            let emojiName = (items.length === 1 && args[1]) ? args[1].replace(/\s+/g, '_') : item.name;
             emojiName = emojiName.replace(/[^a-zA-Z0-9_]/g, '');
             if (emojiName.length < 2) emojiName += '_';
-
             const newEmoji = await message.guild.emojis.create({ attachment: buffer, name: emojiName.slice(0, 32) });
             successes.push(`<${item.animated ? 'a' : ''}:${newEmoji.name}:${newEmoji.id}> \`${newEmoji.name}\``);
           }
         } catch (err) {
-          console.error(err);
           let errorMsg = err.message;
           if (err.message.includes('maximum size')) errorMsg = 'Too large';
           if (err.message.includes('Maximum number')) errorMsg = 'Guild limit reached';
@@ -138,32 +88,20 @@ module.exports = {
         }
       }
 
-      // Final Response
-      const finalEmbed = new EmbedBuilder()
-        .setAuthor({ name: 'Wild Wolf │ Steal Results', iconURL: client.user.displayAvatarURL() })
-        .setColor(failures.length === 0 ? '#57F287' : successes.length > 0 ? '#FEE75C' : '#ED4245')
-        .setTimestamp();
+      const finalContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Steal Results`))
+        .addSeparatorComponents(new SeparatorBuilder());
 
-      let description = `${SEP}\n`;
-      if (successes.length > 0) {
-        description += `${EMOJI_SUCCESS} **Successfully stolen ${successes.length} item(s):**\n${successes.join('\n')}\n\n`;
-      }
-      if (failures.length > 0) {
-        description += `${EMOJI_ERROR} **Failed to steal ${failures.length} item(s):**\n${failures.join('\n')}\n`;
-      }
-      
-      if (uniqueItems.length > maxItems) {
-        description += `\n${EMOJI_DOT} *Limited to ${maxItems} items per command.*`;
-      }
-      
-      description += SEP;
-      finalEmbed.setDescription(description);
+      let desc = '';
+      if (successes.length > 0) desc += `${EMOJI_SUCCESS} **Successfully stolen ${successes.length} item(s):**\n${successes.join('\n')}\n\n`;
+      if (failures.length > 0) desc += `${EMOJI_DOT} **Failed to steal ${failures.length} item(s):**\n${failures.join('\n')}\n`;
+      if (uniqueItems.length > maxItems) desc += `\n*Limited to ${maxItems} items per command.*`;
 
-      return sent.edit({ embeds: [finalEmbed] }).catch(() => {});
+      finalContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(desc || 'No items were processed.'));
 
+      return sent.edit({ components: [finalContainer] }).catch(() => {});
     } catch (error) {
-      console.error(error);
-      sendAutoDelete(message, { embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} An error occurred: ${error.message}`)] }, 5000);
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

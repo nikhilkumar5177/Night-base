@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_WARN } = require('../../utils/constants');
+const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'togglecmd',
@@ -14,29 +15,36 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_OWNER} Owner Only`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Only the server owner can use this.')], flags: 32768 });
       }
       const cmdName = args[0]?.toLowerCase();
       if (!cmdName) {
-        const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}togglecmd <command name>\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}togglecmd warn\n\`\`\`` }, { name: 'Aliases', value: '`toggle`, `cmdenable`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-        return message.reply({ embeds: [usageEmbed] }).catch(() => {});
+        return sendUsage(message, module.exports);
       }
       const command = client.commands.get(cmdName);
       if (!command) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Command Not Found`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Command not found.')], flags: 32768 });
       }
       const configData = storage.read('config.json');
       if (!configData.disabledCommands) configData.disabledCommands = [];
       if (configData.disabledCommands.includes(cmdName)) {
         configData.disabledCommands = configData.disabledCommands.filter(c => c !== cmdName);
         storage.write('config.json', configData);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#00e676').setTitle(`${EMOJI_OWNER} Command Enabled`).setDescription(`\`${cmdName}\` is now enabled.`).setTimestamp()] });
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Enabled`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${cmdName}\` is now enabled.`));
+        return message.reply({ components: [container], flags: 32768 });
       }
       configData.disabledCommands.push(cmdName);
       storage.write('config.json', configData);
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ffab00').setTitle(`${EMOJI_WARN} Command Disabled`).setDescription(`\`${cmdName}\` is now disabled globally.`).setTimestamp()] });
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Disabled`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} \`${cmdName}\` is now disabled globally.`));
+      message.reply({ components: [container], flags: 32768 });
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(error.message).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

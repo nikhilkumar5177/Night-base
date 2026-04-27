@@ -1,5 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_INFO } = require('../../utils/constants');
+const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'dm',
@@ -13,32 +14,35 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Missing Permissions`).setDescription('You need **ModerateMembers** permission.').setTimestamp()] });
+        return message.reply({ components: [cv2Error('You need **ModerateMembers** permission.')], flags: 32768 });
       }
       const target = message.mentions.users.first() || client.users.cache.get(args[0]);
-      if (!target) {
-        const usageEmbed = new EmbedBuilder().setColor('#8B0000').setAuthor({ name: 'WRONG SYNTAX', iconURL: client.user.displayAvatarURL() }).setDescription('**You used this command the wrong way.**\nRead the correct format below before trying again.').addFields({ name: '\u2501\u2501 Correct Format', value: `\`\`\`fix\n${client.config.prefix}dm <@user> <message>\n\`\`\`` }, { name: '\u2501\u2501 Example', value: `\`\`\`\n${client.config.prefix}dm @User Please check your warnings\n\`\`\`` }, { name: 'Aliases', value: '`message`', inline: true }, { name: 'Cooldown', value: '`10s`', inline: true }, { name: 'Permission', value: '`ModerateMembers`', inline: true }).setFooter({ text: 'Wild Wolf \u2022 Use it right or don\'t use it at all.' }).setTimestamp();
-        return message.reply({ embeds: [usageEmbed] }).catch(() => {});
-      }
+      if (!target) return sendUsage(message, module.exports);
+
       const content = args.slice(1).join(' ');
-      if (!content) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Message`).setDescription('Please provide a message.').setTimestamp()] });
-      }
+      if (!content) return message.reply({ components: [cv2Error('Please provide a message to send.')], flags: 32768 });
+
+      // DM Notification (Standard Embed - V2 NOT supported in DMs)
       const dmEmbed = new EmbedBuilder()
-        .setColor(client.config.embedColor || '#0099ff')
-        .setTitle(`${EMOJI_INFO} Message from Staff`)
+        .setColor('#5865F2')
+        .setAuthor({ name: `Message from ${message.guild.name} Staff`, iconURL: message.guild.iconURL({ dynamic: true }) })
         .setDescription(content)
-        .addFields({ name: 'Server', value: message.guild.name })
         .setTimestamp();
-      await target.send({ embeds: [dmEmbed] }).catch(() => {});
-      const embed = new EmbedBuilder()
-        .setColor('#00e676')
-        .setTitle(`${EMOJI_SUCCESS} DM Sent`)
-        .setDescription(`Message sent to **${target.tag}**.`)
-        .setTimestamp();
-      message.reply({ embeds: [embed] }).catch(() => {});
+      
+      const success = await target.send({ embeds: [dmEmbed] }).then(() => true).catch(() => false);
+
+      if (!success) {
+        return message.reply({ components: [cv2Error(`Could not DM **${target.tag}**. They may have DMs disabled.`)], flags: 32768 });
+      }
+
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 DM Sent`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Message successfully sent to **${target.tag}**.`));
+
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} Error`).setDescription(`Could not DM user. They may have DMs disabled.`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

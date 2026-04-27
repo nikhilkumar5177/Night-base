@@ -1,5 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { LIMITS, SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'purgebot',
@@ -13,21 +14,18 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('You need **ManageMessages** permission.')], flags: 32768 });
       }
       if (!message.guild.members.me.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} I need **ManageMessages** permission.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('I need **ManageMessages** permission.')], flags: 32768 });
       }
 
       let count = Math.min(parseInt(args[0]) || 50, LIMITS.MAX_PURGE);
       await message.delete().catch(() => {});
 
-      const loadEmbed = new EmbedBuilder()
-        .setColor('#EB459E')
-        .setAuthor({ name: 'Wild Wolf \u2502 Purge Bot', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_LOADING} **Scanning and deleting bot messages...**\n${SEP}`)
-        .setTimestamp();
-      const progressMsg = await message.reply({ embeds: [loadEmbed] }).catch(() => {});
+      const loadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Scanning and deleting bot messages...**`));
+      const progressMsg = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
 
       let fetched = await message.channel.messages.fetch({ limit: 100 });
       let filtered = fetched.filter(m => m.author.bot && m.id !== progressMsg.id);
@@ -36,26 +34,26 @@ module.exports = {
       const deletable = filtered.filter(m => m.createdTimestamp > twoWeeks).first(count);
 
       if (deletable.length === 0) {
-        return progressMsg.edit({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Purge Bot', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **No bot messages found.**\n${SEP}`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No bot messages found.**`));
+        return progressMsg.edit({ components: [warnContainer] }).catch(() => {});
       }
 
       const deleted = await message.channel.bulkDelete(deletable, true);
 
-      const embed = new EmbedBuilder()
-        .setColor('#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Purge Complete', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Bot messages purged successfully.**\n${SEP}`)
-        .addFields(
-          { name: '\u25B8 Deleted', value: `\`${deleted.size}\` messages`, inline: true },
-          { name: '\u25B8 Filter', value: '`Bot Messages`', inline: true },
-          { name: '\u25B8 By', value: message.author.tag, inline: true }
-        )
-        .setTimestamp();
-      
-      await progressMsg.edit({ embeds: [embed] }).catch(() => {});
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Purge Complete`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_SUCCESS} **Bot messages purged.**\n` +
+          `${EMOJI_DOT} **Deleted:** \`${deleted.size}\` messages\n` +
+          `${EMOJI_DOT} **By:** ${message.author.tag}`
+        ));
+
+      await progressMsg.edit({ components: [container] }).catch(() => {});
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

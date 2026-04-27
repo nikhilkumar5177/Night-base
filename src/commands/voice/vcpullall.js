@@ -1,5 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING, EMOJI_OWNER } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_OWNER, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'vcpullall',
@@ -13,12 +14,12 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_OWNER} Only the server owner can use this command.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Only the server owner can use this command.')], flags: 32768 });
       }
 
       const channel = message.member.voice.channel;
       if (!channel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} You must be in a voice channel to pull people.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('You must be in a voice channel to pull people.')], flags: 32768 });
       }
 
       const allMembers = [];
@@ -27,15 +28,14 @@ module.exports = {
       });
 
       if (allMembers.length === 0) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} No other users found in voice channels.`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No other users found in voice channels.**`));
+        return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
-      const statusEmbed = new EmbedBuilder()
-        .setColor('#ED4245')
-        .setDescription(`${EMOJI_LOADING} **Pulling ${allMembers.length} members into ${channel}...**`)
-        .setTimestamp();
-
-      const statusMsg = await message.reply({ embeds: [statusEmbed] }).catch(() => {});
+      const loadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Pulling ${allMembers.length} members into ${channel}...**`));
+      const statusMsg = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
 
       let count = 0;
       for (const member of allMembers) {
@@ -45,19 +45,18 @@ module.exports = {
         } catch (e) { }
       }
 
-      const embed = new EmbedBuilder()
-        .setColor('#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Mass Pull', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Successfully pulled ${count} members.**\n${SEP}`)
-        .addFields(
-          { name: '\u25B8 Target Channel', value: `${channel}`, inline: true },
-          { name: '\u25B8 Moderator', value: `${message.author.tag}`, inline: true }
-        )
-        .setTimestamp();
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Mass Pull`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_SUCCESS} **Pulled ${count} members.**\n` +
+          `${EMOJI_DOT} **Channel:** ${channel}\n` +
+          `${EMOJI_DOT} **Moderator:** ${message.author.tag}`
+        ));
 
-      statusMsg.edit({ embeds: [embed] }).catch(() => {});
+      statusMsg.edit({ components: [container] }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

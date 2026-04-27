@@ -1,5 +1,6 @@
-const LINK_REGEX = /https?:\/\/[^\s]+/i;
-const INVITE_REGEX = /(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+/i;
+const LINK_REGEX = /https?:\/\/[^\s]+/gi;
+const INVITE_REGEX = /(discord\.(gg|io|me|li|com\/invite|app\.com\/invite)|\.gg\/|discord\.com\/vanity)\/[a-zA-Z0-9_-]+/gi;
+const DOMAIN_REGEX = /\b([a-z0-9-]+)\.([a-z]{2,})\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/gi;
 const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discord-nitro|dlscord)/i;
 const GIF_REGEX = /(tenor\.com|giphy\.com|.+\.gif)/i;
 
@@ -16,10 +17,19 @@ async function checkLinks(message, config) {
   const allowedLinks = config.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
   const allowedGifs = (config.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
 
-  // 1. Gather all potential links (Standard URLs + Discord Invites)
-  const standardLinks = content.match(/https?:\/\/[^\s]+/gi) || [];
-  const inviteLinks = content.match(/(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+/gi) || [];
-  const allLinks = [...new Set([...standardLinks, ...inviteLinks])];
+  // 1. Gather all potential links (Standard URLs + Discord Invites + Raw Domains)
+  const standardLinks = content.match(LINK_REGEX) || [];
+  const inviteLinks = content.match(INVITE_REGEX) || [];
+  const domainLinks = content.match(DOMAIN_REGEX) || [];
+  
+  // Filter out noisy domain matches that are just numbers or very short
+  const cleanDomainLinks = domainLinks.filter(d => {
+    if (/^\d+(\.\d+)+$/.test(d)) return false; // Ignore IPs
+    if (d.split('/')[0].length < 4) return false; // Ignore too short domains
+    return true;
+  });
+
+  const allLinks = [...new Set([...standardLinks, ...inviteLinks, ...cleanDomainLinks])];
 
   if (allLinks.length === 0) return false;
 
@@ -43,7 +53,6 @@ async function checkLinks(message, config) {
 
     // 4. Anti-GIF (Only if not whitelisted)
     if (config.antiGifs && GIF_REGEX.test(link)) {
-      // GIF Role Bypass
       const hasGifRole = config.exemptGifsRoles?.some(roleId => message.member.roles.cache.has(roleId));
       if (hasGifRole) continue;
 
@@ -57,37 +66,34 @@ async function checkLinks(message, config) {
       if (!isGifWhitelisted) return 'GIF Link';
     }
 
-    // 4. Anti-Invite (Only if not whitelisted)
-    if (INVITE_REGEX.test(link)) {
+    // 5. Anti-Invite
+    if (INVITE_REGEX.test(link) || (link.includes('.gg/') && !link.includes('http'))) {
       if (config.antiInvite) {
-        // Smart Bypass: Check if the invite belongs to THIS server
-        const code = link.split('/').pop();
+        const parts = link.split('/');
+        const code = parts[parts.length - 1] || parts[parts.length - 2];
         if (code) {
           try {
-            // Check if it matches vanity first (fast)
             if (message.guild.vanityURLCode && code.toLowerCase() === message.guild.vanityURLCode.toLowerCase()) {
               continue;
             }
             
-            // Fetch invite info to verify guild ID
             const invite = await message.client.fetchInvite(code).catch(() => null);
             if (invite && invite.guild && invite.guild.id === message.guild.id) {
-              continue; // It's an invite to this server!
+              continue;
             }
-          } catch (err) {
-            // If fetch fails (invalid invite), we still treat it as a potential forbidden link
-          }
+          } catch (err) {}
         }
         return 'Discord Invite Link';
       }
     }
 
-    // 5. General Link Block
-    // If we reached here, it means it's a link that wasn't whitelisted, 
-    // wasn't a self-invite, and anti-spam/phishing might have flagged it.
-    // However, if antiInvite and antiPhishing are BOTH off, we should allow it.
+    // 6. Suspicious Domain Block
+    if (DOMAIN_REGEX.test(link) && !link.includes('http')) {
+        return 'Unauthorized Domain/Link';
+    }
+
+    // 7. General Link Block
     if (config.antiInvite || config.antiPhishing) {
-       // Only block as forbidden if some protection is actually active
        return 'Forbidden Link';
     }
   }

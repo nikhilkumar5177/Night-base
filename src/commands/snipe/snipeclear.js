@@ -1,7 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP, EMOJI_ERROR, EMOJI_WARN, EMOJI_SUCCESS } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_WARN } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'snipeclear',
@@ -15,33 +15,47 @@ module.exports = {
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageMessages')) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} You need **ManageMessages** permission.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('You need **ManageMessages** permission.')], flags: 32768 });
       }
 
       const isAll = args[0]?.toLowerCase() === 'all';
 
       if (isAll) {
-        const confirmEmbed = new EmbedBuilder()
-          .setColor('#FEE75C')
-          .setAuthor({ name: 'Wild Wolf \u2502 Clear All Snipes', iconURL: client.user.displayAvatarURL() })
-          .setDescription(`${SEP}\n${EMOJI_WARN} **Clear snipe cache for ALL channels?**\nThis will remove \`${client.snipeCache.size}\` channel caches.\n${SEP}`)
-          .setTimestamp();
+        const confirmContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Clear All Snipes`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Clear snipe cache for ALL channels?**\nThis will remove \`${client.snipeCache.size}\` channel caches.`));
+
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId('sc_yes').setLabel('Clear All').setStyle(ButtonStyle.Danger),
           new ButtonBuilder().setCustomId('sc_no').setLabel('Cancel').setStyle(ButtonStyle.Secondary)
         );
-        const sent = await message.reply({ embeds: [confirmEmbed], components: [row] }).catch(() => {});
+        confirmContainer.addActionRowComponents(row);
+
+        const sent = await message.reply({ components: [confirmContainer], flags: 32768 }).catch(() => {});
         const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 15000, max: 1 });
         coll.on('collect', async i => {
           if (i.customId === 'sc_yes') {
             client.snipeCache.clear();
             storage.write('snipe.json', {});
-            await i.update({ embeds: [new EmbedBuilder().setColor('#57F287').setAuthor({ name: 'Wild Wolf \u2502 Snipe Cache', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_SUCCESS} **All snipe caches cleared.**\n${SEP}`).setTimestamp()], components: [] });
+            const doneContainer = new ContainerBuilder()
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Snipe Cache`))
+              .addSeparatorComponents(new SeparatorBuilder())
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **All snipe caches cleared.**`));
+            await i.update({ components: [doneContainer] });
           } else {
-            await i.update({ embeds: [new EmbedBuilder().setColor('#2B2D31').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **Cancelled.**\n${SEP}`).setTimestamp()], components: [] });
+            const cancelContainer = new ContainerBuilder()
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Cancelled.**`));
+            await i.update({ components: [cancelContainer] });
           }
         });
-        coll.on('end', c => { if (c.size === 0) sent.edit({ components: [] }).catch(() => {}); });
+        coll.on('end', c => {
+          if (c.size === 0) {
+            const timeoutContainer = new ContainerBuilder()
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Timed out.**`));
+            sent.edit({ components: [timeoutContainer] }).catch(() => {});
+          }
+        });
         return;
       }
 
@@ -51,15 +65,13 @@ module.exports = {
       delete snipeData[message.channel.id];
       storage.write('snipe.json', snipeData);
 
-      const embed = new EmbedBuilder()
-        .setColor('#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Snipe Cache Cleared', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **Cleared \`${count}\` sniped messages from this channel.**\n${SEP}`)
-        .setFooter({ text: `Wild Wolf \u2022 Use ${client.config.prefix}snipeclear all for global clear` })
-        .setTimestamp();
-      message.reply({ embeds: [embed] }).catch(() => {});
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Snipe Cache Cleared`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Cleared \`${count}\` sniped messages from this channel.**`));
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() }).setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

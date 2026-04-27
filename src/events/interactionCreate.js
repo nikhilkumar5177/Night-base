@@ -1,70 +1,46 @@
-const { EmbedBuilder, InteractionType, ComponentType } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, InteractionType, MessageFlags } = require('discord.js');
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
-const { LIMITS, EMOJI_OWNER, EMOJI_WARN, EMOJI_ERROR, EMOJI_SUCCESS } = require('../utils/constants');
+const { LIMITS, EMOJI_OWNER, EMOJI_WARN, EMOJI_ERROR } = require('../utils/constants');
+const { cv2Error } = require('../utils/messageHelper');
 
 module.exports = {
   name: 'interactionCreate',
   once: false,
   execute: async (client, interaction) => {
-    // --- Slash Commands ---
     if (interaction.type === InteractionType.ApplicationCommand) {
       const command = client.commands.get(interaction.commandName);
       if (!command) return;
 
-      // --- Security & Permissions ---
       const runtimeConfig = storage.read('config.json');
-      const disabledCommands = runtimeConfig.disabledCommands || [];
-      if (disabledCommands.includes(command.name)) {
-        return interaction.reply({ content: `${EMOJI_ERROR} This command is currently disabled.`, ephemeral: true }).catch(() => {});
+      if (runtimeConfig.disabledCommands?.includes(command.name)) {
+        return interaction.reply({ components: [cv2Error('This command is currently disabled.')], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => {});
       }
       if (runtimeConfig.maintenance && interaction.user.id !== process.env.DEV_ID) {
-        return interaction.reply({
-          embeds: [
-            new EmbedBuilder()
-              .setColor('#ff1744')
-              .setAuthor({ name: 'Wild Wolf \u2502 System Lockdown', iconURL: client.user.displayAvatarURL() })
-              .setDescription(`${EMOJI_OWNER} ${EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`)
-          ],
-          ephemeral: true
-        });
+        const maintContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Lockdown`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} ${EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`));
+        return interaction.reply({ components: [maintContainer], flags: MessageFlags.IsComponentsV2, ephemeral: true });
       }
 
       const blacklistData = storage.read('blacklist.json');
-      if (blacklistData.users && blacklistData.users.includes(interaction.user.id)) return;
+      if (blacklistData.users?.includes(interaction.user.id)) return;
 
       if (command.staffOnly) {
         const staffData = storage.read('staff.json');
         const memberRoles = interaction.member ? interaction.member.roles.cache.map(r => r.id) : [];
         const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
         const isDev = interaction.user.id === process.env.DEV_ID;
-
         if (!isStaff && !isDev) {
-          return interaction.reply({
-            embeds: [
-              new EmbedBuilder()
-                .setColor('#ED4245')
-                .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-                .setDescription(`${EMOJI_ERROR} You are not a **Staff member** of this server.`)
-            ],
-            ephemeral: true
-          });
+          return interaction.reply({ components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2, ephemeral: true });
         }
       }
 
       if (command.devOnly && interaction.user.id !== process.env.DEV_ID) {
-        return interaction.reply({
-          embeds: [
-            new EmbedBuilder()
-              .setColor('#ED4245')
-              .setAuthor({ name: 'Wild Wolf', iconURL: client.user.displayAvatarURL() })
-              .setDescription(`${EMOJI_OWNER} This is an **Owner Command**.`)
-          ],
-          ephemeral: true
-        });
+        return interaction.reply({ components: [cv2Error(`${EMOJI_OWNER} This is an **Owner Command**.`)], flags: MessageFlags.IsComponentsV2, ephemeral: true });
       }
 
-      // --- Cooldowns ---
       const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
       if (cooldownAmount > 0) {
         const key = `${interaction.user.id}-${command.name}`;
@@ -73,19 +49,16 @@ module.exports = {
           const expiresAt = client.cooldowns.get(key);
           if (now < expiresAt) {
             const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            return interaction.reply({ content: `${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`, ephemeral: true }).catch(() => {});
+            return interaction.reply({ components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`))], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => {});
           }
         }
         client.cooldowns.set(key, now + cooldownAmount);
         setTimeout(() => client.cooldowns.delete(key), cooldownAmount);
       }
 
-      // --- Execution ---
       try {
         await command.execute(client, interaction, []);
         logger.cmd(interaction.user.tag, `[Slash] ${command.name}`);
-
-        // Analytics
         const analytics = storage.read('analytics.json');
         if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0, users: {} };
         analytics[command.name].uses++;
@@ -95,57 +68,35 @@ module.exports = {
         storage.write('analytics.json', analytics);
       } catch (error) {
         logger.error(`Slash Command ${command.name} failed: ${error.message}`);
-        
-        // Log to error channel if configured
         const errLogId = client.config.errorLogChannelId;
         if (errLogId) {
           const errLogCh = client.channels.cache.get(errLogId);
           if (errLogCh) {
-            const logEmbed = new EmbedBuilder()
-              .setColor('#ff1744')
-              .setAuthor({ name: 'Wild Wolf │ Slash Error Log', iconURL: client.user.displayAvatarURL() })
-              .setDescription(`${EMOJI_ERROR} **Slash Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${interaction.user.tag} (${interaction.user.id})\n\u25B8 **Guild:** ${interaction.guild.name}\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``)
-              .setTimestamp();
-            errLogCh.send({ embeds: [logEmbed] }).catch(() => {});
+            const logContainer = new ContainerBuilder()
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Slash Error Log`))
+              .addSeparatorComponents(new SeparatorBuilder())
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_ERROR} **Slash Command Failed:** \`${command.name}\` \n\u25B8 **User:** ${interaction.user.tag}\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
+            errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
           }
         }
-
-        if (interaction.replied || interaction.deferred) {
-          interaction.followUp({ content: `${EMOJI_ERROR} Error: ${error.message}`, ephemeral: true }).catch(() => { });
-        } else {
-          interaction.reply({ content: `${EMOJI_ERROR} Error: ${error.message}`, ephemeral: true }).catch(() => { });
-        }
+        const resp = { components: [cv2Error(`Error: ${error.message}`)], flags: MessageFlags.IsComponentsV2, ephemeral: true };
+        if (interaction.replied || interaction.deferred) await interaction.followUp(resp).catch(() => {});
+        else await interaction.reply(resp).catch(() => {});
       }
-    }
-    // --- Autocomplete ---
-    if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
+    } else if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
       const command = client.commands.get(interaction.commandName);
-      if (!command) return;
-
-      try {
-        if (interaction.commandName === 'help') {
-          const focusedValue = interaction.options.getFocused().toLowerCase();
-          const choices = client.commands.map(cmd => cmd.name);
-          const filtered = choices.filter(choice => choice.startsWith(focusedValue)).slice(0, 25);
-          await interaction.respond(
-            filtered.map(choice => ({ name: choice, value: choice }))
-          );
-        }
-      } catch (error) {
-        logger.error(`Autocomplete error: ${error.message}`);
+      if (command && interaction.commandName === 'help') {
+        const focusedValue = interaction.options.getFocused().toLowerCase();
+        const choices = client.commands.map(cmd => cmd.name);
+        const filtered = choices.filter(choice => choice.startsWith(focusedValue)).slice(0, 25);
+        await interaction.respond(filtered.map(choice => ({ name: choice, value: choice }))).catch(() => {});
       }
-    }
-
-    // --- Message Components (Buttons, Select Menus) ---
-    if (interaction.type === InteractionType.MessageComponent) {
+    } else if (interaction.type === InteractionType.MessageComponent) {
       if (interaction.customId.startsWith('automod_')) {
         const command = client.commands.get('automod');
         if (command) return command.execute(client, interaction);
       }
-    }
-
-    // --- Modal Submits ---
-    if (interaction.type === InteractionType.ModalSubmit) {
+    } else if (interaction.type === InteractionType.ModalSubmit) {
       if (interaction.customId.startsWith('automod_modal_')) {
         const command = client.commands.get('automod');
         if (command) return command.execute(client, interaction);

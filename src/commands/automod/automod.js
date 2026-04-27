@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const { getConfig, saveConfig, resetConfig } = require('../../automod/database');
 const { createDashboard } = require('../../automod/ui/dashboard');
 const { createCategoryPanel } = require('../../automod/ui/panels');
@@ -26,10 +26,9 @@ module.exports = {
       const guildId = interaction.guildId;
       const config = { ...(await getConfig(guildId)), clientAvatar: client.user.displayAvatarURL() };
 
-      // Initial Command Call (Slash Only)
       if (interaction.isChatInputCommand && interaction.isChatInputCommand()) {
         const dashboard = createDashboard(config);
-        return interaction.reply({ ...dashboard, ephemeral: true }).catch(() => {});
+        return interaction.reply({ ...dashboard, flags: 32768, ephemeral: true }).catch(() => {});
       }
 
       // Handle Button Interactions
@@ -38,14 +37,14 @@ module.exports = {
 
         if (customId === 'automod_home') {
           const dashboard = createDashboard(config);
-          return interaction.update({ ...dashboard });
+          return interaction.update({ ...dashboard, flags: 32768 });
         }
 
         if (customId === 'automod_toggle_main') {
           config.enabled = !config.enabled;
           await saveConfig(guildId, config);
           const dashboard = createDashboard(config);
-          return interaction.update({ ...dashboard });
+          return interaction.update({ ...dashboard, flags: 32768 });
         }
 
         if (customId.startsWith('automod_toggle_')) {
@@ -54,7 +53,7 @@ module.exports = {
             config.modules[moduleName].enabled = !config.modules[moduleName].enabled;
             await saveConfig(guildId, config);
             const panel = createCategoryPanel(moduleName.charAt(0).toUpperCase() + moduleName.slice(1), config);
-            return interaction.update({ ...panel });
+            return interaction.update({ ...panel, flags: 32768 });
           }
         }
 
@@ -83,7 +82,7 @@ module.exports = {
         if (customId === 'automod_reset') {
           await resetConfig(guildId);
           const dashboard = createDashboard(await getConfig(guildId));
-          return interaction.update({ ...dashboard });
+          return interaction.update({ ...dashboard, flags: 32768 });
         }
       }
 
@@ -92,7 +91,7 @@ module.exports = {
         if (interaction.customId === 'automod_category_select') {
           const category = interaction.values[0];
           const panel = createCategoryPanel(category, config);
-          return interaction.update({ ...panel });
+          return interaction.update({ ...panel, flags: 32768 });
         }
       }
 
@@ -110,7 +109,7 @@ module.exports = {
 
           await saveConfig(guildId, config);
           const panel = createCategoryPanel('spam', config);
-          return interaction.update({ ...panel });
+          return interaction.update({ ...panel, flags: 32768 });
         }
 
         if (interaction.customId === 'automod_modal_links') {
@@ -132,7 +131,7 @@ module.exports = {
 
           await saveConfig(guildId, config);
           const panel = createCategoryPanel('links', config);
-          return interaction.update({ ...panel });
+          return interaction.update({ ...panel, flags: 32768 });
         }
 
         if (interaction.customId === 'automod_modal_content') {
@@ -150,7 +149,7 @@ module.exports = {
 
           await saveConfig(guildId, config);
           const panel = createCategoryPanel('content', config);
-          return interaction.update({ ...panel });
+          return interaction.update({ ...panel, flags: 32768 });
         }
 
         if (interaction.customId === 'automod_modal_raid') {
@@ -162,7 +161,7 @@ module.exports = {
 
           await saveConfig(guildId, config);
           const panel = createCategoryPanel('raid', config);
-          return interaction.update({ ...panel });
+          return interaction.update({ ...panel, flags: 32768 });
         }
 
         if (interaction.customId === 'automod_modal_security') {
@@ -173,7 +172,7 @@ module.exports = {
 
           await saveConfig(guildId, config);
           const panel = createCategoryPanel('security', config);
-          return interaction.update({ ...panel });
+          return interaction.update({ ...panel, flags: 32768 });
         }
 
         if (interaction.customId === 'automod_modal_global') {
@@ -183,20 +182,13 @@ module.exports = {
 
           await saveConfig(guildId, config);
           const dashboard = createDashboard(config);
-          return interaction.update({ ...dashboard });
+          return interaction.update({ ...dashboard, flags: 32768 });
         }
       }
     } catch (error) {
       console.error('AutoMod Command Error:', error);
-      const errorEmbed = new EmbedBuilder()
-        .setColor('#ED4245')
-        .setAuthor({ name: 'Wild Wolf \u2502 Error', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_ERROR} **An error occurred:** \`${error.message}\`\n${SEP}`);
-
-      if (interaction.deferred || interaction.replied) {
-        await interaction.followUp({ embeds: [errorEmbed], ephemeral: true }).catch(() => { });
-      } else if (interaction.isRepliable()) {
-        await interaction.reply({ embeds: [errorEmbed], ephemeral: true }).catch(() => { });
+      if (interaction.isRepliable()) {
+        await interaction.reply({ components: [cv2Error(error.message)], flags: 32768, ephemeral: true }).catch(() => { });
       }
     }
   }

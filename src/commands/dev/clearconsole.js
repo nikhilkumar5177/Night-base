@@ -1,5 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_OWNER, EMOJI_SUCCESS } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'clearconsole',
@@ -12,33 +13,26 @@ module.exports = {
   devOnly: true,
   execute: async (client, message, args) => {
     try {
-      // Clear the physical terminal/console
       console.clear();
       console.log(`[INFO] Console cleared by ${message.author.tag}`);
 
-      // Clear internal memory caches to free up RAM/reset state
       if (client.cooldowns) client.cooldowns.clear();
       if (client._webhookTracker) client._webhookTracker.clear();
-      
-      // Optionally, sweep discord.js cache (messages older than 1 hour)
       message.channel.messages.cache.sweep(m => Date.now() - m.createdTimestamp > 3600000);
 
-      const embed = new EmbedBuilder()
-        .setColor('#00e676')
-        .setAuthor({ name: 'Wild Wolf \u2502 System Manager', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${EMOJI_OWNER} ${EMOJI_SUCCESS} **System Cache & Console Cleared!**\n\u25AA Terminal console has been wiped clean.\n\u25AA Command cooldowns have been reset.\n\u25AA Stale message caches have been swept.`)
-        .setTimestamp();
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Manager`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_OWNER} ${EMOJI_SUCCESS} **System Cache & Console Cleared!**\n\n` +
+          `\u25B8 Terminal console wiped clean.\n` +
+          `\u25B8 Command cooldowns reset.\n` +
+          `\u25B8 Stale message caches swept.`
+        ));
 
-      await message.reply({ embeds: [embed] }).catch(() => {});
-
+      await message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor('#ED4245')
-            .setDescription(`${EMOJI_ERROR} ${error.message}`)
-        ]
-      });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 });
     }
   }
 };

@@ -1,6 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { SEP, EMOJI_SUCCESS, EMOJI_ERROR } = require('../../utils/constants');
-
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'emoji',
@@ -13,37 +13,17 @@ module.exports = {
   devOnly: false,
   execute: async (client, message, args) => {
     try {
-      if (!args.length) {
-        return message.reply({
-          embeds: [
-            new EmbedBuilder()
-              .setColor('#ED4245')
-              .setDescription(`${EMOJI_ERROR} Please provide at least one custom emoji.`)
-              .setTimestamp()
-          ]
-        });
-      }
+      if (!args.length) return message.reply({ components: [cv2Error('Please provide at least one custom emoji.')], flags: 32768 });
 
       const inputStr = args.join(' ');
       const emojiRegex = /<(a?):([a-zA-Z0-9_]+):(\d+)>/g;
       const matches = [...inputStr.matchAll(emojiRegex)];
 
-      if (matches.length === 0) {
-        return message.reply({
-          embeds: [
-            new EmbedBuilder()
-              .setColor('#ED4245')
-              .setDescription(`${EMOJI_ERROR} No custom emojis found. Make sure they are server custom emojis.`)
-              .setTimestamp()
-          ]
-        });
-      }
+      if (matches.length === 0) return message.reply({ components: [cv2Error('No custom emojis found. Make sure they are server custom emojis.')], flags: 32768 });
 
-      const embed = new EmbedBuilder()
-        .setColor('#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 Emoji Info', iconURL: client.user.displayAvatarURL() })
-        .setFooter({ text: 'Wild Wolf \u2022 Utility', iconURL: message.guild.iconURL({ dynamic: true }) })
-        .setTimestamp();
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Emoji Info`))
+        .addSeparatorComponents(new SeparatorBuilder());
 
       if (matches.length === 1) {
         const match = matches[0];
@@ -53,17 +33,14 @@ module.exports = {
         const pattern = `<${isAnimated ? 'a' : ''}:${name}:${id}>`;
         const url = `https://cdn.discordapp.com/emojis/${id}.${isAnimated ? 'gif' : 'png'}`;
 
-        embed.setDescription(`${SEP}\n${EMOJI_SUCCESS} **Emoji successfully parsed!**\n${SEP}`);
-        embed.addFields(
-          { name: '\u25B8 Name', value: `\`${name}\``, inline: true },
-          { name: '\u25B8 ID', value: `\`${id}\``, inline: true },
-          { name: '\u25B8 Animated', value: isAnimated ? '\`Yes\`' : '\`No\`', inline: true },
-          { name: '\u25B8 Pattern Code', value: `\`\`\`${pattern}\`\`\``, inline: false },
-          { name: '\u25B8 URL', value: `[Click here to download](${url})`, inline: false }
-        );
-        embed.setThumbnail(url);
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_SUCCESS} **Emoji successfully parsed!**\n\n` +
+          `**Name:** \`${name}\` \u2502 **ID:** \`${id}\` \u2502 **Animated:** ${isAnimated ? 'Yes' : 'No'}\n` +
+          `**Pattern Code:**\n\`\`\`${pattern}\`\`\`\n` +
+          `**URL:** [Download Link](${url})`
+        ));
       } else {
-        let desc = `${SEP}\n${EMOJI_SUCCESS} **Successfully parsed ${matches.length} emojis!**\n${SEP}\n\n`;
+        let desc = `${EMOJI_SUCCESS} **Successfully parsed ${matches.length} emojis!**\n\n`;
         const maxDisplay = Math.min(matches.length, 10);
 
         for (let i = 0; i < maxDisplay; i++) {
@@ -73,27 +50,16 @@ module.exports = {
           const id = match[3];
           const pattern = `<${isAnimated ? 'a' : ''}:${name}:${id}>`;
           const url = `https://cdn.discordapp.com/emojis/${id}.${isAnimated ? 'gif' : 'png'}`;
-
-          desc += `${pattern} **${name}**\n\u25B8 **ID:** \`${id}\`\n\u25B8 **Pattern:** \`${pattern}\`\n\u25B8 [Download Link](${url})\n\n`;
+          desc += `${pattern} **${name}** \u2014 \`${id}\` \u2014 [Link](${url})\n`;
         }
 
-        if (matches.length > 10) {
-          desc += `*...and ${matches.length - 10} more.*`;
-        }
-
-        embed.setDescription(desc);
+        if (matches.length > 10) desc += `\n*...and ${matches.length - 10} more.*`;
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(desc));
       }
 
-      return message.reply({ embeds: [embed] }).catch(() => {});
+      return message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      return message.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor('#ED4245')
-            .setDescription(`${EMOJI_ERROR} ${error.message}`)
-            .setTimestamp()
-        ]
-      });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

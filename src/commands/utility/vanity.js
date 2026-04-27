@@ -1,5 +1,6 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { SEP, EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { EMOJI_DOT, EMOJI_WARN } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'vanity',
@@ -14,36 +15,33 @@ module.exports = {
     try {
       const g = message.guild;
       if (!g.vanityURLCode) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: 'Wild Wolf \u2502 Vanity URL', iconURL: client.user.displayAvatarURL() }).setDescription(`${SEP}\n${EMOJI_WARN} **This server does not have a vanity URL.**\nVanity URLs require boost level 3.\n${SEP}`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vanity URL`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_WARN} **This server does not have a vanity URL.**\nVanity URLs require boost level 3.`
+          ));
+        return message.reply({ components: [warnContainer], flags: 32768 });
       }
+
       const vanityData = await g.fetchVanityData().catch(() => null);
 
-      const embed = new EmbedBuilder()
-        .setColor('#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 Vanity URL', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(g.iconURL({ dynamic: true, size: 256 }))
-        .setDescription(
-          `${SEP}\n` +
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vanity URL`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **URL:** \`discord.gg/${g.vanityURLCode}\`\n` +
           `${EMOJI_DOT} **Uses:** \`${vanityData ? vanityData.uses.toLocaleString() : 'Unknown'}\`\n` +
-          `${EMOJI_DOT} **Boost Level:** \`${g.premiumTier}\`\n` +
-          `${EMOJI_DOT} **Boosts:** \`${g.premiumSubscriptionCount || 0}\`\n` +
-          `${SEP}`
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 Server Vanity', iconURL: g.iconURL({ dynamic: true }) })
-        .setTimestamp();
+          `${EMOJI_DOT} **Boosts:** \`${g.premiumSubscriptionCount || 0}\` (Level ${g.premiumTier})`
+        ));
 
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setLabel('Open Invite').setStyle(ButtonStyle.Link).setURL(`https://discord.gg/${g.vanityURLCode}`),
-        new ButtonBuilder().setCustomId('v_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
+        new ButtonBuilder().setLabel('Open Invite').setStyle(ButtonStyle.Link).setURL(`https://discord.gg/${g.vanityURLCode}`)
       );
 
-      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
-      coll.on('collect', async i => { if (i.customId === 'v_del') { await sent.delete().catch(() => {}); coll.stop(); } });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      message.reply({ components: [container, row], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

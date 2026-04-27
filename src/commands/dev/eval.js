@@ -1,5 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
-const { EMOJI_ERROR, EMOJI_OWNER } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_OWNER } = require('../../utils/constants');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'eval',
@@ -13,28 +14,29 @@ module.exports = {
   execute: async (client, message, args) => {
     if (message.author.id !== process.env.DEV_ID) return;
     const code = args.join(' ');
-    if (!code) {
-      return message.reply({ embeds: [new EmbedBuilder().setColor('#ff1744').setTitle(`${EMOJI_ERROR} No Code`).setDescription('Provide code to evaluate.').setTimestamp()] });
-    }
+    if (!code) return message.reply({ components: [cv2Error('Provide code to evaluate.')], flags: 32768 });
+
     try {
       let result = eval(code);
       if (result instanceof Promise) result = await result;
       if (typeof result !== 'string') result = require('util').inspect(result, { depth: 2 });
       if (result.length > 4000) result = result.substring(0, 4000) + '...';
       result = result.replace(process.env.TOKEN, '[REDACTED]');
-      const embed = new EmbedBuilder()
-        .setColor('#00e676')
-        .setTitle(`${EMOJI_OWNER} Eval Result`)
-        .addFields({ name: 'Input', value: `\`\`\`js\n${code.substring(0, 1000)}\n\`\`\`` }, { name: 'Output', value: `\`\`\`js\n${result}\n\`\`\`` })
-        .setTimestamp();
-      message.reply({ embeds: [embed] }).catch(() => {});
+
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} **Eval Result**`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Input:**\n\`\`\`js\n${code.substring(0, 500)}\n\`\`\``))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Output:**\n\`\`\`js\n${result}\n\`\`\``));
+
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      const embed = new EmbedBuilder()
-        .setColor('#ff1744')
-        .setTitle(`${EMOJI_ERROR} Eval Error`)
-        .setDescription(`\`\`\`js\n${error.message.substring(0, 4000)}\n\`\`\``)
-        .setTimestamp();
-      message.reply({ embeds: [embed] }).catch(() => {});
+      const errContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Eval Error`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`\`\`\`js\n${error.message}\n\`\`\``));
+      message.reply({ components: [errContainer], flags: 32768 }).catch(() => {});
     }
   }
 };

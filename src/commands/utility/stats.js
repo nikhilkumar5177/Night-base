@@ -1,6 +1,7 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
-const { SEP, EMOJI_DOT, EMOJI_ERROR } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
+const { EMOJI_DOT } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
+const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'stats',
@@ -15,7 +16,6 @@ module.exports = {
   staffOnly: true,
   devOnly: false,
   execute: async (client, message) => {
-    const isInteraction = !message.author;
     try {
       const analytics = storage.read('analytics.json');
       const entries = Object.entries(analytics).sort((a, b) => (b[1].uses || 0) - (a[1].uses || 0));
@@ -29,31 +29,22 @@ module.exports = {
         return `\`${String(i + 1).padStart(2)}.\` \`${bar}\` **${name}** \u2014 \`${data.uses}\``;
       }).join('\n');
 
-      const embed = new EmbedBuilder()
-        .setColor('#5865F2')
-        .setAuthor({ name: 'Wild Wolf \u2502 Analytics Dashboard', iconURL: client.user.displayAvatarURL() })
-        .setThumbnail(client.user.displayAvatarURL({ dynamic: true, size: 256 }))
-        .setDescription(
-          `${SEP}\n` +
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Analytics Dashboard`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Total Commands Used:** \`${totalUses}\`\n` +
           `${EMOJI_DOT} **Unique Commands:** \`${entries.length}\`\n` +
-          `${EMOJI_DOT} **Loaded Commands:** \`${client.commands.size}\`\n` +
-          `${SEP}\n\n` +
+          `${EMOJI_DOT} **Loaded Commands:** \`${client.commands.size}\``
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `**Top 10 Commands**\n${barChart || 'No data yet.'}`
-        )
-        .setFooter({ text: 'Wild Wolf \u2022 Usage Analytics', iconURL: (isInteraction ? message.guild : message.guild).iconURL({ dynamic: true }) })
-        .setTimestamp();
+        ));
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('st_del').setLabel('Dismiss').setStyle(ButtonStyle.Secondary).setEmoji('\u2716')
-      );
-
-      const sent = await message.reply({ embeds: [embed], components: [row] }).catch(() => {});
-      const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (isInteraction ? message.user.id : message.author.id), time: 120000 });
-      coll.on('collect', async i => { if (i.customId === 'st_del') { await sent.delete().catch(() => {}); coll.stop(); } });
-      coll.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

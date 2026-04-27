@@ -1,6 +1,7 @@
-const { EmbedBuilder } = require('discord.js');
-const { SEP, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
 const { resolveMember } = require('../../utils/resolver');
+const { cv2Error } = require('../../utils/messageHelper');
 
 // Global tracker for active tours to allow stopping them
 if (!global.activeVCTours) global.activeVCTours = new Set();
@@ -19,24 +20,30 @@ module.exports = {
       // Handle stop command
       if (args[0]?.toLowerCase() === 'stop') {
         if (!global.activeVCTours.has(message.guild.id)) {
-          return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} No active VC tour found in this server.`).setTimestamp()] });
+          const warnContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No active VC tour found in this server.**`));
+          return message.reply({ components: [warnContainer], flags: 32768 });
         }
         global.activeVCTours.delete(message.guild.id);
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#57F287').setDescription(`${EMOJI_SUCCESS} **VC Tour stopped.**`).setTimestamp()] });
+        const stopContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **VC Tour stopped.**`));
+        return message.reply({ components: [stopContainer], flags: 32768 });
       }
 
       // Check if already running
       if (global.activeVCTours.has(message.guild.id)) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} A VC tour is already running. Use \`!vctour stop\` to end it.`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **A VC tour is already running.** Use \`!vctour stop\` to end it.`));
+        return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
       const target = await resolveMember(message.guild, args[0]);
       if (!target) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} Please specify a user to start a tour.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error('Please specify a user to start a tour.')], flags: 32768 });
       }
 
       if (!target.voice.channel) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} **${target.user.tag}** is not in a voice channel.`).setTimestamp()] });
+        return message.reply({ components: [cv2Error(`**${target.user.tag}** is not in a voice channel.`)], flags: 32768 });
       }
 
       let members = [target];
@@ -47,15 +54,21 @@ module.exports = {
         .values());
 
       if (otherChannels.length < 2) {
-        return message.reply({ embeds: [new EmbedBuilder().setColor('#FEE75C').setDescription(`${EMOJI_WARN} Need at least 2 accessible voice channels for a tour.`).setTimestamp()] });
+        const warnContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Need at least 2 accessible voice channels for a tour.**`));
+        return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
-      const startEmbed = new EmbedBuilder()
-        .setColor('#EB459E')
-        .setAuthor({ name: 'Wild Wolf \u2502 VC Tour Started', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_LOADING} **Starting 2-minute VC tour loop...**\nTarget: **${target ? target.user.tag : 'Everyone in VC'}**\nChannels: **${otherChannels.length}**\n\nUse \`!vctour stop\` to end it early.\n${SEP}`)
-        .setTimestamp();
-      const statusMsg = await message.reply({ embeds: [startEmbed] }).catch(() => {});
+      const startContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Tour`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+          `${EMOJI_LOADING} **Starting 2-minute VC tour loop...**\n` +
+          `${EMOJI_DOT} **Target:** ${target.user.tag}\n` +
+          `${EMOJI_DOT} **Channels:** ${otherChannels.length}\n\nUse \`!vctour stop\` to end it early.`
+        ));
+
+      const statusMsg = await message.reply({ components: [startContainer], flags: 32768 }).catch(() => {});
 
       global.activeVCTours.add(message.guild.id);
       const startTime = Date.now();
@@ -64,7 +77,7 @@ module.exports = {
 
       while (Date.now() - startTime < duration && global.activeVCTours.has(message.guild.id)) {
         const nextChannel = otherChannels[channelIndex];
-        
+
         // Move all members in the tour
         await Promise.allSettled(members.map(m => m.voice.setChannel(nextChannel, `VC Tour (Extreme Loop)`)));
 
@@ -74,7 +87,13 @@ module.exports = {
         // Update status occasionally
         if (channelIndex === 0) {
           const remaining = Math.round((duration - (Date.now() - startTime)) / 1000);
-          statusMsg.edit({ embeds: [startEmbed.setDescription(`${SEP}\n${EMOJI_LOADING} **Touring...**\nTime Remaining: **${remaining}s**\nLooping through ${otherChannels.length} channels.\n${SEP}`).catch(() => {})] }).catch(() => {});
+          const updateContainer = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Tour`))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+              `${EMOJI_LOADING} **Touring...** Time remaining: **${remaining}s**`
+            ));
+          statusMsg.edit({ components: [updateContainer] }).catch(() => {});
         }
 
         // Minimal delay to prevent instant API exhaustion while maintaining "non-stop" feel
@@ -83,17 +102,16 @@ module.exports = {
 
       global.activeVCTours.delete(message.guild.id);
 
-      const endEmbed = new EmbedBuilder()
-        .setColor('#57F287')
-        .setAuthor({ name: 'Wild Wolf \u2502 Tour Finished', iconURL: client.user.displayAvatarURL() })
-        .setDescription(`${SEP}\n${EMOJI_SUCCESS} **The VC tour loop has concluded.**\n${SEP}`)
-        .setTimestamp();
-      
-      await statusMsg.edit({ embeds: [endEmbed] }).catch(() => {});
+      const endContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Tour Finished`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **The VC tour loop has concluded.**`));
+
+      await statusMsg.edit({ components: [endContainer] }).catch(() => {});
 
     } catch (error) {
       global.activeVCTours.delete(message.guild.id);
-      message.reply({ embeds: [new EmbedBuilder().setColor('#ED4245').setDescription(`${EMOJI_ERROR} ${error.message}`).setTimestamp()] });
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }
   }
 };

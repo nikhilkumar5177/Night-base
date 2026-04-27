@@ -20,7 +20,7 @@ const CATEGORY_META = {
   roles: { label: 'Roles', desc: 'Role automation' },
   vouch: { label: 'Vouch', desc: 'Reputation system' },
   snipe: { label: 'Snipe', desc: 'Message recovery' },
-  developer: { label: 'Developer', desc: 'Developer tools' },
+  developer: { label: 'Developer', desc: 'Developer toolFs' },
   automod: { label: 'automod', desc: 'Auto-moderation system' },
   voice: { label: 'voice', desc: 'Voice channel commands' }
 };
@@ -64,22 +64,6 @@ module.exports = {
       let state = { view: 'home', category: null, page: 0 };
 
       const injectComponents = (container) => {
-        // Buttons
-        const buttonRow = new ActionRowBuilder();
-        buttonRow.addComponents(new ButtonBuilder().setCustomId('help_home').setLabel('Home').setStyle(ButtonStyle.Success).setDisabled(state.view === 'home'));
-        buttonRow.addComponents(new ButtonBuilder().setCustomId('help_all').setLabel('All').setStyle(ButtonStyle.Primary).setDisabled(state.view === 'all'));
-
-        if (state.view === 'all') {
-          buttonRow.addComponents(
-            new ButtonBuilder().setCustomId('help_prev').setEmoji(EMOJI_ARROW_LEFT).setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId('help_next').setEmoji(EMOJI_ARROW_RIGHT).setStyle(ButtonStyle.Secondary)
-          );
-        }
-
-        buttonRow.addComponents(new ButtonBuilder().setLabel('Support').setStyle(ButtonStyle.Link).setURL(client.config.supportServer));
-
-        container.addActionRowComponents(buttonRow);
-
         // Dropdowns
         const availableCats = Object.keys(CATEGORY_META).filter(k => categories[k]);
         const catMenu = new StringSelectMenuBuilder()
@@ -103,6 +87,22 @@ module.exports = {
             })));
           container.addActionRowComponents(new ActionRowBuilder().addComponents(cmdMenu));
         }
+
+        // Buttons
+        const buttonRow = new ActionRowBuilder();
+        buttonRow.addComponents(new ButtonBuilder().setCustomId('help_home').setLabel('Home').setStyle(ButtonStyle.Success).setDisabled(state.view === 'home'));
+        buttonRow.addComponents(new ButtonBuilder().setCustomId('help_all').setLabel('All').setStyle(ButtonStyle.Primary).setDisabled(state.view === 'all'));
+
+        if (state.view === 'all') {
+          buttonRow.addComponents(
+            new ButtonBuilder().setCustomId('help_prev').setEmoji(EMOJI_ARROW_LEFT).setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('help_next').setEmoji(EMOJI_ARROW_RIGHT).setStyle(ButtonStyle.Secondary)
+          );
+        }
+
+        buttonRow.addComponents(new ButtonBuilder().setLabel('Support').setStyle(ButtonStyle.Link).setURL(client.config.supportServer));
+
+        container.addActionRowComponents(buttonRow);
 
         return container;
       };

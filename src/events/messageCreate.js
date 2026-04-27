@@ -28,11 +28,48 @@ module.exports = {
   execute: async (client, message) => {
     if (message.author.bot) return;
 
+    const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
+    const isDev = devIds.includes(message.author.id);
     const runtimeConfig = storage.read('config.json');
     const prefix = runtimeConfig.prefix || client.config.prefix;
 
     // Run AutoMod
     await handleAutoMod(client, message);
+
+    // AFK Check (Auto-Remove)
+    const afkData = storage.read('afk.json');
+    if (afkData[message.author.id]) {
+      const { reason, timestamp } = afkData[message.author.id];
+      delete afkData[message.author.id];
+      storage.write('afk.json', afkData);
+
+      const welcomeContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Welcome back ${message.author}, I have removed your AFK status. You were gone for <t:${Math.floor(timestamp / 1000)}:R>.`));
+      sendAutoDelete(message, { components: [welcomeContainer], flags: MessageFlags.IsComponentsV2 }, 5000);
+    }
+
+    // AFK Mention Check
+    if (message.mentions.users.size > 0) {
+      const mentionedAfk = [];
+      message.mentions.users.forEach(user => {
+        if (afkData[user.id] && user.id !== message.author.id) {
+          mentionedAfk.push({ user, data: afkData[user.id] });
+        }
+      });
+
+      if (mentionedAfk.length > 0) {
+        const afkMentionContainer = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AFK Notification`))
+          .addSeparatorComponents(new SeparatorBuilder());
+
+        const afkList = mentionedAfk.map(({ user, data }) =>
+          `${EMOJI_DOT} **${user.tag}** is AFK: \`${data.reason}\` (<t:${Math.floor(data.timestamp / 1000)}:R>)`
+        ).join('\n');
+
+        afkMentionContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(afkList));
+        message.reply({ components: [afkMentionContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+      }
+    }
 
     // Mention Response (Prefix Reminder)
     const mentionRegex = new RegExp(`^<@!?${client.user.id}>$`);
@@ -53,7 +90,7 @@ module.exports = {
           `\u25B8 Use \`${prefix}help\` to see all commands.`
         ));
 
-      return message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+      return message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
     }
 
     if (message.webhookId && message.guild) {
@@ -80,7 +117,7 @@ module.exports = {
             const owner = await message.guild.fetchOwner().catch(() => null);
             const staffData = storage.read('staff.json');
             const staffMentions = staffData.roles ? staffData.roles.map(r => `<@&${r}>`).join(' ') : '';
-            
+
             const alertContainer = new ContainerBuilder()
               .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
               .addSeparatorComponents(new SeparatorBuilder())
@@ -90,7 +127,7 @@ module.exports = {
 
             const logCh = message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) || message.channel;
             await logCh.send({ content: `${owner || ''} ${staffMentions}`, components: [alertContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
-            
+
             const logs = securityConfig.logs || [];
             logs.push({ type: 'webhook_spam', guildId, channelId: message.channel.id, timestamp: now });
             securityConfig.logs = logs.slice(-100);
@@ -103,7 +140,7 @@ module.exports = {
     }
 
     if (message.content.toLowerCase() === 'stop') {
-      if (message.author.id !== process.env.DEV_ID) return;
+      if (!isDev) return;
       if (global.activeVCTours instanceof Set && global.activeVCTours.has(message.guild.id)) {
         global.activeVCTours.delete(message.guild.id);
         const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **VC Tour loop stopped.**`));
@@ -121,19 +158,19 @@ module.exports = {
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 New Vouch`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `\u25B8 **Vouched:** ${target || '`N/A`'}\n` +
-            `\u25B8 **By:** ${message.author}\n` +
-            `\u25B8 **Message:** ${cleanContent || 'No content'}`
+            `${EMOJI_DOT} **Vouched:** ${target || '`N/A`'}\n` +
+            `${EMOJI_DOT} **By:** ${message.author}\n` +
+            `${EMOJI_DOT} **Message:** ${cleanContent || 'No content'}`
           ));
 
-        const sent = await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
-        await message.delete().catch(() => { });
+        const sent = await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+        await message.delete().catch(() => { })
         await sent.react(EMOJI_CHECK).catch(() => { });
       } catch { }
       return;
     }
 
-    if (runtimeConfig.maintenance && message.author.id !== process.env.DEV_ID) return;
+    if (runtimeConfig.maintenance && !isDev) return;
 
     if (runtimeConfig.aliasMode !== false) {
       const aliasData = storage.read('aliases.json');
@@ -146,7 +183,6 @@ module.exports = {
       const aliasConfig = aliasTriggerMap.get(firstWord);
 
       if (aliasConfig && !message.content.startsWith(client.config.prefix)) {
-        const isDev = message.author.id === process.env.DEV_ID;
         const hasManageRoles = message.member.permissions.has(PermissionsBitField.Flags.ManageRoles);
 
         if (!isDev && !hasManageRoles) return;
@@ -156,8 +192,8 @@ module.exports = {
           if (role) {
             try {
               const targetInput = parts[1];
-              const target = message.mentions.members.first() || 
-                             (targetInput ? await resolver.resolveMember(message.guild, targetInput) : message.member);
+              const target = message.mentions.members.first() ||
+                (targetInput ? await resolver.resolveMember(message.guild, targetInput) : message.member);
 
               if (!target) return;
 
@@ -169,11 +205,11 @@ module.exports = {
               if (target.roles.cache.has(role.id)) {
                 await target.roles.remove(role, `Alias Role: ${aliasConfig.key}`);
                 container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Removed **${role.name}** from **${target.user.tag}**`));
-                await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+                await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
               } else {
                 await target.roles.add(role, `Alias Role: ${aliasConfig.key}`);
                 container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Added **${role.name}** to **${target.user.tag}**`));
-                await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+                await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
               }
               return;
             } catch (err) {
@@ -229,7 +265,6 @@ module.exports = {
     const cmdBlacklist = storage.read('cmdBlacklist.json');
     if (cmdBlacklist[message.channel.id]?.includes(command.name)) return;
 
-    const isDev = message.author.id === process.env.DEV_ID;
     const staffData = storage.read('staff.json');
     const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
     const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
@@ -247,9 +282,7 @@ module.exports = {
       }
     }
 
-    if (command.devOnly && !isDev) {
-      return sendAutoDelete(message, { components: [cv2Error(`${EMOJI_OWNER} This is an **Owner Command**.`)], flags: MessageFlags.IsComponentsV2 }, 5000);
-    }
+    if (command.devOnly && !isDev) return; // Silent ignore for dev commands as requested
 
     const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
     if (cooldownAmount > 0) {
@@ -279,10 +312,10 @@ module.exports = {
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Error Log`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${message.author.tag} (${message.author.id})\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
-          errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+          errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
         }
       }
-      await sendAutoDelete(message, { components: [cv2Error(`An error occurred: \`${error.message}\``)], flags: MessageFlags.IsComponentsV2 }, 5000).catch(() => {});
+      await sendAutoDelete(message, { components: [cv2Error(`An error occurred: \`${error.message}\``)], flags: MessageFlags.IsComponentsV2 }, 5000).catch(() => { });
     }
 
     const analytics = storage.read('analytics.json');

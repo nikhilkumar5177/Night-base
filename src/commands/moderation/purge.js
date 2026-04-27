@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
+const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -25,6 +25,8 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Scanning and deleting messages...**`));
       
       const progressMsg = await sendAutoDelete(message, { components: [loadContainer], flags: 32768 }, 0);
+      
+      // Delete command message after sending progress
       await message.delete().catch(() => {});
 
       let fetched = await message.channel.messages.fetch({ limit: count });
@@ -65,7 +67,9 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **Messages purged successfully.**\n\n` +
           `Deleted: \`${deleted.size}\` \u2502 Filter: \`${filterLabel}\``
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await progressMsg.edit({ components: [successContainer] }).catch(() => {});
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);

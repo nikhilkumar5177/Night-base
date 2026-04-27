@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
 
 module.exports = {
   name: 'kick',
@@ -85,7 +85,9 @@ module.exports = {
               `${EMOJI_SUCCESS} **Mass kick completed.**\n\n` +
               `Success: \`${successCount}\` \u2502 Failed: \`${failCount}\`\n` +
               `Reason: ${reason}`
-            ));
+            ))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
           await sent.edit({ components: [successContainer] }).catch(() => {});
         } else {
           const cancelContainer = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Mass kick cancelled.**`));

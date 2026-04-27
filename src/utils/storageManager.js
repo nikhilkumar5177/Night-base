@@ -19,7 +19,8 @@ const DEFAULT_FILES = {
   'config.json': { channelCommands: {}, disabledCommands: [], noPrefixUsers: [], aliasMode: true, maintenance: false },
   'autorole.json': {},
   'privateChannels.json': {},
-  'vcjoiner.json': {}
+  'vcjoiner.json': {},
+  'afk.json': {}
 };
 
 let flushInterval = null;

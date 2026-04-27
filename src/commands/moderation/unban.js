@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
 
 module.exports = {
   name: 'unban',
@@ -64,7 +64,9 @@ module.exports = {
       if (failure.length > 0) desc += `${EMOJI_DOT} **Failed ${failure.length} user(s):**\n${failure.join('\n')}\n\n`;
       desc += `${EMOJI_DOT} **Reason:** ${reason}`;
 
-      finalContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(desc));
+      finalContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(desc))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await statusMsg.edit({ components: [finalContainer] }).catch(() => {});
     } catch (error) {

@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -38,11 +38,12 @@ module.exports = {
         ))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-          `**Statistics**\n` +
           `Guilds: ${client.guilds.cache.size}\n` +
           `Users: ${totalMembers}\n` +
           `Channels: ${client.channels.cache.size}`
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setLabel('Support Server').setStyle(ButtonStyle.Link).setURL(client.config.supportServer)

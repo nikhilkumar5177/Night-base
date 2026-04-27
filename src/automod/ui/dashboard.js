@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { COLORS, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS, EMOJI_ACTIVE, EMOJI_INACTIVE } = require('../../utils/constants');
+const { COLORS, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS, EMOJI_ACTIVE, EMOJI_INACTIVE, FOOTER_TEXT } = require('../../utils/constants');
 
 /**
  * Create the main AutoMod dashboard.
@@ -11,7 +11,7 @@ function createDashboard(config) {
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Dashboard`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-      `Welcome to the **Wild Wolf** advanced automoderation system. Configure protection rules to keep your server safe.`
+      `Welcome to the **Wild Wolf** advanced automoderation system. \n Configure protection rules to keep your server safe.`
     ))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
@@ -23,7 +23,9 @@ function createDashboard(config) {
       `${EMOJI_DOT} **Status:** ${config.enabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``}\n` +
       `${EMOJI_DOT} **Log Channel:** ${config.logChannel ? `<#${config.logChannel}>` : '`Not Set`'}\n` +
       `${EMOJI_DOT} **Bypasses:** \`${config.bypassRoles.length}\` Roles, \`${config.bypassUsers.length}\` Users`
-    ));
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
   const menu = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
@@ -62,7 +64,7 @@ function createDashboard(config) {
 function getModuleStatus(config) {
   const modules = config.modules;
   const format = (key, name) => `${modules[key].enabled ? EMOJI_CHECK : EMOJI_CROSS} **${name}**`;
-  
+
   return [
     `${format('spam', 'Spam')} \u2502 ${format('links', 'Links')}`,
     `${format('raid', 'Raid')} \u2502 ${format('content', 'Content')}`,

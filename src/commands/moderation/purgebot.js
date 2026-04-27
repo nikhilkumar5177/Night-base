@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -21,11 +21,12 @@ module.exports = {
       }
 
       let count = Math.min(parseInt(args[0]) || 50, LIMITS.MAX_PURGE);
-      await message.delete().catch(() => {});
-
       const loadContainer = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Scanning and deleting bot messages...**`));
       const progressMsg = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
+
+      // Delete the command message after replying
+      await message.delete().catch(() => {});
 
       let fetched = await message.channel.messages.fetch({ limit: 100 });
       let filtered = fetched.filter(m => m.author.bot && m.id !== progressMsg.id);
@@ -48,7 +49,9 @@ module.exports = {
           `${EMOJI_SUCCESS} **Bot messages purged.**\n` +
           `${EMOJI_DOT} **Deleted:** \`${deleted.size}\` messages\n` +
           `${EMOJI_DOT} **By:** ${message.author.tag}`
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await progressMsg.edit({ components: [container] }).catch(() => {});
       setTimeout(() => progressMsg.delete().catch(() => {}), 5000);

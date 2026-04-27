@@ -1,4 +1,4 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder, MediaGalleryBuilder, MediaBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 const { EMOJI_DOT, EMOJI_ARROW, EMOJI_WARN, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
@@ -90,7 +90,7 @@ module.exports = {
               `${EMOJI_DOT} **Type:** \`Global Avatar\``
             ))
             .addSeparatorComponents(new SeparatorBuilder())
-            .addMediaGalleryComponents(new MediaGalleryBuilder().addMedia(new MediaBuilder().setURL(avUrl)))
+            .addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(avUrl)))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
           
@@ -115,7 +115,7 @@ module.exports = {
               `${EMOJI_DOT} **Type:** \`User Banner\``
             ))
             .addSeparatorComponents(new SeparatorBuilder())
-            .addMediaGalleryComponents(new MediaGalleryBuilder().addMedia(new MediaBuilder().setURL(bannerUrl)))
+            .addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(bannerUrl)))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
           

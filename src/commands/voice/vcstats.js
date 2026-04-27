@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -25,7 +25,9 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Total in VC:** \`${totalMembers}\` \u2022 **Active Channels:** \`${activeChannels.size}\``
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {

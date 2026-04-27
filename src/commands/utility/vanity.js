@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { EMOJI_DOT, EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_WARN, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -20,7 +20,9 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_WARN} **This server does not have a vanity URL.**\nVanity URLs require boost level 3.`
-          ));
+          ))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
         return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
@@ -33,7 +35,9 @@ module.exports = {
           `${EMOJI_DOT} **URL:** \`discord.gg/${g.vanityURLCode}\`\n` +
           `${EMOJI_DOT} **Uses:** \`${vanityData ? vanityData.uses.toLocaleString() : 'Unknown'}\`\n` +
           `${EMOJI_DOT} **Boosts:** \`${g.premiumSubscriptionCount || 0}\` (Level ${g.premiumTier})`
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setLabel('Open Invite').setStyle(ButtonStyle.Link).setURL(`https://discord.gg/${g.vanityURLCode}`)

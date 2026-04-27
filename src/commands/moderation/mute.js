@@ -1,7 +1,7 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, MessageFlags } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
 
 module.exports = {
   name: 'mute',
@@ -79,7 +79,9 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Reason:** ${reason}\n` +
           `${EMOJI_DOT} **Expires:** <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>`
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await sent.edit({ components: [container] }).catch(() => {});
 

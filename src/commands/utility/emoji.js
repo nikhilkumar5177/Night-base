@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -56,6 +56,9 @@ module.exports = {
         if (matches.length > 10) desc += `\n*...and ${matches.length - 10} more.*`;
         container.addTextDisplayComponents(new TextDisplayBuilder().setContent(desc));
       }
+
+      container.addSeparatorComponents(new SeparatorBuilder());
+      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       return message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {

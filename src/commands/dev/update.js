@@ -9,7 +9,7 @@ const {
   MessageFlags 
 } = require('discord.js');
 const { exec } = require('child_process');
-const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -27,7 +27,10 @@ module.exports = {
   execute: async (client, message, args) => {
     const isInteraction = !message.author;
     const user = isInteraction ? message.user : message.author;
-    if (user.id !== process.env.DEV_ID) return;
+    
+    // Developer Authorization Check (Multiple IDs)
+    const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
+    if (!devIds.includes(user.id)) return; // Silent ignore as requested
 
     const commitId = isInteraction ? message.options.getString('commit') : args[0];
     const targetLabel = commitId ? `Commit: \`${commitId}\`` : 'Latest Origin';
@@ -65,7 +68,7 @@ module.exports = {
           `**Log Output:**\n\`\`\`\n${stdout.slice(0, 500) || 'No output'}\n\`\`\``
         ))
         .addSeparatorComponents(new SeparatorBuilder())
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent('Please restart to apply kernel changes.'));
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       successContainer.addActionRowComponents(new ActionRowBuilder().addComponents(
         new ButtonBuilder()
@@ -80,8 +83,8 @@ module.exports = {
         flags: MessageFlags.IsComponentsV2
       }).catch(() => {});
       
-      const filter = i => i.user.id === user.id && i.customId === 'sys_restart_after_update';
-      const collector = msg.createMessageComponentCollector({ filter, time: 30000 });
+      const filter = i => devIds.includes(i.user.id) && i.customId === 'sys_restart_after_update';
+      const collector = msg.createMessageComponentCollector({ filter, time: 60000 });
 
       collector.on('collect', async i => {
         const restartContainer = new ContainerBuilder()

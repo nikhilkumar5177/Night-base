@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_OWNER, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 
 module.exports = {
   name: 'restart',
@@ -14,14 +14,16 @@ module.exports = {
   staffOnly: false,
   devOnly: true,
   execute: async (client, message, args) => {
-    if ((message.author || message.user).id !== process.env.DEV_ID) return;
+    const user = message.author || message.user;
+    const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
+    if (!devIds.includes(user.id)) return; // Silent ignore
 
     const container = new ContainerBuilder()
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Reboot`))
       .addSeparatorComponents(new SeparatorBuilder())
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} **Kernel is restarting...**\n${EMOJI_DOT} **Status:** \`Process Exit Initiated\``))
       .addSeparatorComponents(new SeparatorBuilder())
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent('Bot process will be offline for a few seconds'));
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
     await message.reply({ 
       components: [container], 

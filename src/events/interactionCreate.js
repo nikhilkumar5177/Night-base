@@ -13,10 +13,13 @@ module.exports = {
       if (!command) return;
 
       const runtimeConfig = storage.read('config.json');
+      const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
+      const isDev = devIds.includes(interaction.user.id);
+
       if (runtimeConfig.disabledCommands?.includes(command.name)) {
-        return interaction.reply({ components: [cv2Error('This command is currently disabled.')], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => {});
+        return interaction.reply({ components: [cv2Error('This command is currently disabled.')], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => { });
       }
-      if (runtimeConfig.maintenance && interaction.user.id !== process.env.DEV_ID) {
+      if (runtimeConfig.maintenance && !isDev) {
         const maintContainer = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Lockdown`))
           .addSeparatorComponents(new SeparatorBuilder())
@@ -31,13 +34,12 @@ module.exports = {
         const staffData = storage.read('staff.json');
         const memberRoles = interaction.member ? interaction.member.roles.cache.map(r => r.id) : [];
         const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
-        const isDev = interaction.user.id === process.env.DEV_ID;
         if (!isStaff && !isDev) {
           return interaction.reply({ components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2, ephemeral: true });
         }
       }
 
-      if (command.devOnly && interaction.user.id !== process.env.DEV_ID) {
+      if (command.devOnly && !isDev) {
         return interaction.reply({ components: [cv2Error(`${EMOJI_OWNER} This is an **Owner Command**.`)], flags: MessageFlags.IsComponentsV2, ephemeral: true });
       }
 
@@ -49,7 +51,7 @@ module.exports = {
           const expiresAt = client.cooldowns.get(key);
           if (now < expiresAt) {
             const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            return interaction.reply({ components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`))], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => {});
+            return interaction.reply({ components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`))], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => { });
           }
         }
         client.cooldowns.set(key, now + cooldownAmount);
@@ -76,12 +78,12 @@ module.exports = {
               .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Slash Error Log`))
               .addSeparatorComponents(new SeparatorBuilder())
               .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_ERROR} **Slash Command Failed:** \`${command.name}\` \n\u25B8 **User:** ${interaction.user.tag}\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
-            errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+            errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
           }
         }
         const resp = { components: [cv2Error(`Error: ${error.message}`)], flags: MessageFlags.IsComponentsV2, ephemeral: true };
-        if (interaction.replied || interaction.deferred) await interaction.followUp(resp).catch(() => {});
-        else await interaction.reply(resp).catch(() => {});
+        if (interaction.replied || interaction.deferred) await interaction.followUp(resp).catch(() => { });
+        else await interaction.reply(resp).catch(() => { });
       }
     } else if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
       const command = client.commands.get(interaction.commandName);
@@ -89,7 +91,7 @@ module.exports = {
         const focusedValue = interaction.options.getFocused().toLowerCase();
         const choices = client.commands.map(cmd => cmd.name);
         const filtered = choices.filter(choice => choice.startsWith(focusedValue)).slice(0, 25);
-        await interaction.respond(filtered.map(choice => ({ name: choice, value: choice }))).catch(() => {});
+        await interaction.respond(filtered.map(choice => ({ name: choice, value: choice }))).catch(() => { });
       }
     } else if (interaction.type === InteractionType.MessageComponent) {
       if (interaction.customId.startsWith('automod_')) {

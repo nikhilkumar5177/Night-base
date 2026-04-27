@@ -2,7 +2,7 @@ const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, 
 const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
 
 module.exports = {
   name: 'warn',
@@ -67,7 +67,9 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Reason:** ${reason}\n` +
           `${EMOJI_DOT} **Warn Level [${totalWarns}/10]:** \`${warnBar}\` **${severity}**`
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await sent.edit({ components: [container] }).catch(() => {});
 

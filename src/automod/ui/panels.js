@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { EMOJI_TOOL, EMOJI_DOT, EMOJI_INFO, EMOJI_ACTIVE, EMOJI_INACTIVE, EMOJI_WARN, EMOJI_BYPASS } = require('../../utils/constants');
+const { EMOJI_TOOL, EMOJI_DOT, EMOJI_INFO, EMOJI_ACTIVE, EMOJI_INACTIVE, EMOJI_WARN, EMOJI_BYPASS, FOOTER_TEXT } = require('../../utils/constants');
 
 /**
  * Create a generic category panel.
@@ -26,7 +26,9 @@ function createCategoryPanel(category, config) {
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${EMOJI_TOOL} **Module Settings**\n` + formatConfig(category, categoryData)
-    ));
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
   const buttons = new ActionRowBuilder().addComponents(
     new ButtonBuilder()

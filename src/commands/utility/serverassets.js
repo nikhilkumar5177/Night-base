@@ -1,4 +1,4 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, MediaGalleryBuilder, MediaBuilder } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, MediaGalleryBuilder, MediaGalleryItemBuilder } = require('discord.js');
 const { EMOJI_DOT, EMOJI_WARN, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
@@ -40,7 +40,7 @@ module.exports = {
             `${EMOJI_DOT} **Asset:** ${asset.label} (${page + 1}/${assetData.length})`
           ))
           .addSeparatorComponents(new SeparatorBuilder())
-          .addMediaGalleryComponents(new MediaGalleryBuilder().addMedia(new MediaBuilder().setURL(asset.url)))
+          .addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(asset.url)))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
       };

@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { resolveMember } = require('../../utils/resolver');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
@@ -47,7 +47,9 @@ module.exports = {
             `${EMOJI_DOT} **Moderator:** ${message.author.tag}`
           ))
           .setThumbnailAccessory(new ThumbnailBuilder().setURL(target.user.displayAvatarURL({ dynamic: true })))
-        );
+        )
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await sent.edit({ components: [container] }).catch(() => {});
     } catch (error) {

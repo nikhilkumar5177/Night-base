@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, PermissionsBitField } = require('discord.js');
 const axios = require('axios');
-const { EMOJI_SUCCESS, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -98,6 +98,8 @@ module.exports = {
       if (uniqueItems.length > maxItems) desc += `\n*Limited to ${maxItems} items per command.*`;
 
       finalContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(desc || 'No items were processed.'));
+      finalContainer.addSeparatorComponents(new SeparatorBuilder());
+      finalContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       return sent.edit({ components: [finalContainer] }).catch(() => {});
     } catch (error) {

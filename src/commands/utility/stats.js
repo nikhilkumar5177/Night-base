@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 const { cv2Error } = require('../../utils/messageHelper');
 
@@ -40,7 +40,9 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `**Top 10 Commands**\n${barChart || 'No data yet.'}`
-        ));
+        ))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {

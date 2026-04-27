@@ -1,7 +1,7 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, PermissionsBitField } = require('discord.js');
-const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, SEP } = require('../utils/constants');
+const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_DOT, SEP } = require('../utils/constants');
 
 const { sendAutoDelete, cv2Error } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
@@ -32,6 +32,39 @@ module.exports = {
     const isDev = devIds.includes(message.author.id);
     const runtimeConfig = storage.read('config.json');
     const prefix = runtimeConfig.prefix || client.config.prefix;
+
+    // Vouch Logic
+    const vouchData = storage.read('vouch.json');
+    if (vouchData.channels && vouchData.channels.includes(message.channel.id)) {
+      if (message.content.startsWith(prefix)) return;
+      try {
+        const now = Date.now();
+        if (message.content.match(/https?:\/\/[^\s]+/gi)) {
+          const linkMsg = await message.channel.send({ content: `${message.author}`, components: [cv2Error('Links are not allowed in vouches.')] }).catch(() => { });
+          await message.delete().catch(() => { });
+          if (linkMsg) setTimeout(() => linkMsg.delete().catch(() => { }), 5000);
+          return;
+        }
+
+        const target = message.mentions.users.first();
+        const cleanContent = target ? message.content.replace(new RegExp(`<@!?${target.id}>`, 'g'), '').trim() : message.content;
+
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 New Vouch`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_DOT} **Vouched:** ${target || '`N/A`'}\n` +
+            `${EMOJI_DOT} **By:** ${message.author}\n` +
+            `${EMOJI_DOT} **Message:** ${cleanContent || 'No content'}`
+          ));
+
+        const sent = await message.channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+        await message.delete().catch(() => { });
+        if (sent) await sent.react(EMOJI_CHECK).catch(() => { });
+        console.log(`[Vouch] Logged vouch by ${message.author.tag} in ${message.channel.name}`);
+      } catch (e) { console.error('[Vouch Error]', e); }
+      return;
+    }
 
     // Run AutoMod
     await handleAutoMod(client, message);
@@ -146,28 +179,6 @@ module.exports = {
         const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **VC Tour loop stopped.**`));
         return message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       }
-    }
-
-    const vouchData = storage.read('vouch.json');
-    if (vouchData.channels && vouchData.channels.includes(message.channel.id)) {
-      try {
-        const target = message.mentions.users.first();
-        const cleanContent = target ? message.content.replace(new RegExp(`<@!?${target.id}>`, 'g'), '').trim() : message.content;
-
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 New Vouch`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_DOT} **Vouched:** ${target || '`N/A`'}\n` +
-            `${EMOJI_DOT} **By:** ${message.author}\n` +
-            `${EMOJI_DOT} **Message:** ${cleanContent || 'No content'}`
-          ));
-
-        const sent = await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
-        await message.delete().catch(() => { })
-        await sent.react(EMOJI_CHECK).catch(() => { });
-      } catch { }
-      return;
     }
 
     if (runtimeConfig.maintenance && !isDev) return;

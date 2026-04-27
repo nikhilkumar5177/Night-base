@@ -28,7 +28,7 @@ async function handleGhostPing(client, message, config) {
   const targetChannel = message.guild.channels.cache.get(logChannelId) || message.channel;
 
   if (targetChannel) {
-    await targetChannel.send({ components: [container], flags: 32768 }).catch(() => {});
+    await targetChannel.send({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
   }
 }
 

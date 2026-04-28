@@ -50,11 +50,6 @@ async function checkSpam(message, config) {
 
   if (recentTimestamps.length > config.limit) {
     userMessages.set(key, []);
-    
-    if (config.autoSlowmode && channel.rateLimitPerUser === 0) {
-      await channel.setRateLimitPerUser(5, 'AutoMod: Spam spike').catch(() => {});
-      setTimeout(() => channel.setRateLimitPerUser(0).catch(() => {}), 30000);
-    }
     return 'Message Spam';
   }
 

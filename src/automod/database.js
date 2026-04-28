@@ -24,7 +24,6 @@ const DEFAULT_CONFIG = {
       exemptRoles: [],
       exemptUsers: [],
       responseMessage: `${EMOJI_ERROR} **{user}**, please stop spamming!`,
-      autoSlowmode: true,
       duplicateDetection: true
     },
     links: {

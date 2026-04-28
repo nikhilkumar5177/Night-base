@@ -44,7 +44,7 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Staff Dashboard`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-          `${EMOJI_DOT} **Staff Roles:** \`${staffData.roles.length}\`\n` +
+          `${EMOJI_DOT} **Staff Roles:** \`${guildData.roles.length}\`\n` +
           `${EMOJI_DOT} **Total Staff:** \`${totalStaff}\``
         ))
         .addSeparatorComponents(new SeparatorBuilder())

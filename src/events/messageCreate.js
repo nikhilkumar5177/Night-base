@@ -35,7 +35,8 @@ module.exports = {
 
     // Vouch Logic
     const vouchData = storage.read('vouch.json');
-    if (vouchData.channels && vouchData.channels.includes(message.channel.id)) {
+    const guildVouchChannels = vouchData[message.guild.id]?.channels || [];
+    if (guildVouchChannels.includes(message.channel.id)) {
       if (message.content.startsWith(prefix)) {
         const alertMsg = await message.channel.send({ 
           content: `${message.author}`, 

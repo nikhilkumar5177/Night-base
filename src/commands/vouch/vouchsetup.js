@@ -19,9 +19,10 @@ module.exports = {
       }
       const action = args[0]?.toLowerCase();
       const vouchData = storage.read('vouch.json');
+      if (!vouchData[message.guild.id]) vouchData[message.guild.id] = { channels: [] };
 
       if (action === 'list') {
-        const guildChannels = vouchData.channels.filter(id => message.guild.channels.cache.has(id));
+        const guildChannels = vouchData[message.guild.id].channels;
         if (guildChannels.length === 0) {
           const container = new ContainerBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channels`))
@@ -40,12 +41,12 @@ module.exports = {
       const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
 
       if (action === 'add') {
-        if (vouchData.channels.includes(channel.id)) {
+        if (vouchData[message.guild.id].channels.includes(channel.id)) {
           const warnContainer = new ContainerBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${channel}** is already a vouch channel.`));
           return message.reply({ components: [warnContainer], flags: MessageFlags.IsComponentsV2 });
         }
-        vouchData.channels.push(channel.id);
+        vouchData[message.guild.id].channels.push(channel.id);
         storage.write('vouch.json', vouchData);
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channel Added`))
@@ -55,7 +56,7 @@ module.exports = {
       }
 
       if (action === 'remove') {
-        vouchData.channels = vouchData.channels.filter(id => id !== channel.id);
+        vouchData[message.guild.id].channels = vouchData[message.guild.id].channels.filter(id => id !== channel.id);
         storage.write('vouch.json', vouchData);
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channel Removed`))

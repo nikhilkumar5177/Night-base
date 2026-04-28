@@ -1,7 +1,7 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, PermissionsBitField } = require('discord.js');
-const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_DOT, SEP } = require('../utils/constants');
+const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_LEGIT, EMOJI_DOT, SEP } = require('../utils/constants');
 
 const { sendAutoDelete, cv2Error, safeReply, safeSend } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
@@ -69,7 +69,7 @@ module.exports = {
 
         const sent = await safeSend(message.channel, { components: [container] }).catch(() => { });
         await message.delete().catch(() => { });
-        if (sent) await sent.react(EMOJI_CHECK).catch(() => { });
+        if (sent) await sent.react(EMOJI_LEGIT).catch(() => { });
         console.log(`[Vouch] Logged vouch by ${message.author.tag} in ${message.channel.name}`);
       } catch (e) { console.error('[Vouch Error]', e); }
       return;

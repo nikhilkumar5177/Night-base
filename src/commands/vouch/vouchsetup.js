@@ -21,14 +21,15 @@ module.exports = {
       const vouchData = storage.read('vouch.json');
 
       if (action === 'list') {
-        if (!vouchData.channels || vouchData.channels.length === 0) {
+        const guildChannels = vouchData.channels.filter(id => message.guild.channels.cache.has(id));
+        if (guildChannels.length === 0) {
           const container = new ContainerBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channels`))
             .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No vouch channels configured.`));
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No vouch channels configured for this server.`));
           return message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 });
         }
-        const list = vouchData.channels.map((id, i) => `**${i + 1}.** <#${id}>`).join('\n');
+        const list = guildChannels.map((id, i) => `**${i + 1}.** <#${id}>`).join('\n');
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channels`))
           .addSeparatorComponents(new SeparatorBuilder())

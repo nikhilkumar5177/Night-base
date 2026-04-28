@@ -36,7 +36,15 @@ module.exports = {
     // Vouch Logic
     const vouchData = storage.read('vouch.json');
     if (vouchData.channels && vouchData.channels.includes(message.channel.id)) {
-      if (message.content.startsWith(prefix)) return;
+      if (message.content.startsWith(prefix)) {
+        const alertMsg = await message.channel.send({ 
+          content: `${message.author}`, 
+          components: [cv2Error('Commands are not allowed in this channel. Please use slowmode to manage spam.')] 
+        }).catch(() => { });
+        await message.delete().catch(() => { });
+        if (alertMsg) setTimeout(() => alertMsg.delete().catch(() => { }), 5000);
+        return;
+      }
       try {
         const now = Date.now();
         if (message.content.match(/https?:\/\/[^\s]+/gi)) {
@@ -149,7 +157,8 @@ module.exports = {
             if (webhooks) { for (const [, wh] of webhooks) { await wh.delete('Security: Webhook spam').catch(() => { }); } }
             const owner = await message.guild.fetchOwner().catch(() => null);
             const staffData = storage.read('staff.json');
-            const staffMentions = staffData.roles ? staffData.roles.map(r => `<@&${r}>`).join(' ') : '';
+            const guildRoles = staffData[message.guild.id]?.roles || [];
+            const staffMentions = guildRoles.map(r => `<@&${r}>`).join(' ');
 
             const alertContainer = new ContainerBuilder()
               .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
@@ -277,8 +286,9 @@ module.exports = {
     if (cmdBlacklist[message.channel.id]?.includes(command.name)) return;
 
     const staffData = storage.read('staff.json');
+    const guildRoles = staffData[message.guild.id]?.roles || [];
     const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
-    const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
+    const isStaff = guildRoles.some(r => memberRoles.includes(r));
 
     if (command.staffOnly && !isStaff && !isDev) {
       return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);

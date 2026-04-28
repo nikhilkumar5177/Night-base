@@ -154,29 +154,31 @@ module.exports = {
       };
 
       const buildAllContainer = (page) => {
-        const allCmds = [];
+        const blocks = [];
         Object.keys(categories).forEach(cat => {
           const catLabel = (CATEGORY_META[cat]?.label || cat).toUpperCase();
-          const catCmds = categories[cat].map(c => `${EMOJI_DOT}\`${c.name}\``);
-
-          allCmds.push(`${EMOJI_ARROW} **${catLabel}**`);
-
-          // Column logic (3 columns)
+          const catCmds = categories[cat].map(c => `\`${c.name}\``);
+          
+          let block = [`${EMOJI_ARROW} **${catLabel}**`];
           for (let i = 0; i < catCmds.length; i += 3) {
-            const row = catCmds.slice(i, i + 3).join(`\n`);
-            allCmds.push(row);
+            const row = catCmds.slice(i, i + 3).join(' \u2022 ');
+            block.push(`${EMOJI_DOT} ${row}`);
           }
-          allCmds.push(''); // Spacer
+          blocks.push(block.join('\n'));
         });
 
-        const perPage = 15; // Adjusted perPage for multi-line column view
-        const totalPages = Math.ceil(allCmds.length / perPage);
-        const slice = allCmds.slice(page * perPage, (page + 1) * perPage);
+        const perPage = 5; // 5 Categories per page
+        const totalPages = Math.ceil(blocks.length / perPage) || 1;
+        if (page >= totalPages) page = totalPages - 1;
+        if (page < 0) page = 0;
+
+        const slice = blocks.slice(page * perPage, (page + 1) * perPage);
+        const content = slice.join('\n\n').trim() || 'No commands found.';
 
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 All Commands (Page ${page + 1}/${totalPages})`))
           .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(slice.join('\n')));
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
 
         return injectComponents(container);
       };

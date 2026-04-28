@@ -11,6 +11,7 @@ const {
 const { exec } = require('child_process');
 const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
+const storage = require('../../utils/storageManager');
 
 module.exports = {
   name: 'update',
@@ -93,7 +94,10 @@ module.exports = {
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} **Kernel is restarting...**`));
 
         await i.update({ components: [restartContainer], flags: MessageFlags.IsComponentsV2 });
-        setTimeout(() => process.exit(0), 1000);
+        setTimeout(async () => {
+          await storage.stopPeriodicFlush();
+          process.exit(0);
+        }, 1000);
       });
     });
   }

@@ -1,5 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
 const { EMOJI_SUCCESS, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const storage = require('../../utils/storageManager');
 
 module.exports = {
   name: 'restart',
@@ -31,7 +32,8 @@ module.exports = {
     }).catch(() => {});
     
     // Small delay to ensure message is sent before process exits
-    setTimeout(() => {
+    setTimeout(async () => {
+      await storage.stopPeriodicFlush();
       process.exit(0);
     }, 1000);
   }

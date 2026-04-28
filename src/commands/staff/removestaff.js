@@ -20,12 +20,12 @@ module.exports = {
       const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[0]);
       if (!role) return sendUsage(message, module.exports);
       const staffData = storage.read('staff.json');
-      if (!staffData.roles.includes(role.id)) {
+      if (!staffData[message.guild.id] || !staffData[message.guild.id].roles.includes(role.id)) {
         const warnContainer = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${role.name}** is not a staff role.`));
         return message.reply({ components: [warnContainer], flags: 32768 });
       }
-      staffData.roles = staffData.roles.filter(r => r !== role.id);
+      staffData[message.guild.id].roles = staffData[message.guild.id].roles.filter(r => r !== role.id);
       storage.write('staff.json', staffData);
       const container = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Staff Role Removed`))

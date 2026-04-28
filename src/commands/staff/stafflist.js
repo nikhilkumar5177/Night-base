@@ -15,9 +15,11 @@ module.exports = {
   execute: async (client, message) => {
     try {
       const staffData = storage.read('staff.json');
-      if (!staffData.roles || staffData.roles.length === 0) {
+      const guildData = staffData[message.guild.id];
+
+      if (!guildData || !guildData.roles || guildData.roles.length === 0) {
         const warnContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No staff roles configured.** Use \`${client.config.prefix}addstaff @Role\` to add one.`));
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No staff roles configured for this server.**\nUse \`${client.config.prefix}addstaff @Role\` to add one.`));
         return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
@@ -25,7 +27,7 @@ module.exports = {
       const sections = [];
       let totalStaff = 0;
 
-      for (const roleId of staffData.roles) {
+      for (const roleId of guildData.roles) {
         const role = message.guild.roles.cache.get(roleId);
         if (!role) { cleaned.push(roleId); continue; }
         const members = role.members.map(m => m.user.tag);
@@ -34,7 +36,7 @@ module.exports = {
       }
 
       if (cleaned.length > 0) {
-        staffData.roles = staffData.roles.filter(id => !cleaned.includes(id));
+        staffData[message.guild.id].roles = guildData.roles.filter(id => !cleaned.includes(id));
         storage.write('staff.json', staffData);
       }
 

@@ -32,8 +32,9 @@ module.exports = {
 
       if (command.staffOnly) {
         const staffData = storage.read('staff.json');
+        const guildRoles = staffData[interaction.guildId]?.roles || [];
         const memberRoles = interaction.member ? interaction.member.roles.cache.map(r => r.id) : [];
-        const isStaff = staffData.roles && staffData.roles.some(r => memberRoles.includes(r));
+        const isStaff = guildRoles.some(r => memberRoles.includes(r));
         if (!isStaff && !isDev) {
           return interaction.reply({ components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2, ephemeral: true });
         }

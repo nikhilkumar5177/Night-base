@@ -78,6 +78,68 @@ async function sendUsage(message, command) {
 }
 
 /**
+ * Global Mention Control Defaults
+ */
+const SAFE_DEFAULTS = {
+    allowedMentions: { parse: [] },
+    flags: MessageFlags.IsComponentsV2
+};
+
+/**
+ * Merges security defaults with provided options.
+ * @param {object} options 
+ * @returns {object}
+ */
+function injectSafe(options = {}) {
+    if (typeof options === 'string') options = { content: options };
+    return { ...SAFE_DEFAULTS, ...options };
+}
+
+/**
+ * Safely replies to a message or interaction with mention protection.
+ * @param {import('discord.js').Message | import('discord.js').Interaction} target 
+ * @param {object|string} options 
+ * @returns {Promise<import('discord.js').Message>}
+ */
+async function safeReply(target, options) {
+    const payload = injectSafe(options);
+    if (target.replied || target.deferred) {
+        return target.followUp(payload);
+    }
+    if (target.reply) {
+        return target.reply(payload);
+    }
+    return null;
+}
+
+/**
+ * Safely sends a message to a channel with mention protection.
+ * @param {import('discord.js').TextChannel | import('discord.js').DMChannel} channel 
+ * @param {object|string} options 
+ * @returns {Promise<import('discord.js').Message>}
+ */
+async function safeSend(channel, options) {
+    return channel.send(injectSafe(options));
+}
+
+/**
+ * Safely edits a message or interaction response with mention protection.
+ * @param {import('discord.js').Message | import('discord.js').Interaction} target 
+ * @param {object|string} options 
+ * @returns {Promise<import('discord.js').Message>}
+ */
+async function safeEdit(target, options) {
+    const payload = injectSafe(options);
+    if (target.editReply) {
+        return target.editReply(payload);
+    }
+    if (target.edit) {
+        return target.edit(payload);
+    }
+    return null;
+}
+
+/**
  * Creates a V2 Container for expired sessions.
  * @returns {import('discord.js').ContainerBuilder}
  */
@@ -90,4 +152,13 @@ function cv2Expire() {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 }
 
-module.exports = { sendAutoDelete, sendUsage, cv2Error, cv2Expire };
+module.exports = { 
+    sendAutoDelete, 
+    sendUsage, 
+    cv2Error, 
+    cv2Expire, 
+    safeReply, 
+    safeSend, 
+    safeEdit,
+    injectSafe 
+};

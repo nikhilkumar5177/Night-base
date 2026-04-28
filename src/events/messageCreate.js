@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, PermissionsBitField } = require('discord.js');
 const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_DOT, SEP } = require('../utils/constants');
 
-const { sendAutoDelete, cv2Error } = require('../utils/messageHelper');
+const { sendAutoDelete, cv2Error, safeReply, safeSend } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
 const resolver = require('../utils/resolver');
 
@@ -67,7 +67,7 @@ module.exports = {
             `${EMOJI_DOT} **Message:** ${cleanContent || 'No content'}`
           ));
 
-        const sent = await message.channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+        const sent = await safeSend(message.channel, { components: [container] }).catch(() => { });
         await message.delete().catch(() => { });
         if (sent) await sent.react(EMOJI_CHECK).catch(() => { });
         console.log(`[Vouch] Logged vouch by ${message.author.tag} in ${message.channel.name}`);
@@ -109,7 +109,7 @@ module.exports = {
         ).join('\n');
 
         afkMentionContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(afkList));
-        message.reply({ components: [afkMentionContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+        safeReply(message, { components: [afkMentionContainer] }).catch(() => { });
       }
     }
 
@@ -132,7 +132,7 @@ module.exports = {
           `\u25B8 Use \`${prefix}help\` to see all commands.`
         ));
 
-      return message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+      return safeReply(message, { components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
     }
 
     if (message.webhookId && message.guild) {
@@ -169,7 +169,11 @@ module.exports = {
               ));
 
             const logCh = message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) || message.channel;
-            await logCh.send({ content: `${owner || ''} ${staffMentions}`, components: [alertContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+            await safeSend(logCh, { 
+              content: `${owner || ''} ${staffMentions}`, 
+              components: [alertContainer],
+              allowedMentions: { parse: ['users', 'roles'] } // Security Alert Override
+            }).catch(() => { });
 
             const logs = securityConfig.logs || [];
             logs.push({ type: 'webhook_spam', guildId, channelId: message.channel.id, timestamp: now });
@@ -187,7 +191,7 @@ module.exports = {
       if (global.activeVCTours instanceof Set && global.activeVCTours.has(message.guild.id)) {
         global.activeVCTours.delete(message.guild.id);
         const container = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **VC Tour loop stopped.**`));
-        return message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 });
+        return safeReply(message, { components: [container] });
       }
     }
 
@@ -226,11 +230,11 @@ module.exports = {
               if (target.roles.cache.has(role.id)) {
                 await target.roles.remove(role, `Alias Role: ${aliasConfig.key}`);
                 container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Removed **${role.name}** from **${target.user.tag}**`));
-                await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+                await safeReply(message, { components: [container] }).catch(() => { });
               } else {
                 await target.roles.add(role, `Alias Role: ${aliasConfig.key}`);
                 container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Added **${role.name}** to **${target.user.tag}**`));
-                await message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+                await safeReply(message, { components: [container] }).catch(() => { });
               }
               return;
             } catch (err) {
@@ -334,7 +338,7 @@ module.exports = {
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Error Log`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${message.author.tag} (${message.author.id})\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
-          errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+          safeSend(errLogCh, { components: [logContainer] }).catch(() => { });
         }
       }
       await sendAutoDelete(message, { components: [cv2Error(`An error occurred: \`${error.message}\``)], flags: MessageFlags.IsComponentsV2 }, 5000).catch(() => { });

@@ -2,7 +2,7 @@ const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, InteractionType,
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { LIMITS, EMOJI_OWNER, EMOJI_WARN, EMOJI_ERROR } = require('../utils/constants');
-const { cv2Error } = require('../utils/messageHelper');
+const { cv2Error, safeReply } = require('../utils/messageHelper');
 
 module.exports = {
   name: 'interactionCreate',
@@ -17,14 +17,14 @@ module.exports = {
       const isDev = devIds.includes(interaction.user.id);
 
       if (runtimeConfig.disabledCommands?.includes(command.name)) {
-        return interaction.reply({ components: [cv2Error('This command is currently disabled.')], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => { });
+        return safeReply(interaction, { components: [cv2Error('This command is currently disabled.')], ephemeral: true }).catch(() => { });
       }
       if (runtimeConfig.maintenance && !isDev) {
         const maintContainer = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Lockdown`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} ${EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`));
-        return interaction.reply({ components: [maintContainer], flags: MessageFlags.IsComponentsV2, ephemeral: true });
+        return safeReply(interaction, { components: [maintContainer], ephemeral: true });
       }
 
       const blacklistData = storage.read('blacklist.json');
@@ -36,12 +36,12 @@ module.exports = {
         const memberRoles = interaction.member ? interaction.member.roles.cache.map(r => r.id) : [];
         const isStaff = guildRoles.some(r => memberRoles.includes(r));
         if (!isStaff && !isDev) {
-          return interaction.reply({ components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2, ephemeral: true });
+          return safeReply(interaction, { components: [cv2Error('You are not a **Staff member** of this server.')], ephemeral: true });
         }
       }
 
       if (command.devOnly && !isDev) {
-        return interaction.reply({ components: [cv2Error(`${EMOJI_OWNER} This is an **Owner Command**.`)], flags: MessageFlags.IsComponentsV2, ephemeral: true });
+        return safeReply(interaction, { components: [cv2Error(`${EMOJI_OWNER} This is an **Owner Command**.`)], ephemeral: true });
       }
 
       const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
@@ -52,7 +52,7 @@ module.exports = {
           const expiresAt = client.cooldowns.get(key);
           if (now < expiresAt) {
             const remaining = ((expiresAt - now) / 1000).toFixed(1);
-            return interaction.reply({ components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`))], flags: MessageFlags.IsComponentsV2, ephemeral: true }).catch(() => { });
+            return safeReply(interaction, { components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`))], ephemeral: true }).catch(() => { });
           }
         }
         client.cooldowns.set(key, now + cooldownAmount);
@@ -82,9 +82,8 @@ module.exports = {
             errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
           }
         }
-        const resp = { components: [cv2Error(`Error: ${error.message}`)], flags: MessageFlags.IsComponentsV2, ephemeral: true };
-        if (interaction.replied || interaction.deferred) await interaction.followUp(resp).catch(() => { });
-        else await interaction.reply(resp).catch(() => { });
+        const resp = { components: [cv2Error(`Error: ${error.message}`)], ephemeral: true };
+        await safeReply(interaction, resp).catch(() => { });
       }
     } else if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
       const command = client.commands.get(interaction.commandName);

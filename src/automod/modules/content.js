@@ -44,6 +44,12 @@ async function checkContent(message, config) {
   if (emojiCount > config.emojiLimit) {
     return 'Excessive Emojis';
   }
+  
+  // Line Limit
+  const lineCount = content.split('\n').length;
+  if (lineCount > (config.lineLimit || 10)) {
+    return 'Excessive Lines';
+  }
 
   // Mass Mention
   if (message.mentions.users.size > 5 || message.mentions.roles.size > 5) {

@@ -141,6 +141,7 @@ module.exports = {
           const limits = interaction.fields.getTextInputValue('content_limits').toLowerCase();
           config.modules.content.capsLimit = parseInt(limits.match(/caps:\s*(\d+)/)?.[1]) || config.modules.content.capsLimit;
           config.modules.content.emojiLimit = parseInt(limits.match(/emojis:\s*(\d+)/)?.[1]) || config.modules.content.emojiLimit;
+          config.modules.content.lineLimit = parseInt(limits.match(/lines:\s*(\d+)/)?.[1]) || config.modules.content.lineLimit;
 
           const rawActions = interaction.fields.getTextInputValue('content_punishment').toLowerCase();
           config.modules.content.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));

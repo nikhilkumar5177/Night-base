@@ -135,9 +135,9 @@ function createContentModal(config) {
 
   const limitsInput = new TextInputBuilder()
     .setCustomId('content_limits')
-    .setLabel('Limits (Caps %, Emojis)')
-    .setPlaceholder('Caps: 70, Emojis: 10')
-    .setValue(`Caps: ${config.capsLimit || 70}, Emojis: ${config.emojiLimit || 10}`)
+    .setLabel('Limits (Caps %, Emojis, Lines)')
+    .setPlaceholder('Caps: 70, Emojis: 10, Lines: 10')
+    .setValue(`Caps: ${config.capsLimit || 70}, Emojis: ${config.emojiLimit || 10}, Lines: ${config.lineLimit || 10}`)
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 

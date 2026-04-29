@@ -57,6 +57,7 @@ const DEFAULT_CONFIG = {
       partialBlockedWords: [], // Substring/in-between matching
       capsLimit: 70, // percentage
       emojiLimit: 10,
+      lineLimit: 10,
       ghostPing: true,
       actions: ['delete', 'warn'],
       exemptChannels: [],

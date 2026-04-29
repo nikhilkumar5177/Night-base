@@ -87,11 +87,28 @@ module.exports = {
       }
     } else if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
       const command = client.commands.get(interaction.commandName);
-      if (command && interaction.commandName === 'help') {
+      if (!command) return;
+
+      if (interaction.commandName === 'help') {
         const focusedValue = interaction.options.getFocused().toLowerCase();
         const choices = client.commands.map(cmd => cmd.name);
         const filtered = choices.filter(choice => choice.startsWith(focusedValue)).slice(0, 25);
         await interaction.respond(filtered.map(choice => ({ name: choice, value: choice }))).catch(() => { });
+      } else if (interaction.commandName === 'automodrule') {
+        const focusedValue = interaction.options.getFocused().toLowerCase();
+        const guilds = client.guilds.cache.map(g => {
+          const words = g.name.split(' ');
+          const truncatedName = words.length > 3 ? words.slice(0, 3).join(' ') + '...' : g.name;
+          return { name: truncatedName, value: g.id };
+        });
+        
+        const choices = [
+          { name: '🌐 All Guilds', value: 'all' },
+          ...guilds
+        ];
+
+        const filtered = choices.filter(c => c.name.toLowerCase().includes(focusedValue)).slice(0, 25);
+        await interaction.respond(filtered).catch(() => { });
       }
     } else if (interaction.type === InteractionType.MessageComponent) {
       if (interaction.customId.startsWith('automod_')) {

@@ -8,7 +8,7 @@ module.exports = {
   execute: async (client, guild) => {
     try {
       const config = await getConfig(guild.id);
-      await syncNativeRules(guild, config);
+      await syncNativeRules(guild, config, true);
       logger.info(`AutoMod Rule Sync: Initialized for joined guild ${guild.name} (${guild.id})`);
     } catch (error) {
       logger.error(`Failed to sync AutoMod rules on join for ${guild.id}: ${error.message}`);

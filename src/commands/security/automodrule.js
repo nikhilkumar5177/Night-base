@@ -33,7 +33,7 @@ module.exports = {
 
         for (const [id, guild] of guilds) {
           const config = await getConfig(id);
-          const result = await syncNativeRules(guild, config);
+          const result = await syncNativeRules(guild, config, true);
           if (result.success) successCount++;
           else failCount++;
         }
@@ -56,7 +56,7 @@ module.exports = {
       }
 
       const config = await getConfig(targetGuildId);
-      const result = await syncNativeRules(targetGuild, config);
+      const result = await syncNativeRules(targetGuild, config, true);
 
       if (result.success) {
         const container = new ContainerBuilder()

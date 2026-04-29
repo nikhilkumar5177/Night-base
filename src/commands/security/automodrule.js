@@ -64,7 +64,8 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Successfully synchronized filters!**\n\n` +
-            `Native rules have been created/updated based on your dashboard settings. This helps you work towards the **Automated Moderator** badge.`
+            `${EMOJI_INFO} **Rules Created/Updated:** \`${result.syncedCount}\`\n` +
+            `This server is now contributing \`${result.syncedCount}\` rules toward your **Automated Moderator** badge.`
           ));
         return interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       } else {

@@ -3,6 +3,27 @@ const storage = require('../../utils/storageManager');
 const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
+/**
+ * Auto-migrate root-level aliases to guild-scoped structure.
+ * Moves any root-level alias whose roleId exists in this guild under aliasData[guildId].
+ */
+function getGuildAliases(aliasData, guild) {
+  const guildId = guild.id;
+  if (!aliasData[guildId]) aliasData[guildId] = {};
+
+  // Auto-migrate root-level legacy entries
+  for (const [key, cfg] of Object.entries(aliasData)) {
+    if (key === guildId || typeof cfg !== 'object' || cfg === null || Array.isArray(cfg)) continue;
+    if (!cfg.roleId) continue; // Skip guild containers (they have nested alias objects, not roleId)
+    if (guild.roles.cache.has(cfg.roleId)) {
+      aliasData[guildId][key] = cfg;
+      delete aliasData[key];
+    }
+  }
+
+  return aliasData[guildId];
+}
+
 module.exports = {
   name: 'aliasrole',
   aliases: ['ar', 'setalias'],
@@ -19,14 +40,15 @@ module.exports = {
       }
       const action = args[0]?.toLowerCase();
       const aliasData = storage.read('aliases.json');
+      const guildAliases = getGuildAliases(aliasData, message.guild);
 
       if (action === 'list') {
-        const entries = Object.entries(aliasData);
+        const entries = Object.entries(guildAliases);
         if (entries.length === 0) {
           const container = new ContainerBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Roles`))
             .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No alias roles configured.`));
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No alias roles configured for this server.`));
           return message.reply({ components: [container], flags: 32768 });
         }
         const list = entries.map(([name, cfg]) => {
@@ -50,7 +72,7 @@ module.exports = {
         const role = resolveRole(message.guild, roleId);
         if (!role) return message.reply({ components: [cv2Error('Role not found.')], flags: 32768 });
 
-        aliasData[alias] = { roleId: role.id, requiredRole: args[3] || null, aliases: [], timestamp: Date.now() };
+        guildAliases[alias] = { roleId: role.id, requiredRole: args[3] || null, aliases: [], timestamp: Date.now() };
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Role Added`))
@@ -61,10 +83,10 @@ module.exports = {
 
       if (action === 'remove') {
         const alias = args[1]?.toLowerCase();
-        if (!alias || !aliasData[alias]) {
+        if (!alias || !guildAliases[alias]) {
           return message.reply({ components: [cv2Error('That alias does not exist.')], flags: 32768 });
         }
-        delete aliasData[alias];
+        delete guildAliases[alias];
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Removed`))
@@ -76,10 +98,10 @@ module.exports = {
       if (action === 'addalias') {
         const primary = args[1]?.toLowerCase();
         const newAlias = args[2]?.toLowerCase();
-        if (!primary || !newAlias || !aliasData[primary]) return sendUsage(message, module.exports);
+        if (!primary || !newAlias || !guildAliases[primary]) return sendUsage(message, module.exports);
 
-        if (!aliasData[primary].aliases) aliasData[primary].aliases = [];
-        aliasData[primary].aliases.push(newAlias);
+        if (!guildAliases[primary].aliases) guildAliases[primary].aliases = [];
+        guildAliases[primary].aliases.push(newAlias);
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Added`))

@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder } = require('discord.js');
 const { EMOJI_DOT, EMOJI_ARROW, FOOTER_TEXT } = require('../../utils/constants');
-const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
+const { cv2Error, cv2Expire, safeReply, safeUpdate, sanitizeContent } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'serverinfo',
@@ -36,7 +36,7 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `**${g.name}**\n` +
-            `${EMOJI_DOT} **Owner:** <@${g.ownerId}>\n` +
+            `${EMOJI_DOT} **Owner:** ${g.members.cache.get(g.ownerId)?.user.tag || `\`${g.ownerId}\``}\n` +
             `${EMOJI_DOT} **Created:** <t:${Math.floor(g.createdTimestamp / 1000)}:R>\n` +
             `${EMOJI_DOT} **ID:** \`${g.id}\``
           ))
@@ -67,7 +67,7 @@ module.exports = {
       };
 
       const buildRolesContainer = () => {
-        const roles = g.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== g.id).map(r => `${r}`).join(', ');
+        const roles = g.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== g.id).map(r => `\`${r.name}\``).join(', ');
         const truncated = roles.length > 3900 ? roles.substring(0, 3900) + '...' : roles;
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(truncated))
@@ -80,15 +80,15 @@ module.exports = {
         return container;
       };
 
-      const sent = await message.reply({ components: [buildMainContainer()], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+      const sent = await safeReply(message, { components: [buildMainContainer()] }).catch(() => {});
       if (!sent) return;
 
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 120000 });
       coll.on('collect', async i => {
         if (i.customId === 'si_roles') {
-          await i.update({ components: [buildRolesContainer()] });
+          await safeUpdate(i, { components: [buildRolesContainer()] });
         } else if (i.customId === 'si_back') {
-          await i.update({ components: [buildMainContainer()] });
+          await safeUpdate(i, { components: [buildMainContainer()] });
         }
       });
 

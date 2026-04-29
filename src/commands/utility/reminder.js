@@ -44,7 +44,7 @@ module.exports = {
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Your reminder:**\n${reminderMsg}`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
-          ch.send({ content: `<@${message.author.id}>`, components: [remindContainer], flags: 32768 }).catch(() => {});
+          ch.send({ content: `<@${message.author.id}>`, components: [remindContainer], flags: 32768, allowedMentions: { users: [message.author.id] } }).catch(() => {});
         }
         const current = storage.read('reminders.json');
         storage.write('reminders.json', current.filter(r => r.id !== id));

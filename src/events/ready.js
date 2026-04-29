@@ -35,7 +35,7 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Your reminder:**\n${text}`));
-      channel.send({ content: `<@${userId}>`, components: [container], flags: 32768 }).catch(() => {});
+      channel.send({ content: `<@${userId}>`, components: [container], flags: 32768, allowedMentions: { users: [userId] } }).catch(() => {});
     };
 
     for (const reminder of reminders) {

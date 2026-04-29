@@ -16,7 +16,8 @@ module.exports = {
     try {
       const target = message.mentions.users.first() || client.users.cache.get(args[0]) || message.author;
       const warns = storage.read('warns.json');
-      const userWarns = warns[target.id] || [];
+      const allWarns = warns[target.id] || [];
+      const userWarns = allWarns.filter(w => !w.guildId || w.guildId === message.guild.id);
 
       if (userWarns.length === 0) {
         const cleanContainer = new ContainerBuilder()

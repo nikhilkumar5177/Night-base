@@ -3,6 +3,25 @@ const storage = require('../../utils/storageManager');
 const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
+/**
+ * Get guild-scoped aliases with auto-migration from root-level legacy entries.
+ */
+function getGuildAliases(aliasData, guild) {
+  const guildId = guild.id;
+  if (!aliasData[guildId]) aliasData[guildId] = {};
+
+  for (const [key, cfg] of Object.entries(aliasData)) {
+    if (key === guildId || typeof cfg !== 'object' || cfg === null || Array.isArray(cfg)) continue;
+    if (!cfg.roleId) continue;
+    if (guild.roles.cache.has(cfg.roleId)) {
+      aliasData[guildId][key] = cfg;
+      delete aliasData[key];
+    }
+  }
+
+  return aliasData[guildId];
+}
+
 module.exports = {
   name: 'invoicerole',
   aliases: ['ivr', 'voicerole'],
@@ -19,14 +38,15 @@ module.exports = {
       }
       const action = args[0]?.toLowerCase();
       const aliasData = storage.read('aliases.json');
+      const guildAliases = getGuildAliases(aliasData, message.guild);
 
       if (action === 'list') {
-        const entries = Object.entries(aliasData).filter(([, c]) => c.voiceRole);
+        const entries = Object.entries(guildAliases).filter(([, c]) => c.voiceRole);
         if (entries.length === 0) {
           const container = new ContainerBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Voice Roles`))
             .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No in-voice roles configured.`));
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No in-voice roles configured for this server.`));
           return message.reply({ components: [container], flags: 32768 });
         }
         const list = entries.map(([name, cfg]) => {
@@ -49,8 +69,8 @@ module.exports = {
         const role = resolveRole(message.guild, roleId);
         if (!role) return message.reply({ components: [cv2Error('Role not found.')], flags: 32768 });
 
-        if (!aliasData[alias]) aliasData[alias] = { roleId: null, aliases: [] };
-        aliasData[alias].voiceRole = role.id;
+        if (!guildAliases[alias]) guildAliases[alias] = { roleId: null, aliases: [] };
+        guildAliases[alias].voiceRole = role.id;
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Voice Role Set`))
@@ -61,10 +81,10 @@ module.exports = {
 
       if (action === 'remove') {
         const alias = args[1]?.toLowerCase();
-        if (!alias || !aliasData[alias] || !aliasData[alias].voiceRole) {
+        if (!alias || !guildAliases[alias] || !guildAliases[alias].voiceRole) {
           return message.reply({ components: [cv2Error('Voice role not found for this alias.')], flags: 32768 });
         }
-        delete aliasData[alias].voiceRole;
+        delete guildAliases[alias].voiceRole;
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Voice Role Removed`))

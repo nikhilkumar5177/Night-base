@@ -8,18 +8,30 @@ const { handleAutoMod } = require('../automod/handlers/messageHandler');
 const resolver = require('../utils/resolver');
 
 let lastAliasData = null;
-let aliasTriggerMap = new Map();
+let aliasTriggerMap = new Map(); // guildId -> Map of triggers
 
-function updateAliasCache(aliasData) {
-  if (aliasData === lastAliasData) return;
-  lastAliasData = aliasData;
-  aliasTriggerMap.clear();
-  for (const [aliasKey, config] of Object.entries(aliasData)) {
-    const triggers = [aliasKey, ...(config.aliases || [])];
-    for (const t of triggers) {
-      aliasTriggerMap.set(t.toLowerCase(), { ...config, key: aliasKey });
+function getGuildTriggerMap(aliasData, guild) {
+  const guildId = guild.id;
+  const guildAliases = aliasData[guildId] || {};
+
+  // Also check root-level legacy entries whose roleId exists in this guild
+  const merged = { ...guildAliases };
+  for (const [key, cfg] of Object.entries(aliasData)) {
+    if (key === guildId || typeof cfg !== 'object' || cfg === null || Array.isArray(cfg)) continue;
+    if (!cfg.roleId) continue;
+    if (guild.roles.cache.has(cfg.roleId) && !merged[key]) {
+      merged[key] = cfg;
     }
   }
+
+  const triggerMap = new Map();
+  for (const [aliasKey, config] of Object.entries(merged)) {
+    const triggers = [aliasKey, ...(config.aliases || [])];
+    for (const t of triggers) {
+      triggerMap.set(t.toLowerCase(), { ...config, key: aliasKey });
+    }
+  }
+  return triggerMap;
 }
 
 module.exports = {
@@ -199,13 +211,13 @@ module.exports = {
 
     if (runtimeConfig.aliasMode !== false) {
       const aliasData = storage.read('aliases.json');
-      updateAliasCache(aliasData);
+      const triggerMap = getGuildTriggerMap(aliasData, message.guild);
 
       const content = message.content.toLowerCase().trim();
       const parts = content.split(/\s+/);
       const firstWord = parts[0];
 
-      const aliasConfig = aliasTriggerMap.get(firstWord);
+      const aliasConfig = triggerMap.get(firstWord);
 
       if (aliasConfig && !message.content.startsWith(client.config.prefix)) {
         const hasManageRoles = message.member.permissions.has(PermissionsBitField.Flags.ManageRoles);

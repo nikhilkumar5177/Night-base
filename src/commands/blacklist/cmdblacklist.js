@@ -20,12 +20,12 @@ module.exports = {
       const action = args[0]?.toLowerCase();
       const cblData = storage.read('cmdBlacklist.json');
       if (action === 'list') {
-        const entries = Object.entries(cblData);
+        const entries = Object.entries(cblData).filter(([chId]) => message.guild.channels.cache.has(chId));
         if (entries.length === 0) {
           const container = new ContainerBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Blacklist`))
             .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} No channel command blacklists.`));
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} No channel command blacklists for this server.`));
           return message.reply({ components: [container], flags: 32768 });
         }
         const list = entries.map(([chId, cmds]) => `<#${chId}>: ${cmds.join(', ')}`).join('\n');

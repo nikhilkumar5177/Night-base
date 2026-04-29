@@ -9,10 +9,20 @@ module.exports = {
   cooldown: 5,
   enabled: true,
   execute: async (client, message, args) => {
-    const reason = args.join(' ') || 'AFK';
+    let reason = args.join(' ') || 'AFK';
+    const guildId = message.guild.id;
     const afkData = storage.read('afk.json');
 
-    afkData[message.author.id] = {
+    // Resolve emojis in the reason
+    const emojiRegex = /:([a-zA-Z0-9_]+):/g;
+    reason = reason.replace(emojiRegex, (match, name) => {
+      const emoji = message.guild.emojis.cache.find(e => e.name === name);
+      return emoji ? emoji.toString() : match;
+    });
+
+    if (!afkData[guildId]) afkData[guildId] = {};
+
+    afkData[guildId][message.author.id] = {
       reason,
       timestamp: Date.now()
     };

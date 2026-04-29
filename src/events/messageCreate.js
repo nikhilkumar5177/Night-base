@@ -50,9 +50,9 @@ module.exports = {
     const guildVouchChannels = vouchData[message.guild.id]?.channels || [];
     if (guildVouchChannels.includes(message.channel.id)) {
       if (message.content.startsWith(prefix)) {
-        const alertMsg = await message.channel.send({ 
-          content: `${message.author}`, 
-          components: [cv2Error('Commands are not allowed in this channel. Please use slowmode to manage spam.')] 
+        const alertMsg = await message.channel.send({
+          content: `${message.author}`,
+          components: [cv2Error('Commands are not allowed in this channel. Please use slowmode to manage spam.')]
         }).catch(() => { });
         await message.delete().catch(() => { });
         if (alertMsg) setTimeout(() => alertMsg.delete().catch(() => { }), 5000);
@@ -92,9 +92,10 @@ module.exports = {
 
     // AFK Check (Auto-Remove)
     const afkData = storage.read('afk.json');
-    if (afkData[message.author.id]) {
-      const { reason, timestamp } = afkData[message.author.id];
-      delete afkData[message.author.id];
+    const guildAfk = afkData[message.guild.id] || {};
+    if (guildAfk[message.author.id]) {
+      const { reason, timestamp } = guildAfk[message.author.id];
+      delete afkData[message.guild.id][message.author.id];
       storage.write('afk.json', afkData);
 
       const welcomeContainer = new ContainerBuilder()
@@ -105,9 +106,10 @@ module.exports = {
     // AFK Mention Check
     if (message.mentions.users.size > 0) {
       const mentionedAfk = [];
+      const guildAfk = afkData[message.guild.id] || {};
       message.mentions.users.forEach(user => {
-        if (afkData[user.id] && user.id !== message.author.id) {
-          mentionedAfk.push({ user, data: afkData[user.id] });
+        if (guildAfk[user.id] && user.id !== message.author.id) {
+          mentionedAfk.push({ user, data: guildAfk[user.id] });
         }
       });
 
@@ -117,7 +119,7 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder());
 
         const afkList = mentionedAfk.map(({ user, data }) =>
-          `${EMOJI_DOT} **${user.tag}** is AFK: \`${data.reason}\` (<t:${Math.floor(data.timestamp / 1000)}:R>)`
+          `${EMOJI_DOT} **${user.tag}** is AFK: ${data.reason} (<t:${Math.floor(data.timestamp / 1000)}:R>)`
         ).join('\n');
 
         afkMentionContainer.addTextDisplayComponents(new TextDisplayBuilder().setContent(afkList));
@@ -125,7 +127,6 @@ module.exports = {
       }
     }
 
-    // Mention Response (Prefix Reminder)
     const mentionRegex = new RegExp(`^<@!?${client.user.id}>$`);
     if (mentionRegex.test(message.content)) {
       if (!client._mentionCooldowns) client._mentionCooldowns = new Map();
@@ -181,8 +182,8 @@ module.exports = {
               ));
 
             const logCh = message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) || message.channel;
-            await safeSend(logCh, { 
-              content: `${owner || ''} ${staffMentions}`, 
+            await safeSend(logCh, {
+              content: `${owner || ''} ${staffMentions}`,
               components: [alertContainer],
               allowedMentions: { parse: ['users', 'roles'] } // Security Alert Override
             }).catch(() => { });

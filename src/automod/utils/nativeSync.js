@@ -16,11 +16,11 @@ async function syncNativeRules(guild, config, force = false) {
     const modules = config.modules;
     let syncedCount = 0;
 
-    // 1. Sync Content / Blocked Words (Keywords - Max 6 rules allowed)
+    // 1. Sync Content / Blocked Words (Keywords - Max 6 rules allowed per guild)
     const blockedWords = [...(modules.content.blockedWords || []), ...(modules.content.partialBlockedWords || [])];
+    const currentKeywordRules = existingRules.filter(r => r.triggerType === AutoModerationRuleTriggerType.Keyword);
     
     if (force || (modules.content.enabled && blockedWords.length > 0)) {
-      // Split words into 6 chunks to maximize rule count for the badge
       const ruleNames = [
         'Wild Wolf Blocked Words',
         'Wild Wolf Filter Layer 2',
@@ -30,12 +30,13 @@ async function syncNativeRules(guild, config, force = false) {
         'Wild Wolf Filter Layer 6'
       ];
 
+      let usedSlots = currentKeywordRules.size;
+
       for (let i = 0; i < 6; i++) {
         try {
           const ruleName = ruleNames[i];
           const existing = existingRules.find(r => r.name === ruleName);
           
-          // Distribute words or use a unique placeholder
           const start = i * 10;
           const end = (i + 1) * 10;
           let filter = blockedWords.slice(start, end);
@@ -57,10 +58,24 @@ async function syncNativeRules(guild, config, force = false) {
             enabled: true
           };
 
-          if (existing) await existing.edit(ruleData);
-          else await guild.autoModerationRules.create(ruleData);
-          syncedCount++;
-        } catch (e) { console.error(`[AutoMod Sync] Keyword Rule ${i + 1} Failed for ${guild.id}: ${e.message}`); }
+          if (existing) {
+            await existing.edit(ruleData).catch(async (err) => {
+                if (err.code === 10062 || err.status === 404) {
+                    if (usedSlots < 6) await guild.autoModerationRules.create(ruleData);
+                } else throw err;
+            });
+            syncedCount++;
+          } else if (usedSlots < 6) {
+            await guild.autoModerationRules.create(ruleData);
+            usedSlots++;
+            syncedCount++;
+          }
+        } catch (e) {
+          // Ignore "Max rules reached" errors silently as we are now slot-aware
+          if (!e.message.includes('trigger type 1 is 6')) {
+            console.error(`[AutoMod Sync] Keyword Layer ${i + 1} Failed for ${guild.id}: ${e.message}`);
+          }
+        }
       }
     }
 

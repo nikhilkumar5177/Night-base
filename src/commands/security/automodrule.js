@@ -30,12 +30,17 @@ module.exports = {
         const guilds = client.guilds.cache;
         let successCount = 0;
         let failCount = 0;
+        let totalRulesSynced = 0;
 
         for (const [id, guild] of guilds) {
           const config = await getConfig(id);
           const result = await syncNativeRules(guild, config, true);
-          if (result.success) successCount++;
-          else failCount++;
+          if (result.success) {
+            successCount++;
+            totalRulesSynced += (result.syncedCount || 0);
+          } else {
+            failCount++;
+          }
         }
 
         const container = new ContainerBuilder()
@@ -43,8 +48,9 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Global synchronization complete!**\n\n` +
-            `${EMOJI_INFO} **Success:** \`${successCount}\`\n` +
-            `${EMOJI_ERROR} **Failed:** \`${failCount}\` (Check bot permissions in those servers)`
+            `${EMOJI_INFO} **Servers Synced:** \`${successCount}\`\n` +
+            `${EMOJI_INFO} **Total Rules Created:** \`${totalRulesSynced}\`\n` +
+            `${EMOJI_ERROR} **Failed Servers:** \`${failCount}\` (Check permissions)`
           ));
         return interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       }
@@ -64,8 +70,7 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Successfully synchronized filters!**\n\n` +
-            `${EMOJI_INFO} **Rules Created/Updated:** \`${result.syncedCount}\`\n` +
-            `This server is now contributing \`${result.syncedCount}\` rules toward your **Automated Moderator** badge.`
+            `${EMOJI_INFO} **Rules Created/Updated:** \`${result.syncedCount}\``
           ));
         return interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       } else {

@@ -140,6 +140,29 @@ async function safeEdit(target, options) {
 }
 
 /**
+ * Safely updates an interaction with mention protection.
+ * @param {import('discord.js').Interaction} interaction 
+ * @param {object|string} options 
+ */
+async function safeUpdate(interaction, options) {
+    const payload = injectSafe(options);
+    if (interaction.update) {
+        return interaction.update(payload).catch(() => {});
+    }
+    return null;
+}
+
+/**
+ * Sanitizes content to prevent markdown breakages or pings.
+ * @param {string} text 
+ * @returns {string}
+ */
+function sanitizeContent(text) {
+    if (typeof text !== 'string') return '';
+    return text.replace(/@/g, '@\u200b').replace(/`/g, '`\u200b');
+}
+
+/**
  * Creates a V2 Container for expired sessions.
  * @returns {import('discord.js').ContainerBuilder}
  */
@@ -160,5 +183,7 @@ module.exports = {
     safeReply, 
     safeSend, 
     safeEdit,
+    safeUpdate,
+    sanitizeContent,
     injectSafe 
 };

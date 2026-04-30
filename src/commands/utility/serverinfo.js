@@ -67,7 +67,7 @@ module.exports = {
       };
 
       const buildRolesContainer = () => {
-        const roles = g.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== g.id).map(r => `\`${r.name}\``).join(', ');
+        const roles = g.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== g.id).map(r => `<@&${r.id}>`).join(' ');
         const truncated = roles.length > 3900 ? roles.substring(0, 3900) + '...' : roles;
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(truncated))

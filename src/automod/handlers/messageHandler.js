@@ -9,20 +9,38 @@ const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 const warningCooldowns = new Map();
 const logChannelCache = new Map();
 
-// TTL eviction for warning cooldowns and log channel cache
+// Pre-filter: per-user rate limiter to skip heavy processing for well-behaved users
+const userRateLimit = new Map();
+const RATE_LIMIT_WINDOW = 1000; // 1 second cooldown between full pipeline runs per user
+
+// Priority-ordered module keys (spam first — cheapest, highest signal)
+const MODULE_PRIORITY = ['spam', 'content', 'links', 'security'];
+
+// Module dispatch table (avoids switch statement overhead)
+const MODULE_CHECKS = {
+  spam: checkSpam,
+  links: checkLinks,
+  content: checkContent,
+  security: checkSecurity
+};
+
+// TTL eviction for Maps
 setInterval(() => {
   const now = Date.now();
   for (const [key, ts] of warningCooldowns.entries()) {
     if (now - ts > 30000) warningCooldowns.delete(key);
   }
   for (const [key, entry] of logChannelCache.entries()) {
-    if (now - entry.ts > 300000) logChannelCache.delete(key); // 5min TTL
+    if (now - entry.ts > 300000) logChannelCache.delete(key);
+  }
+  for (const [key, ts] of userRateLimit.entries()) {
+    if (now - ts > 5000) userRateLimit.delete(key);
   }
 }, 60000);
 
 /**
  * Handle AutoMod logic for every message.
- * Optimized: sync config, parallel checks, batched actions.
+ * Priority-ordered, rate-limited, parallel execution.
  */
 async function handleAutoMod(client, message) {
   if (!message.guild || message.author.bot) return;
@@ -32,51 +50,49 @@ async function handleAutoMod(client, message) {
 
   if (message.member.permissions.has('Administrator')) return;
 
-  // Use Set for O(1) bypass lookups
-  const bypassRoleSet = config._bypassRoleSet || (config._bypassRoleSet = new Set(config.bypassRoles));
-  const bypassUserSet = config._bypassUserSet || (config._bypassUserSet = new Set(config.bypassUsers));
+  // Use pre-hydrated Sets from database (O(1) bypass checks)
+  const bypassRoleSet = config._bypassRoleSet;
+  const bypassUserSet = config._bypassUserSet;
 
-  if (message.member.roles.cache.some(r => bypassRoleSet.has(r.id))) return;
-  if (bypassUserSet.has(message.author.id)) return;
+  if (bypassUserSet && bypassUserSet.has(message.author.id)) return;
+  if (bypassRoleSet && message.member.roles.cache.some(r => bypassRoleSet.has(r.id))) return;
+
+  // Pre-filter: rate limit full pipeline per user (skip if processed recently)
+  const userKey = `${message.guild.id}-${message.author.id}`;
+  const now = Date.now();
+  const lastProcessed = userRateLimit.get(userKey) || 0;
+  if (now - lastProcessed < RATE_LIMIT_WINDOW) return;
+  userRateLimit.set(userKey, now);
 
   const modules = config.modules;
-  let activeViolation = null;
-  let activeModule = null;
 
+  // Build check list in priority order (spam → content → links → security)
   const checks = [];
   const enabledModules = [];
 
-  for (const [key, module] of Object.entries(modules)) {
-    if (!module.enabled) continue;
+  for (const key of MODULE_PRIORITY) {
+    const module = modules[key];
+    if (!module || !module.enabled) continue;
     if (module.exemptRoles?.some(roleId => message.member.roles.cache.has(roleId))) continue;
     if (module.exemptChannels?.includes(message.channel.id)) continue;
     if (module.exemptUsers?.includes(message.author.id)) continue;
 
-    enabledModules.push({ key, module });
-    switch (key) {
-      case 'spam': checks.push(checkSpam(message, module)); break;
-      case 'links': checks.push(checkLinks(message, module)); break;
-      case 'content': checks.push(checkContent(message, module)); break;
-      case 'security': checks.push(checkSecurity(message, module)); break;
-    }
+    enabledModules.push(module);
+    checks.push(MODULE_CHECKS[key](message, module));
   }
 
-  if (checks.length > 0) {
-    const results = await Promise.all(checks);
-    const vIdx = results.findIndex(v => v);
-    if (vIdx !== -1) {
-      activeViolation = results[vIdx];
-      activeModule = enabledModules[vIdx].module;
-    }
-  }
+  if (checks.length === 0) return;
 
-  if (activeViolation && activeModule) {
-    await executeActions(client, message, activeViolation, activeModule);
+  const results = await Promise.all(checks);
+  const vIdx = results.findIndex(v => v);
+
+  if (vIdx !== -1) {
+    await executeActions(client, message, results[vIdx], enabledModules[vIdx]);
   }
 }
 
 /**
- * Execute violation actions in parallel where possible.
+ * Execute violation actions in parallel with Promise.allSettled.
  */
 async function executeActions(client, message, violation, moduleConfig) {
   const actions = moduleConfig.actions || [];
@@ -165,7 +181,8 @@ async function logToChannel(client, message, data) {
   if (cached && Date.now() - cached.ts < 300000) {
     channel = cached.channel;
   } else {
-    channel = message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null);
+    channel = message.guild.channels.cache.get(logChannelId);
+    if (!channel) channel = await message.guild.channels.fetch(logChannelId).catch(() => null);
     if (channel) logChannelCache.set(logChannelId, { channel, ts: Date.now() });
   }
   if (!channel) return;

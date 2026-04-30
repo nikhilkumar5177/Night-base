@@ -27,9 +27,9 @@ async function checkLinks(message, config) {
 
   const content = message.content;
   
-  // Pre-compute allowed sets once (avoid .map per message)
-  const allowedLinks = config.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
-  const allowedGifSet = new Set((config.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, '')));
+  // Use pre-hydrated arrays from database.js (computed on config load/save, not per message)
+  const allowedLinks = config._allowedLinksLower || config.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
+  const allowedGifSet = config._allowedGifSet || new Set((config.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, '')));
 
   // 1. Gather all potential links
   const standardLinks = content.match(LINK_REGEX) || [];

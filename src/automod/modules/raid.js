@@ -1,7 +1,18 @@
 const guildJoins = new Map();
 
+// Periodic cleanup to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, timestamps] of guildJoins.entries()) {
+    if (timestamps.length === 0 || now - timestamps[timestamps.length - 1] > 120000) {
+      guildJoins.delete(key);
+    }
+  }
+}, 120000);
+
 /**
  * Handle raid detection (join velocity).
+ * Uses sliding window instead of .filter() for O(1) amortized perf.
  * @param {object} member 
  * @param {object} config 
  * @returns {boolean} True if raid detected
@@ -20,19 +31,28 @@ async function checkRaid(member, config) {
   const timestamps = guildJoins.get(guild.id);
   timestamps.push(now);
 
-  const recentJoins = timestamps.filter(ts => now - ts < windowMs);
-  guildJoins.set(guild.id, recentJoins);
+  // Sliding window — shift expired timestamps off the front
+  while (timestamps.length > 0 && timestamps[0] < now - windowMs) {
+    timestamps.shift();
+  }
 
-  if (recentJoins.length > config.joinLimit) {
-    // Raid detected!
+  if (timestamps.length > config.joinLimit) {
+    timestamps.length = 0; // Reset without new array allocation
+
     if (config.autoLockdown) {
+      const tasks = [];
       // Lockdown the server by denying SendMessages for @everyone
       const everyone = guild.roles.everyone;
-      await everyone.setPermissions(everyone.permissions.remove('SendMessages'), 'AutoMod: Raid lockdown').catch(() => {});
+      tasks.push(everyone.setPermissions(everyone.permissions.remove('SendMessages'), 'AutoMod: Raid lockdown').catch(() => {}));
       
       // Notify owner/logs
-      const owner = await guild.fetchOwner();
-      await owner.send(`⚠️ **RAID DETECTED in ${guild.name}!** The server has been placed in lockdown.`).catch(() => {});
+      tasks.push(
+        guild.fetchOwner().then(owner => 
+          owner.send(`⚠️ **RAID DETECTED in ${guild.name}!** The server has been placed in lockdown.`).catch(() => {})
+        ).catch(() => {})
+      );
+
+      await Promise.allSettled(tasks);
     }
     return true;
   }

@@ -86,10 +86,13 @@ const DEFAULT_CONFIG = {
   }
 };
 
+// Pre-serialized default for fast cloning (avoids JSON.parse(JSON.stringify) per call)
+const DEFAULT_CONFIG_STR = JSON.stringify(DEFAULT_CONFIG);
+
 const cache = new Map();
 
 /**
- * Deep merge source into target.
+ * Deep merge source into target (non-recursive for flat module structure).
  */
 function deepMerge(target, source) {
   for (const key in source) {
@@ -101,6 +104,32 @@ function deepMerge(target, source) {
     }
   }
   return target;
+}
+
+/**
+ * Clone default config using pre-serialized string (fastest safe clone).
+ */
+function cloneDefault() {
+  return JSON.parse(DEFAULT_CONFIG_STR);
+}
+
+/**
+ * Hydrate computed caches on a config object.
+ * Pre-computes Sets and lowercase arrays to avoid per-message work.
+ */
+function hydrateConfig(config) {
+  // Bypass sets for O(1) lookup
+  config._bypassRoleSet = new Set(config.bypassRoles);
+  config._bypassUserSet = new Set(config.bypassUsers);
+
+  // Pre-compute allowed links (lowercase, stripped) for links module
+  const links = config.modules.links;
+  if (links) {
+    links._allowedLinksLower = links.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
+    links._allowedGifSet = new Set((links.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, '')));
+  }
+
+  return config;
 }
 
 /**
@@ -117,9 +146,9 @@ function initConfigs() {
       const data = fs.readFileSync(path.join(CONFIG_DIR, file), 'utf8');
       const loaded = JSON.parse(data);
       
-      // Clone default and merge loaded data
-      const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      const config = cloneDefault();
       deepMerge(config, loaded);
+      hydrateConfig(config);
       
       cache.set(guildId, config);
       loadedCount++;
@@ -138,8 +167,9 @@ function initConfigs() {
 function getConfig(guildId) {
   if (cache.has(guildId)) return cache.get(guildId);
 
-  // Fallback for new guilds (Clone default to avoid mutation of the master object)
-  const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  // Fallback for new guilds
+  const config = cloneDefault();
+  hydrateConfig(config);
   cache.set(guildId, config);
   return config;
 }
@@ -147,10 +177,12 @@ function getConfig(guildId) {
 /**
  * Save the config for a specific guild.
  * Updates cache instantly, writes to disk asynchronously.
+ * Re-hydrates computed caches on save.
  * @param {string} guildId 
  * @param {object} config 
  */
 async function saveConfig(guildId, config) {
+  hydrateConfig(config);
   cache.set(guildId, config);
   const filePath = path.join(CONFIG_DIR, `${guildId}.json`);
   fs.promises.writeFile(filePath, JSON.stringify(config, null, 2)).catch(err => {
@@ -163,7 +195,7 @@ async function saveConfig(guildId, config) {
  * @param {string} guildId 
  */
 async function resetConfig(guildId) {
-  const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  const config = cloneDefault();
   await saveConfig(guildId, config);
 }
 

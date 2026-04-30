@@ -2,14 +2,12 @@ const logger = require('../utils/logger');
 const storage = require('../utils/storageManager');
 const { EMOJI_INFO } = require('../utils/constants');
 const { runRotation } = require('../utils/vcJoiner');
-const { initConfigs } = require('../automod/database');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
   name: 'ready',
   once: true,
   execute: (client) => {
-    initConfigs();
     logger.info(`Wild Wolf online as ${client.user.tag}`);
     logger.info(`Serving ${client.guilds.cache.size} guilds`);
 

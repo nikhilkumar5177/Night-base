@@ -7,105 +7,58 @@ const { checkSecurity } = require('../modules/security');
 const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 const warningCooldowns = new Map();
-const logChannelCache = new Map();
-
-// Pre-filter: per-user rate limiter to skip heavy processing for well-behaved users
-const userRateLimit = new Map();
-const RATE_LIMIT_WINDOW = 1000; // 1 second cooldown between full pipeline runs per user
-
-// Priority-ordered module keys (spam first — cheapest, highest signal)
-const MODULE_PRIORITY = ['spam', 'content', 'links', 'security'];
-
-// Module dispatch table (avoids switch statement overhead)
-const MODULE_CHECKS = {
-  spam: checkSpam,
-  links: checkLinks,
-  content: checkContent,
-  security: checkSecurity
-};
-
-// TTL eviction for Maps
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, ts] of warningCooldowns.entries()) {
-    if (now - ts > 30000) warningCooldowns.delete(key);
-  }
-  for (const [key, entry] of logChannelCache.entries()) {
-    if (now - entry.ts > 300000) logChannelCache.delete(key);
-  }
-  for (const [key, ts] of userRateLimit.entries()) {
-    if (now - ts > 5000) userRateLimit.delete(key);
-  }
-}, 60000);
 
 /**
  * Handle AutoMod logic for every message.
- * Priority-ordered, rate-limited, parallel execution.
  */
 async function handleAutoMod(client, message) {
   if (!message.guild || message.author.bot) return;
 
-  const config = getConfig(message.guild.id);
+  const config = await getConfig(message.guild.id);
   if (!config.enabled) return;
 
   if (message.member.permissions.has('Administrator')) return;
-
-  // Use pre-hydrated Sets from database (O(1) bypass checks)
-  const bypassRoleSet = config._bypassRoleSet;
-  const bypassUserSet = config._bypassUserSet;
-
-  if (bypassUserSet && bypassUserSet.has(message.author.id)) return;
-  if (bypassRoleSet && message.member.roles.cache.some(r => bypassRoleSet.has(r.id))) return;
-
-  // Pre-filter: rate limit full pipeline per user (skip if processed recently)
-  const userKey = `${message.guild.id}-${message.author.id}`;
-  const now = Date.now();
-  const lastProcessed = userRateLimit.get(userKey) || 0;
-  if (now - lastProcessed < RATE_LIMIT_WINDOW) return;
-  userRateLimit.set(userKey, now);
+  if (config.bypassRoles.some(roleId => message.member.roles.cache.has(roleId))) return;
+  if (config.bypassUsers.includes(message.author.id)) return;
 
   const modules = config.modules;
+  let activeViolation = null;
+  let activeModule = null;
 
-  // Build check list in priority order (spam → content → links → security)
-  const checks = [];
-  const enabledModules = [];
-
-  for (const key of MODULE_PRIORITY) {
-    const module = modules[key];
-    if (!module || !module.enabled) continue;
+  for (const [key, module] of Object.entries(modules)) {
+    if (!module.enabled) continue;
     if (module.exemptRoles?.some(roleId => message.member.roles.cache.has(roleId))) continue;
     if (module.exemptChannels?.includes(message.channel.id)) continue;
     if (module.exemptUsers?.includes(message.author.id)) continue;
 
-    enabledModules.push(module);
-    checks.push(MODULE_CHECKS[key](message, module));
+    let violation = null;
+    switch (key) {
+      case 'spam': violation = await checkSpam(message, module); break;
+      case 'links': violation = await checkLinks(message, module); break;
+      case 'content': violation = await checkContent(message, module); break;
+      case 'security': violation = await checkSecurity(message, module); break;
+    }
+
+    if (violation) {
+      activeViolation = violation;
+      activeModule = module;
+      break;
+    }
   }
 
-  if (checks.length === 0) return;
-
-  const results = await Promise.all(checks);
-  const vIdx = results.findIndex(v => v);
-
-  if (vIdx !== -1) {
-    await executeActions(client, message, results[vIdx], enabledModules[vIdx]);
+  if (activeViolation && activeModule) {
+    await executeActions(client, message, activeViolation, activeModule);
   }
 }
 
-/**
- * Execute violation actions in parallel with Promise.allSettled.
- */
 async function executeActions(client, message, violation, moduleConfig) {
   const actions = moduleConfig.actions || [];
-
+  
   try {
-    const tasks = [];
-
-    // Delete (fire immediately)
     if (actions.includes('delete')) {
-      tasks.push(message.delete().catch(() => {}));
+      await message.delete().catch(() => {});
     }
 
-    // Warn (with cooldown)
     if (actions.includes('warn')) {
       const cooldownKey = `${message.author.id}-${message.channel.id}`;
       const now = Date.now();
@@ -128,17 +81,21 @@ async function executeActions(client, message, violation, moduleConfig) {
             `${EMOJI_DOT} **Notice:** ${formatted}`
           ));
 
+        let msg;
         const payload = { components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: { repliedUser: true } };
-        tasks.push(
-          message.reply(payload).catch(() => message.channel.send(payload).catch(() => {}))
-            .then(msg => { if (msg) setTimeout(() => msg.delete().catch(() => {}), 10000); })
-        );
+        try {
+          msg = await message.reply(payload).catch(async () => {
+            return await message.channel.send(payload);
+          });
+        } catch (e) { }
+
+        if (msg) setTimeout(() => msg.delete().catch(() => { }), 10000);
       }
     }
 
-    // DM + Moderation actions (parallel)
     const majorActions = actions.filter(a => ['warn', 'mute', 'kick', 'ban'].includes(a));
     if (majorActions.length > 0) {
+      // DM stays Embed (V2 not supported in DMs)
       const dmEmbed = new EmbedBuilder()
         .setColor('#ff1744')
         .setAuthor({ name: `AutoMod Alert \u2502 ${message.guild.name}`, iconURL: message.guild.iconURL() })
@@ -149,42 +106,25 @@ async function executeActions(client, message, violation, moduleConfig) {
           `${EMOJI_DOT} **Actions Taken:** ${majorActions.map(a => `\`${a.toUpperCase()}\``).join(', ')}`
         )
         .setTimestamp();
-      tasks.push(message.author.send({ embeds: [dmEmbed] }).catch(() => {}));
+      await message.author.send({ embeds: [dmEmbed] }).catch(() => {});
     }
 
-    if (actions.includes('mute')) tasks.push(message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {}));
-    if (actions.includes('kick')) tasks.push(message.member.kick(`AutoMod: ${violation}`).catch(() => {}));
-    if (actions.includes('ban')) tasks.push(message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {}));
+    if (actions.includes('mute')) await message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {});
+    if (actions.includes('kick')) await message.member.kick(`AutoMod: ${violation}`).catch(() => {});
+    if (actions.includes('ban')) await message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {});
 
-    // Log (non-blocking)
-    tasks.push(logToChannel(client, message, { violation, actions }));
-
-    // Fire all actions in parallel
-    await Promise.allSettled(tasks);
+    await logToChannel(client, message, { violation, actions });
   } catch (err) {
     console.error('Error executing AutoMod actions:', err);
   }
 }
 
-/**
- * Log violation to the configured channel.
- * Uses cached channel object to avoid repeated fetches.
- */
 async function logToChannel(client, message, data) {
-  const config = getConfig(message.guild.id);
+  const config = await getConfig(message.guild.id);
   const logChannelId = config.logChannel;
   if (!logChannelId) return;
 
-  // Use cached channel object
-  let channel;
-  const cached = logChannelCache.get(logChannelId);
-  if (cached && Date.now() - cached.ts < 300000) {
-    channel = cached.channel;
-  } else {
-    channel = message.guild.channels.cache.get(logChannelId);
-    if (!channel) channel = await message.guild.channels.fetch(logChannelId).catch(() => null);
-    if (channel) logChannelCache.set(logChannelId, { channel, ts: Date.now() });
-  }
+  const channel = message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null);
   if (!channel) return;
 
   const logContainer = new ContainerBuilder()
@@ -198,7 +138,7 @@ async function logToChannel(client, message, data) {
       `**Content:**\n\`\`\`\n${message.content.slice(0, 500) || 'None'}\n\`\`\``
     ));
 
-  channel.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+  await channel.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
 }
 
 module.exports = { handleAutoMod };

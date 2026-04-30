@@ -1,12 +1,12 @@
-const { 
-  ActionRowBuilder, 
-  ButtonBuilder, 
-  ButtonStyle, 
+const {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   SlashCommandBuilder,
-  ContainerBuilder, 
-  TextDisplayBuilder, 
-  SeparatorBuilder, 
-  MessageFlags 
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SeparatorBuilder,
+  MessageFlags
 } = require('discord.js');
 const { exec } = require('child_process');
 const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
@@ -28,8 +28,7 @@ module.exports = {
   execute: async (client, message, args) => {
     const isInteraction = !message.author;
     const user = isInteraction ? message.user : message.author;
-    
-    // Developer Authorization Check (Multiple IDs)
+
     const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
     if (!devIds.includes(user.id)) return; // Silent ignore as requested
 
@@ -41,22 +40,22 @@ module.exports = {
       .addSeparatorComponents(new SeparatorBuilder())
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} ${EMOJI_LOADING} **Synchronizing with repository...**\n${EMOJI_DOT} **Target:** ${targetLabel}`));
 
-    const msg = await message.reply({ 
-      components: [loadContainer], 
+    const msg = await message.reply({
+      components: [loadContainer],
       flags: MessageFlags.IsComponentsV2,
       fetchReply: isInteraction
-    }).catch(() => {});
+    }).catch(() => { });
 
-    const gitCmd = commitId 
+    const gitCmd = commitId
       ? `git fetch --all && git reset --hard ${commitId} && git clean -fd`
       : `git fetch --all && git reset --hard origin/main && git clean -fd`;
 
     exec(gitCmd, async (err, stdout, stderr) => {
       if (err) {
-        return msg.edit({ 
+        return msg.edit({
           components: [cv2Error(`Git operation failed: ${err.message}`)],
           flags: MessageFlags.IsComponentsV2
-        }).catch(() => {});
+        }).catch(() => { });
       }
 
       const successContainer = new ContainerBuilder()
@@ -79,11 +78,11 @@ module.exports = {
           .setEmoji('\u267B')
       ));
 
-      await msg.edit({ 
+      await msg.edit({
         components: [successContainer],
         flags: MessageFlags.IsComponentsV2
-      }).catch(() => {});
-      
+      }).catch(() => { });
+
       const filter = i => devIds.includes(i.user.id) && i.customId === 'sys_restart_after_update';
       const collector = msg.createMessageComponentCollector({ filter, time: 60000 });
 

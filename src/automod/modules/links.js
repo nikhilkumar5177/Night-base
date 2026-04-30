@@ -4,6 +4,18 @@ const DOMAIN_REGEX = /\b([a-z0-9-]+)\.([a-z]{2,})\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)
 const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discord-nitro|dlscord)/i;
 const GIF_REGEX = /(tenor\.com|giphy\.com|.+\.gif)/i;
 
+// Invite code cache — prevents repeated API calls for the same code
+const inviteCache = new Map();
+const INVITE_CACHE_TTL = 300000; // 5 minutes
+
+// Evict stale invite cache entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, entry] of inviteCache.entries()) {
+    if (now - entry.ts > INVITE_CACHE_TTL) inviteCache.delete(code);
+  }
+}, 60000);
+
 /**
  * Handle link filtering, anti-invite, and anti-phishing.
  * @param {object} message 
@@ -14,18 +26,20 @@ async function checkLinks(message, config) {
   if (!config.enabled) return false;
 
   const content = message.content;
+  
+  // Pre-compute allowed sets once (avoid .map per message)
   const allowedLinks = config.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
-  const allowedGifs = (config.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
+  const allowedGifSet = new Set((config.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, '')));
 
-  // 1. Gather all potential links (Standard URLs + Discord Invites + Raw Domains)
+  // 1. Gather all potential links
   const standardLinks = content.match(LINK_REGEX) || [];
   const inviteLinks = content.match(INVITE_REGEX) || [];
   const domainLinks = content.match(DOMAIN_REGEX) || [];
   
-  // Filter out noisy domain matches that are just numbers or very short
+  // Filter out noisy domain matches
   const cleanDomainLinks = domainLinks.filter(d => {
-    if (/^\d+(\.\d+)+$/.test(d)) return false; // Ignore IPs
-    if (d.split('/')[0].length < 4) return false; // Ignore too short domains
+    if (/^\d+(\.\d+)+$/.test(d)) return false;
+    if (d.split('/')[0].length < 4) return false;
     return true;
   });
 
@@ -36,7 +50,7 @@ async function checkLinks(message, config) {
   for (const link of allLinks) {
     const cleanLink = link.toLowerCase().replace(/^https?:\/\//, '');
 
-    // 2. Check Whitelist (Primary Bypass)
+    // 2. Check Whitelist
     let isWhitelisted = false;
     for (const allowed of allowedLinks) {
       if (cleanLink.includes(allowed)) {
@@ -46,18 +60,18 @@ async function checkLinks(message, config) {
     }
     if (isWhitelisted) continue;
 
-    // 3. Anti-Phishing (Only if not whitelisted)
+    // 3. Anti-Phishing
     if (config.antiPhishing && PHISHING_REGEX.test(link)) {
       return 'Phishing/Scam Link';
     }
 
-    // 4. Anti-GIF (Only if not whitelisted)
+    // 4. Anti-GIF
     if (config.antiGifs && GIF_REGEX.test(link)) {
       const hasGifRole = config.exemptGifsRoles?.some(roleId => message.member.roles.cache.has(roleId));
       if (hasGifRole) continue;
 
       let isGifWhitelisted = false;
-      for (const allowed of allowedGifs) {
+      for (const allowed of allowedGifSet) {
         if (cleanLink.includes(allowed)) {
           isGifWhitelisted = true;
           break;
@@ -66,22 +80,29 @@ async function checkLinks(message, config) {
       if (!isGifWhitelisted) return 'GIF Link';
     }
 
-    // 5. Anti-Invite
+    // 5. Anti-Invite — with cached invite resolution
     if (INVITE_REGEX.test(link) || (link.includes('.gg/') && !link.includes('http'))) {
       if (config.antiInvite) {
         const parts = link.split('/');
         const code = parts[parts.length - 1] || parts[parts.length - 2];
         if (code) {
-          try {
-            if (message.guild.vanityURLCode && code.toLowerCase() === message.guild.vanityURLCode.toLowerCase()) {
-              continue;
-            }
-            
+          // Check vanity first (no API call)
+          if (message.guild.vanityURLCode && code.toLowerCase() === message.guild.vanityURLCode.toLowerCase()) {
+            continue;
+          }
+
+          // Check invite cache before hitting Discord API
+          const cached = inviteCache.get(code.toLowerCase());
+          if (cached) {
+            if (cached.guildId === message.guild.id) continue;
+          } else {
+            // Only fetch if not cached
             const invite = await message.client.fetchInvite(code).catch(() => null);
-            if (invite && invite.guild && invite.guild.id === message.guild.id) {
-              continue;
+            if (invite && invite.guild) {
+              inviteCache.set(code.toLowerCase(), { guildId: invite.guild.id, ts: Date.now() });
+              if (invite.guild.id === message.guild.id) continue;
             }
-          } catch (err) {}
+          }
         }
         return 'Discord Invite Link';
       }

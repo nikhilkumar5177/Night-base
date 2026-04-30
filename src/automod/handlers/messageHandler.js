@@ -7,23 +7,44 @@ const { checkSecurity } = require('../modules/security');
 const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
 
 const warningCooldowns = new Map();
+const logChannelCache = new Map();
+
+// TTL eviction for warning cooldowns and log channel cache
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, ts] of warningCooldowns.entries()) {
+    if (now - ts > 30000) warningCooldowns.delete(key);
+  }
+  for (const [key, entry] of logChannelCache.entries()) {
+    if (now - entry.ts > 300000) logChannelCache.delete(key); // 5min TTL
+  }
+}, 60000);
 
 /**
  * Handle AutoMod logic for every message.
+ * Optimized: sync config, parallel checks, batched actions.
  */
 async function handleAutoMod(client, message) {
   if (!message.guild || message.author.bot) return;
 
-  const config = await getConfig(message.guild.id);
+  const config = getConfig(message.guild.id);
   if (!config.enabled) return;
 
   if (message.member.permissions.has('Administrator')) return;
-  if (config.bypassRoles.some(roleId => message.member.roles.cache.has(roleId))) return;
-  if (config.bypassUsers.includes(message.author.id)) return;
+
+  // Use Set for O(1) bypass lookups
+  const bypassRoleSet = config._bypassRoleSet || (config._bypassRoleSet = new Set(config.bypassRoles));
+  const bypassUserSet = config._bypassUserSet || (config._bypassUserSet = new Set(config.bypassUsers));
+
+  if (message.member.roles.cache.some(r => bypassRoleSet.has(r.id))) return;
+  if (bypassUserSet.has(message.author.id)) return;
 
   const modules = config.modules;
   let activeViolation = null;
   let activeModule = null;
+
+  const checks = [];
+  const enabledModules = [];
 
   for (const [key, module] of Object.entries(modules)) {
     if (!module.enabled) continue;
@@ -31,18 +52,21 @@ async function handleAutoMod(client, message) {
     if (module.exemptChannels?.includes(message.channel.id)) continue;
     if (module.exemptUsers?.includes(message.author.id)) continue;
 
-    let violation = null;
+    enabledModules.push({ key, module });
     switch (key) {
-      case 'spam': violation = await checkSpam(message, module); break;
-      case 'links': violation = await checkLinks(message, module); break;
-      case 'content': violation = await checkContent(message, module); break;
-      case 'security': violation = await checkSecurity(message, module); break;
+      case 'spam': checks.push(checkSpam(message, module)); break;
+      case 'links': checks.push(checkLinks(message, module)); break;
+      case 'content': checks.push(checkContent(message, module)); break;
+      case 'security': checks.push(checkSecurity(message, module)); break;
     }
+  }
 
-    if (violation) {
-      activeViolation = violation;
-      activeModule = module;
-      break;
+  if (checks.length > 0) {
+    const results = await Promise.all(checks);
+    const vIdx = results.findIndex(v => v);
+    if (vIdx !== -1) {
+      activeViolation = results[vIdx];
+      activeModule = enabledModules[vIdx].module;
     }
   }
 
@@ -51,14 +75,21 @@ async function handleAutoMod(client, message) {
   }
 }
 
+/**
+ * Execute violation actions in parallel where possible.
+ */
 async function executeActions(client, message, violation, moduleConfig) {
   const actions = moduleConfig.actions || [];
-  
+
   try {
+    const tasks = [];
+
+    // Delete (fire immediately)
     if (actions.includes('delete')) {
-      await message.delete().catch(() => {});
+      tasks.push(message.delete().catch(() => {}));
     }
 
+    // Warn (with cooldown)
     if (actions.includes('warn')) {
       const cooldownKey = `${message.author.id}-${message.channel.id}`;
       const now = Date.now();
@@ -81,21 +112,17 @@ async function executeActions(client, message, violation, moduleConfig) {
             `${EMOJI_DOT} **Notice:** ${formatted}`
           ));
 
-        let msg;
         const payload = { components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: { repliedUser: true } };
-        try {
-          msg = await message.reply(payload).catch(async () => {
-            return await message.channel.send(payload);
-          });
-        } catch (e) { }
-
-        if (msg) setTimeout(() => msg.delete().catch(() => { }), 10000);
+        tasks.push(
+          message.reply(payload).catch(() => message.channel.send(payload).catch(() => {}))
+            .then(msg => { if (msg) setTimeout(() => msg.delete().catch(() => {}), 10000); })
+        );
       }
     }
 
+    // DM + Moderation actions (parallel)
     const majorActions = actions.filter(a => ['warn', 'mute', 'kick', 'ban'].includes(a));
     if (majorActions.length > 0) {
-      // DM stays Embed (V2 not supported in DMs)
       const dmEmbed = new EmbedBuilder()
         .setColor('#ff1744')
         .setAuthor({ name: `AutoMod Alert \u2502 ${message.guild.name}`, iconURL: message.guild.iconURL() })
@@ -106,25 +133,41 @@ async function executeActions(client, message, violation, moduleConfig) {
           `${EMOJI_DOT} **Actions Taken:** ${majorActions.map(a => `\`${a.toUpperCase()}\``).join(', ')}`
         )
         .setTimestamp();
-      await message.author.send({ embeds: [dmEmbed] }).catch(() => {});
+      tasks.push(message.author.send({ embeds: [dmEmbed] }).catch(() => {}));
     }
 
-    if (actions.includes('mute')) await message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {});
-    if (actions.includes('kick')) await message.member.kick(`AutoMod: ${violation}`).catch(() => {});
-    if (actions.includes('ban')) await message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {});
+    if (actions.includes('mute')) tasks.push(message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {}));
+    if (actions.includes('kick')) tasks.push(message.member.kick(`AutoMod: ${violation}`).catch(() => {}));
+    if (actions.includes('ban')) tasks.push(message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {}));
 
-    await logToChannel(client, message, { violation, actions });
+    // Log (non-blocking)
+    tasks.push(logToChannel(client, message, { violation, actions }));
+
+    // Fire all actions in parallel
+    await Promise.allSettled(tasks);
   } catch (err) {
     console.error('Error executing AutoMod actions:', err);
   }
 }
 
+/**
+ * Log violation to the configured channel.
+ * Uses cached channel object to avoid repeated fetches.
+ */
 async function logToChannel(client, message, data) {
-  const config = await getConfig(message.guild.id);
+  const config = getConfig(message.guild.id);
   const logChannelId = config.logChannel;
   if (!logChannelId) return;
 
-  const channel = message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null);
+  // Use cached channel object
+  let channel;
+  const cached = logChannelCache.get(logChannelId);
+  if (cached && Date.now() - cached.ts < 300000) {
+    channel = cached.channel;
+  } else {
+    channel = message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null);
+    if (channel) logChannelCache.set(logChannelId, { channel, ts: Date.now() });
+  }
   if (!channel) return;
 
   const logContainer = new ContainerBuilder()
@@ -138,7 +181,7 @@ async function logToChannel(client, message, data) {
       `**Content:**\n\`\`\`\n${message.content.slice(0, 500) || 'None'}\n\`\`\``
     ));
 
-  await channel.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+  channel.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
 }
 
 module.exports = { handleAutoMod };

@@ -89,62 +89,73 @@ const DEFAULT_CONFIG = {
 const cache = new Map();
 
 /**
- * Get the config for a specific guild.
+ * Deep merge source into target.
+ */
+function deepMerge(target, source) {
+  for (const key in source) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (!target[key]) target[key] = {};
+      deepMerge(target[key], source[key]);
+    } else {
+      target[key] = source[key];
+    }
+  }
+  return target;
+}
+
+/**
+ * Preload all configurations from disk.
+ * Called once during bot startup.
+ */
+function initConfigs() {
+  const files = fs.readdirSync(CONFIG_DIR).filter(f => f.endsWith('.json'));
+  let loadedCount = 0;
+
+  for (const file of files) {
+    const guildId = file.replace('.json', '');
+    try {
+      const data = fs.readFileSync(path.join(CONFIG_DIR, file), 'utf8');
+      const loaded = JSON.parse(data);
+      
+      // Clone default and merge loaded data
+      const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      deepMerge(config, loaded);
+      
+      cache.set(guildId, config);
+      loadedCount++;
+    } catch (err) {
+      console.error(`Failed to preload config for ${guildId}:`, err);
+    }
+  }
+  console.log(`[AutoMod] Preloaded ${loadedCount} server configurations.`);
+}
+
+/**
+ * Get the config for a specific guild (Synchronous).
  * @param {string} guildId 
  * @returns {object}
  */
-async function getConfig(guildId) {
+function getConfig(guildId) {
   if (cache.has(guildId)) return cache.get(guildId);
 
-  const filePath = path.join(CONFIG_DIR, `${guildId}.json`);
-  let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-
-  if (fs.existsSync(filePath)) {
-    try {
-      const data = await fs.promises.readFile(filePath, 'utf8');
-      const loaded = JSON.parse(data);
-      
-      // Deep merge modules to handle missing modules or fields
-      config = {
-        ...DEFAULT_CONFIG,
-        ...loaded,
-        modules: {
-          ...DEFAULT_CONFIG.modules,
-          ...(loaded.modules || {})
-        }
-      };
-      
-      // Ensure each module has its own defaults merged
-      for (const key in config.modules) {
-        config.modules[key] = {
-          ...DEFAULT_CONFIG.modules[key],
-          ...config.modules[key]
-        };
-      }
-    } catch (err) {
-      console.error(`Error reading config for guild ${guildId}:`, err);
-    }
-  } else {
-    await saveConfig(guildId, config);
-  }
-  
+  // Fallback for new guilds (Clone default to avoid mutation of the master object)
+  const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   cache.set(guildId, config);
   return config;
 }
 
 /**
  * Save the config for a specific guild.
+ * Updates cache instantly, writes to disk asynchronously.
  * @param {string} guildId 
  * @param {object} config 
  */
 async function saveConfig(guildId, config) {
   cache.set(guildId, config);
   const filePath = path.join(CONFIG_DIR, `${guildId}.json`);
-  try {
-    await fs.promises.writeFile(filePath, JSON.stringify(config));
-  } catch (err) {
+  fs.promises.writeFile(filePath, JSON.stringify(config, null, 2)).catch(err => {
     console.error(`Error saving config for guild ${guildId}:`, err);
-  }
+  });
 }
 
 /**
@@ -152,11 +163,12 @@ async function saveConfig(guildId, config) {
  * @param {string} guildId 
  */
 async function resetConfig(guildId) {
-  cache.delete(guildId);
-  await saveConfig(guildId, DEFAULT_CONFIG);
+  const config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  await saveConfig(guildId, config);
 }
 
 module.exports = {
+  initConfigs,
   getConfig,
   saveConfig,
   resetConfig,

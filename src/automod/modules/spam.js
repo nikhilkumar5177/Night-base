@@ -1,11 +1,11 @@
 const userMessages = new Map();
 const userLastMsg = new Map();
 
-// Periodic cleanup to prevent memory leaks
+// Periodic cleanup to prevent memory leaks — evict stale entries
 setInterval(() => {
   const now = Date.now();
-  for (const [key, timestamps] of userMessages.entries()) {
-    if (timestamps.length === 0 || now - timestamps[timestamps.length - 1] > 60000) {
+  for (const [key, ts] of userMessages.entries()) {
+    if (ts.length === 0 || now - ts[ts.length - 1] > 60000) {
       userMessages.delete(key);
     }
   }
@@ -14,18 +14,19 @@ setInterval(() => {
       userLastMsg.delete(key);
     }
   }
-}, 600000); // Cleanup every 10 minutes
+}, 120000); // Cleanup every 2 minutes (was 10 — tighter eviction)
 
 /**
  * Handle message spam and duplicate detection.
+ * Uses sliding window queue instead of .filter() for O(1) amortized perf.
  * @param {object} message 
  * @param {object} config 
  * @returns {string|boolean} Violation type or false
  */
-async function checkSpam(message, config) {
+function checkSpam(message, config) {
   if (!config.enabled) return false;
 
-  const { author, guild, channel, content } = message;
+  const { author, guild, content } = message;
   const key = `${guild.id}-${author.id}`;
   const now = Date.now();
 
@@ -38,18 +39,20 @@ async function checkSpam(message, config) {
     userLastMsg.set(key, { content, ts: now });
   }
 
-  // Rate Limit / Spam
+  // Rate Limit / Spam — Sliding window (shift expired, no filter/alloc)
   const windowMs = config.window * 1000;
   if (!userMessages.has(key)) userMessages.set(key, []);
 
   const timestamps = userMessages.get(key);
   timestamps.push(now);
 
-  const recentTimestamps = timestamps.filter(ts => now - ts < windowMs);
-  userMessages.set(key, recentTimestamps);
+  // Shift expired timestamps off the front (O(k) where k = expired count, amortized O(1))
+  while (timestamps.length > 0 && timestamps[0] < now - windowMs) {
+    timestamps.shift();
+  }
 
-  if (recentTimestamps.length > config.limit) {
-    userMessages.set(key, []);
+  if (timestamps.length > config.limit) {
+    timestamps.length = 0; // Reset without new array allocation
     return 'Message Spam';
   }
 

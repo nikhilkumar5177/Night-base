@@ -18,21 +18,59 @@ module.exports = {
   devOnly: false,
   execute: async (client, message, args) => {
     try {
-      const target = !message.author
-        ? (message.options.getMember('user') || message.member)
-        : (await resolveMember(message.guild, args[0]) || message.member);
-      const u = target.user;
+      const { resolveUser } = require('../../utils/resolver');
+      let targetMember = null;
+      let targetUser = null;
+
+      if (!message.author) {
+        targetMember = message.options.getMember('user');
+        targetUser = message.options.getUser('user') || message.user;
+      } else {
+        const input = args[0];
+        if (!input) {
+          targetMember = message.member;
+          targetUser = message.author;
+        } else {
+          targetMember = await resolveMember(message.guild, input);
+          if (targetMember) {
+            targetUser = targetMember.user;
+          } else {
+            targetUser = await resolveUser(client, input);
+          }
+        }
+      }
+
+      if (!targetUser) {
+        return message.reply({ components: [cv2Error('Could not find the specified user.')], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+      }
+
+      const u = targetUser;
       const flags = u.flags?.toArray().map(f => `\`${f}\``).join(', ') || 'None';
-      const roles = target.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== message.guild.id);
-      const roleList = roles.size > 0 ? roles.map(r => `${r}`).join(', ') : 'None';
-      const truncRoles = roleList.length > 900 ? roleList.substring(0, 900) + '...' : roleList;
+      
+      let roles = [];
+      let roleList = 'Not in server';
+      let truncRoles = 'Not in server';
+      let status = 'offline';
+      let joinedAt = 'Not in server';
+      let nickname = 'None';
+      let highestRole = 'None';
+
+      if (targetMember) {
+        roles = targetMember.roles.cache.sort((a, b) => b.position - a.position).filter(r => r.id !== message.guild.id);
+        roleList = roles.size > 0 ? roles.map(r => `${r}`).join(', ') : 'None';
+        truncRoles = roleList.length > 900 ? roleList.substring(0, 900) + '...' : roleList;
+        status = targetMember.presence?.status || 'offline';
+        joinedAt = `<t:${Math.floor(targetMember.joinedTimestamp / 1000)}:R>`;
+        nickname = targetMember.nickname || 'None';
+        highestRole = `${targetMember.roles.highest}`;
+      }
+
       const statusMap = { online: '\u25CF Online', idle: '\u25CB Idle', dnd: '\u25CF DND', offline: '\u25CB Offline' };
-      const status = target.presence?.status || 'offline';
       
       let tags = [];
       if (u.id === message.guild.ownerId) tags.push('\`\uD83D\uDC51 Owner\`');
       if (u.bot) tags.push('\`\uD83E\uDD16 Bot\`');
-      if (target.premiumSinceTimestamp) tags.push('\`\uD83D\uDC8E Booster\`');
+      if (targetMember?.premiumSinceTimestamp) tags.push('\`\uD83D\uDC8E Booster\`');
 
       const buildProfileContainer = () => {
         const container = new ContainerBuilder()
@@ -47,14 +85,14 @@ module.exports = {
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_ARROW} **Account Dates**\n` +
             `Created: <t:${Math.floor(u.createdTimestamp / 1000)}:R>\n` +
-            `Joined: <t:${Math.floor(target.joinedTimestamp / 1000)}:R>`
+            `Joined: ${joinedAt}`
           ))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_ARROW} **Server Info**\n` +
-            `Nickname: ${target.nickname || 'None'}\n` +
-            `Highest Role: ${target.roles.highest}\n` +
-            `Roles [${roles.size}]: ${truncRoles}`
+            `Nickname: ${nickname}\n` +
+            `Highest Role: ${highestRole}\n` +
+            `Roles [${roles.size || 0}]: ${truncRoles}`
           ))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(

@@ -22,15 +22,19 @@ module.exports = {
       if (!args[0]) {
         return sendUsage(message, module.exports);
       }
-      const target = await resolveMember(message.guild, args[0]);
-      if (!target) {
+
+      const { resolveMember, resolveUser } = require('../../utils/resolver');
+      let targetMember = await resolveMember(message.guild, args[0]);
+      let targetUser = targetMember ? targetMember.user : await resolveUser(client, args[0]);
+
+      if (!targetUser) {
         return message.reply({ components: [cv2Error('Could not find the specified user.')], flags: 32768 });
       }
-      if (target.id === message.author.id) {
+      if (targetUser.id === message.author.id) {
         return message.reply({ components: [cv2Error('You cannot warn yourself.')], flags: 32768 });
       }
-      if (target.roles.highest.position > message.member.roles.highest.position) {
-        return message.reply({ components: [cv2Error('Target has a higher role.')], flags: 32768 });
+      if (targetMember && targetMember.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
+        return message.reply({ components: [cv2Error('Target has a higher or equal role.')], flags: 32768 });
       }
 
       const loadContainer = new ContainerBuilder()
@@ -39,16 +43,16 @@ module.exports = {
 
       const reason = args.slice(1).join(' ') || 'No reason provided';
       const warns = storage.read('warns.json');
-      if (!warns[target.id]) warns[target.id] = [];
+      if (!warns[targetUser.id]) warns[targetUser.id] = [];
       const caseId = Date.now().toString(36).toUpperCase();
-      warns[target.id].push({ caseId, moderator: message.author.id, reason, guildId: message.guild.id, timestamp: Date.now() });
-      if (warns[target.id].length > 50) warns[target.id] = warns[target.id].slice(-50);
+      warns[targetUser.id].push({ caseId, moderator: message.author.id, reason, guildId: message.guild.id, timestamp: Date.now() });
+      if (warns[targetUser.id].length > 50) warns[targetUser.id] = warns[targetUser.id].slice(-50);
       storage.write('warns.json', warns);
 
       await new Promise(r => setTimeout(r, 400));
 
-      const totalWarns = warns[target.id].length;
-      const warnBar = totalWarns >= 10 ? '\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588' : '\u2588'.repeat(totalWarns) + '\u2591'.repeat(10 - totalWarns);
+      const totalWarns = warns[targetUser.id].length;
+      const warnBar = totalWarns >= 10 ? '\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588' : '\u2588'.repeat(Math.min(totalWarns, 10)) + '\u2591'.repeat(Math.max(0, 10 - totalWarns));
       const severity = totalWarns >= 10 ? 'CRITICAL' : totalWarns >= 5 ? 'HIGH' : totalWarns >= 3 ? 'MODERATE' : 'LOW';
 
       const container = new ContainerBuilder()
@@ -57,11 +61,11 @@ module.exports = {
         .addSectionComponents(new SectionBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Warning recorded.**\n` +
-            `${EMOJI_DOT} **User:** ${target.user.tag} \`${target.id}\`\n` +
+            `${EMOJI_DOT} **User:** ${targetUser.tag} \`${targetUser.id}\`\n` +
             `${EMOJI_DOT} **Moderator:** ${message.author.tag}\n` +
             `${EMOJI_DOT} **Case:** \`${caseId}\``
           ))
-          .setThumbnailAccessory(new ThumbnailBuilder().setURL(target.user.displayAvatarURL({ dynamic: true })))
+          .setThumbnailAccessory(new ThumbnailBuilder().setURL(targetUser.displayAvatarURL({ dynamic: true })))
         )
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
@@ -74,7 +78,11 @@ module.exports = {
       await sent.edit({ components: [container] }).catch(() => {});
 
       // DM notice — plain content (V2 not supported in DMs)
-      target.send({ content: `\u26A0\uFE0F **You received a warning in ${message.guild.name}**\n\u2022 Reason: ${reason}\n\u2022 Case: \`${caseId}\`\n\u2022 Total: \`${totalWarns}\`` }).catch(() => {});
+      if (targetMember) {
+        targetMember.send({ content: `\u26A0\uFE0F **You received a warning in ${message.guild.name}**\n\u2022 Reason: ${reason}\n\u2022 Case: \`${caseId}\`\n\u2022 Total: \`${totalWarns}\`` }).catch(() => {});
+      } else {
+        targetUser.send({ content: `\u26A0\uFE0F **You received a warning in ${message.guild.name}**\n\u2022 Reason: ${reason}\n\u2022 Case: \`${caseId}\`\n\u2022 Total: \`${totalWarns}\`` }).catch(() => {});
+      }
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }

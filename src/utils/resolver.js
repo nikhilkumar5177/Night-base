@@ -67,5 +67,28 @@ module.exports = {
     
     // Try Name (case-insensitive)
     return guild.channels.cache.find(c => c.name.toLowerCase() === input.toLowerCase());
+  },
+
+  /**
+   * Resolves a User from a mention or ID.
+   * @param {Client} client 
+   * @param {string} input 
+   * @returns {Promise<User|null>}
+   */
+  resolveUser: async (client, input) => {
+    if (!input || typeof input !== 'string') return null;
+    const id = input.replace(/[<@!>]/g, '');
+    if (!id.match(/^\d{17,20}$/)) return null;
+    
+    // Check cache first
+    let user = client.users.cache.get(id);
+    if (user) return user;
+    
+    // Fetch from API
+    try {
+      return await client.users.fetch(id);
+    } catch {
+      return null;
+    }
   }
 };

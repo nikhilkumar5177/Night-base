@@ -35,8 +35,11 @@ module.exports = {
       const invalidTargets = [];
 
       for (const target of finalTargets) {
-        if (!target.kickable || target.roles.highest.position >= message.member.roles.highest.position) invalidTargets.push(target.user.tag);
-        else validTargets.push(target);
+        if (!target.kickable || target.roles.highest.position >= message.member.roles.highest.position) {
+          invalidTargets.push(target.user.tag);
+        } else {
+          validTargets.push(target);
+        }
       }
 
       if (validTargets.length === 0) {

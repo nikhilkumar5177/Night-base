@@ -16,14 +16,19 @@ module.exports = {
       if (!message.member.permissions.has('BanMembers')) return message.reply({ components: [cv2Error('You need **BanMembers** permission.')], flags: 32768 });
       if (!message.guild.members.me.permissions.has('BanMembers')) return message.reply({ components: [cv2Error('I need **BanMembers** permission.')], flags: 32768 });
 
-      const { resolveMember } = require('../../utils/resolver');
+      const { resolveMember, resolveUser } = require('../../utils/resolver');
       const targets = new Set();
       const reasonArgs = [];
 
       for (const arg of args) {
         if (arg.match(/^\d{17,20}$/) || arg.match(/^<@!?\d{17,20}>$/)) {
           const member = await resolveMember(message.guild, arg);
-          if (member) targets.add(member);
+          if (member) {
+            targets.add({ type: 'member', data: member, id: member.id, tag: member.user.tag });
+          } else {
+            const user = await resolveUser(client, arg);
+            if (user) targets.add({ type: 'user', data: user, id: user.id, tag: user.tag });
+          }
         } else { reasonArgs.push(arg); }
       }
 
@@ -35,8 +40,16 @@ module.exports = {
       const invalidTargets = [];
 
       for (const target of finalTargets) {
-        if (!target.bannable || target.roles.highest.position >= message.member.roles.highest.position) invalidTargets.push(target.user.tag);
-        else validTargets.push(target);
+        if (target.type === 'member') {
+          if (!target.data.bannable || target.data.roles.highest.position >= message.member.roles.highest.position) {
+            invalidTargets.push(target.tag);
+          } else {
+            validTargets.push(target);
+          }
+        } else {
+          // It's a user not in the guild, always try to ban
+          validTargets.push(target);
+        }
       }
 
       if (validTargets.length === 0) {
@@ -48,7 +61,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_WARN} **Permanently ban ${validTargets.length} user(s)?**\n\n` +
-          `${EMOJI_DOT} **Targets:** ${validTargets.map(t => `\`${t.user.tag}\``).join(', ')}\n` +
+          `${EMOJI_DOT} **Targets:** ${validTargets.map(t => `\`${t.tag}\``).join(', ')}\n` +
           `${EMOJI_DOT} **Reason:** ${reason}\n` +
           `${EMOJI_DOT} **Messages:** \`7 days will be purged\``
         ));
@@ -73,9 +86,12 @@ module.exports = {
 
           for (const target of validTargets) {
             try {
-              // DM attempt (Plain text/Embed only)
-              await target.send(`**Banned from ${message.guild.name}**\nReason: ${reason}\nModerator: ${message.author.tag}`).catch(() => {});
-              await target.ban({ reason, deleteMessageSeconds: 604800 });
+              if (target.type === 'member') {
+                await target.data.send(`**Banned from ${message.guild.name}**\nReason: ${reason}\nModerator: ${message.author.tag}`).catch(() => {});
+                await target.data.ban({ reason, deleteMessageSeconds: 604800 });
+              } else {
+                await message.guild.members.ban(target.id, { reason, deleteMessageSeconds: 604800 });
+              }
               successCount++;
             } catch { failCount++; }
           }

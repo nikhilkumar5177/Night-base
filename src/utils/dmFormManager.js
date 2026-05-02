@@ -21,6 +21,29 @@ async function handleIncomingDM(client, message) {
         thread = await client.channels.fetch(threadId).catch(() => null);
     }
 
+    const isBot = message.author.id === client.user.id;
+    const isOtherBot = message.author.bot && !isBot;
+    const origin = isBot ? 'Response Sent' : (isOtherBot ? 'Other Bot DM' : 'New DM Received');
+    const colorEmoji = isBot ? EMOJI_SUCCESS : EMOJI_INFO;
+
+    // Format the "Form" log
+    const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${origin}`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${colorEmoji} **${isBot ? 'Bot' : 'From'}:** ${message.author.tag} (\`${message.author.id}\`)\n` +
+            `${EMOJI_DOT} **Message:** ${message.content || '*No text content*'}`
+        ));
+
+    if (message.attachments.size > 0) {
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
+            `${EMOJI_DOT} **Attachments:** ${message.attachments.map(a => `[${a.name}](${a.url})`).join(', ')}`
+        ));
+    }
+
+    container.addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+
     if (!thread) {
         // Create new thread for this user
         try {
@@ -53,28 +76,6 @@ async function handleIncomingDM(client, message) {
         }
     }
 
-    const isBot = message.author.id === client.user.id;
-    const isOtherBot = message.author.bot && !isBot;
-    const origin = isBot ? 'Response Sent' : (isOtherBot ? 'Other Bot DM' : 'New DM Received');
-    const colorEmoji = isBot ? EMOJI_SUCCESS : EMOJI_INFO;
-
-    // Format the "Form" log
-    const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${origin}`))
-        .addSeparatorComponents(new SeparatorBuilder())
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${colorEmoji} **${isBot ? 'Bot' : 'From'}:** ${message.author.tag} (\`${message.author.id}\`)\n` +
-            `${EMOJI_DOT} **Message:** ${message.content || '*No text content*'}`
-        ));
-
-    if (message.attachments.size > 0) {
-        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_DOT} **Attachments:** ${message.attachments.map(a => `[${a.name}](${a.url})`).join(', ')}`
-        ));
-    }
-
-    container.addSeparatorComponents(new SeparatorBuilder())
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
     await safeSend(thread, { components: [container] }).catch(() => {});
 }

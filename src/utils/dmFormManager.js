@@ -24,7 +24,7 @@ async function handleIncomingDM(client, message) {
     const isBot = message.author.id === client.user.id;
     const isSystem = message.system || message.author.id === 'System' || (message.author.bot && message.author.username === 'Discord');
     const isOtherBot = message.author.bot && !isBot && !isSystem;
-    
+
     let origin = 'New DM Received';
     if (isBot) origin = 'Response Sent';
     else if (isSystem) origin = 'System Message';
@@ -69,7 +69,7 @@ async function handleIncomingDM(client, message) {
             }
 
             thread = await logChannel.threads.create(threadOptions);
-            
+
             threads[message.author.id] = thread.id;
             threads[thread.id] = message.author.id;
             storage.write('dmThreads.json', threads);
@@ -86,7 +86,7 @@ async function handleIncomingDM(client, message) {
     }
 
 
-    await safeSend(thread, { components: [container] }).catch(() => {});
+    await safeSend(thread, { components: [container] }).catch(() => { });
 }
 
 /**
@@ -107,7 +107,7 @@ async function handleStaffReply(client, message) {
 
     try {
         // Forward to user
-        await user.send(`From ${message.author.tag}: ${message.content}`).catch(err => {
+        await user.send(`${message.content}\n\n**From:** ${message.author.tag}`).catch(err => {
             message.reply({ content: `\u274C **Failed to DM user:** ${err.message}` });
             throw err;
         });
@@ -121,10 +121,10 @@ async function handleStaffReply(client, message) {
                 `${EMOJI_DOT} **To:** ${user.tag}\n` +
                 `${EMOJI_DOT} **By:** ${message.author.tag}`
             ));
-        
-        await message.delete().catch(() => {}); // Clean up the raw staff message
+
+        await message.delete().catch(() => { }); // Clean up the raw staff message
         await safeSend(message.channel, { components: [confirmContainer] });
-        
+
     } catch (err) {
         // Error already handled in the send catch
     }

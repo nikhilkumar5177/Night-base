@@ -107,7 +107,7 @@ async function handleStaffReply(client, message) {
 
     try {
         // Forward to user
-        await user.send(`${message.content}\n\n**From:** ${message.author.tag}`).catch(err => {
+        await user.send(`${message.content}`).catch(err => {
             message.reply({ content: `\u274C **Failed to DM user:** ${err.message}` });
             throw err;
         });

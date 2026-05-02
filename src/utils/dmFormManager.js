@@ -56,8 +56,7 @@ async function handleIncomingDM(client, message) {
 
             if (isForum) {
                 threadOptions.message = {
-                    content: `**Conversation started with ${message.author.tag}**`,
-                    components: [container]
+                    content: `**DM Conversation History: ${message.author.tag}**`,
                 };
             } else {
                 threadOptions.type = ChannelType.GuildPublicThread;
@@ -69,7 +68,11 @@ async function handleIncomingDM(client, message) {
             threads[thread.id] = message.author.id;
             storage.write('dmThreads.json', threads);
 
-            if (isForum) return; // For forums, the initial message is already sent
+            if (isForum) {
+                // For forums, we must send the V2 container as a follow-up message
+                await safeSend(thread, { components: [container] });
+                return;
+            }
         } catch (err) {
             console.error('[DM Manager] Failed to create thread:', err);
             return;

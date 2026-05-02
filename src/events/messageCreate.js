@@ -39,6 +39,7 @@ module.exports = {
   once: false,
   execute: async (client, message) => {
     if (message.author.bot) return;
+    if (!message.guild) return;
 
     const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
     const isDev = devIds.includes(message.author.id);

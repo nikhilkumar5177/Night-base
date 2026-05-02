@@ -24,16 +24,29 @@ async function handleIncomingDM(client, message) {
     if (!thread) {
         // Create new thread for this user
         try {
-            thread = await logChannel.threads.create({
+            const isForum = logChannel.type === ChannelType.GuildForum;
+            const threadOptions = {
                 name: `${message.author.tag} (${message.author.id})`,
-                autoArchiveDuration: 10080, // 1 week
+                autoArchiveDuration: 10080,
                 reason: `DM Conversation with ${message.author.tag}`,
-                type: ChannelType.GuildPublicThread // Or Private if channel is private
-            });
+            };
+
+            if (isForum) {
+                threadOptions.message = {
+                    content: `**Conversation started with ${message.author.tag}**`,
+                    components: [container]
+                };
+            } else {
+                threadOptions.type = ChannelType.GuildPublicThread;
+            }
+
+            thread = await logChannel.threads.create(threadOptions);
+            
             threads[message.author.id] = thread.id;
-            // Also store reverse mapping for staff replies
             threads[thread.id] = message.author.id;
             storage.write('dmThreads.json', threads);
+
+            if (isForum) return; // For forums, the initial message is already sent
         } catch (err) {
             console.error('[DM Manager] Failed to create thread:', err);
             return;

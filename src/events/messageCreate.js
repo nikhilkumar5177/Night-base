@@ -38,6 +38,23 @@ module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
+    const { handleIncomingDM, handleStaffReply } = require('../utils/dmFormManager');
+
+    // 1. Handle DM Logging (User -> Bot or Bot -> User)
+    if (!message.guild) {
+      await handleIncomingDM(client, message);
+      if (message.author.bot) return; // Still skip processing commands for bots
+      return; // Stop processing for DMs
+    }
+
+    // 2. Handle Staff Replies in Forms Channel (Staff -> User)
+    const config = storage.read('config.json');
+    if (message.channel.isThread() && message.channel.parentId === config.dmLogChannelId) {
+      if (message.author.bot) return; // Don't forward bot's own confirmations
+      await handleStaffReply(client, message);
+      return;
+    }
+
     if (message.author.bot) return;
     if (!message.guild) return;
 

@@ -28,8 +28,8 @@ module.exports = {
       if (!target.moderatable) {
         return message.reply({ components: [cv2Error('I cannot timeout this user.')], flags: 32768 });
       }
-      if (target.roles.highest.position > message.member.roles.highest.position) {
-        return message.reply({ components: [cv2Error('Target has a higher role.')], flags: 32768 });
+      if (target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
+        return message.reply({ components: [cv2Error('Target has a higher or equal role.')], flags: 32768 });
       }
 
       const timeStr = args[1]?.toLowerCase();

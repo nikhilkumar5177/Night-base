@@ -27,8 +27,8 @@ module.exports = {
       if (target.roles.highest.position >= message.guild.members.me.roles.highest.position) {
         return message.reply({ components: [cv2Error('That user has a higher or equal role than me.')], flags: 32768 });
       }
-      if (target.roles.highest.position > message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
-        return message.reply({ components: [cv2Error('Target has a higher role.')], flags: 32768 });
+      if (target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
+        return message.reply({ components: [cv2Error('Target has a higher or equal role.')], flags: 32768 });
       }
 
       const newNick = args.slice(1).join(' ');

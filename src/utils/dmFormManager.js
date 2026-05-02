@@ -107,7 +107,7 @@ async function handleStaffReply(client, message) {
 
     try {
         // Forward to user
-        await user.send(`\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\n**Response from ${message.guild.name} Staff:**\n\n${message.content}\n\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC\u25AC`).catch(err => {
+        await user.send(`From ${message.author.tag}: ${message.content}`).catch(err => {
             message.reply({ content: `\u274C **Failed to DM user:** ${err.message}` });
             throw err;
         });

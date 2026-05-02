@@ -22,16 +22,22 @@ async function handleIncomingDM(client, message) {
     }
 
     const isBot = message.author.id === client.user.id;
-    const isOtherBot = message.author.bot && !isBot;
-    const origin = isBot ? 'Response Sent' : (isOtherBot ? 'Other Bot DM' : 'New DM Received');
-    const colorEmoji = isBot ? EMOJI_SUCCESS : EMOJI_INFO;
+    const isSystem = message.system || message.author.id === 'System' || (message.author.bot && message.author.username === 'Discord');
+    const isOtherBot = message.author.bot && !isBot && !isSystem;
+    
+    let origin = 'New DM Received';
+    if (isBot) origin = 'Response Sent';
+    else if (isSystem) origin = 'System Message';
+    else if (isOtherBot) origin = 'Other Bot DM';
+
+    const colorEmoji = (isBot || isSystem) ? EMOJI_SUCCESS : EMOJI_INFO;
 
     // Format the "Form" log
     const container = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${origin}`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${colorEmoji} **${isBot ? 'Bot' : 'From'}:** ${message.author.tag} (\`${message.author.id}\`)\n` +
+            `${colorEmoji} **${isBot ? 'Bot' : (isSystem ? 'Discord' : 'From')}:** ${message.author.tag || 'System'} (\`${message.author.id}\`)\n` +
             `${EMOJI_DOT} **Message:** ${message.content || '*No text content*'}`
         ));
 
@@ -144,10 +150,6 @@ async function syncDMs(client) {
 
             const messages = await dmChannel.messages.fetch({ limit: 50 }).catch(() => null);
             if (!messages || messages.size === 0) continue;
-
-            // Check if user has sent any message
-            const userMessages = messages.filter(m => m.author.id === userId);
-            if (userMessages.size === 0) continue;
 
             // Sort messages by timestamp
             const sorted = messages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);

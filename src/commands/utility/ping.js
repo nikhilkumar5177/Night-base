@@ -16,21 +16,19 @@ module.exports = {
   devOnly: false,
   execute: async (client, message) => {
     try {
-      const start = Date.now();
+      const loadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Calculating diagnostics...**`));
+
+      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => { });
+      if (!sent) return;
 
       const dbStart = Date.now();
       const storage = require('../../utils/storageManager');
       storage.read('config.json');
       const dbLatency = Date.now() - dbStart;
 
-      const loadContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Calculating diagnostics...**`));
-
-      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => { });
-
-      const end = Date.now();
+      const start = Date.now();
       const apiLatency = client.ws.ping;
-      const responseTime = end - start;
 
       const hrStart = process.hrtime();
       await new Promise(r => setImmediate(r));
@@ -42,7 +40,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **API Latency:** \`${apiLatency}ms\`\n` +
-          `${EMOJI_DOT} **Response Time:** \`${responseTime}ms\`\n` +
+          `${EMOJI_DOT} **Response Time:** \`${Date.now() - start}ms\`\n` +
           `${EMOJI_DOT} **Database Latency:** \`${dbLatency}ms\`\n` +
           `${EMOJI_DOT} **Node Latency:** \`${nodeLatency}ms\``
         ))

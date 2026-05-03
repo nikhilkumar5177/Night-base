@@ -3,8 +3,9 @@ const logger = require('../utils/logger');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, PermissionsBitField } = require('discord.js');
 const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_LEGIT, EMOJI_DOT, SEP } = require('../utils/constants');
 
-const { sendAutoDelete, cv2Error, safeReply, safeSend } = require('../utils/messageHelper');
+const { sendAutoDelete, cv2Error, safeReply, safeSend, safeDelete } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
+const { handleIncomingDM, handleStaffReply } = require('../utils/dmFormManager');
 const resolver = require('../utils/resolver');
 
 let lastAliasData = null;
@@ -38,7 +39,8 @@ module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
-    const { handleIncomingDM, handleStaffReply } = require('../utils/dmFormManager');
+    const runtimeConfig = storage.read('config.json');
+    const dmLogChannelId = runtimeConfig.dmLogChannelId;
 
     // 1. Handle DM Logging (User -> Bot or Bot -> User)
     if (!message.guild) {
@@ -48,8 +50,7 @@ module.exports = {
     }
 
     // 2. Handle Staff Replies in Forms Channel (Staff -> User)
-    const config = storage.read('config.json');
-    if (message.channel.isThread() && message.channel.parentId === config.dmLogChannelId) {
+    if (message.channel.isThread() && message.channel.parentId === dmLogChannelId) {
       if (message.author.bot) return; // Don't forward bot's own confirmations
       await handleStaffReply(client, message);
       return;
@@ -60,7 +61,6 @@ module.exports = {
 
     const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
     const isDev = devIds.includes(message.author.id);
-    const runtimeConfig = storage.read('config.json');
     const prefix = runtimeConfig.prefix || client.config.prefix;
 
     // Vouch Logic
@@ -230,7 +230,18 @@ module.exports = {
 
     if (runtimeConfig.aliasMode !== false) {
       const aliasData = storage.read('aliases.json');
-      const triggerMap = getGuildTriggerMap(aliasData, message.guild);
+      
+      // Lazy cache: Only rebuild if data reference changed
+      if (aliasData !== lastAliasData) {
+        aliasTriggerMap.clear();
+        lastAliasData = aliasData;
+      }
+
+      let triggerMap = aliasTriggerMap.get(message.guild.id);
+      if (!triggerMap) {
+        triggerMap = getGuildTriggerMap(aliasData, message.guild);
+        aliasTriggerMap.set(message.guild.id, triggerMap);
+      }
 
       const content = message.content.toLowerCase().trim();
       const parts = content.split(/\s+/);

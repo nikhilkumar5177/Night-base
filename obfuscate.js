@@ -14,9 +14,9 @@ function obfuscateFile(inputPath, outputPath) {
   const result = JavaScriptObfuscator.obfuscate(code, {
     compact: true,
     controlFlowFlattening: false,
-    controlFlowFlatteningThreshold: 0.5,
+    controlFlowFlatteningThreshold: 0,
     deadCodeInjection: false,
-    deadCodeInjectionThreshold: 0.2,
+    deadCodeInjectionThreshold: 0,
     debugProtection: false,
     disableConsoleOutput: false,
     identifierNamesGenerator: 'hexadecimal',

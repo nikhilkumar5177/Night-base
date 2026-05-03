@@ -176,19 +176,24 @@ function cv2Expire() {
 }
 
 /**
- * Safely deletes a message and adds it to the ignoredDeletes set to prevent ghost ping logs.
+ * Safely deletes a message and ensures it is ignored by the ghost ping detector.
  * @param {import('discord.js').Message} message 
- * @returns {Promise<import('discord.js').Message>}
  */
 async function safeDelete(message) {
-    if (!message || !message.delete) return null;
-    if (message.client?.ignoredDeletes) {
-        message.client.ignoredDeletes.add(message.id);
+    if (!message || !message.delete) return;
+    
+    const client = message.client;
+    if (client) {
+        if (!client.ignoredDeletes || !(client.ignoredDeletes instanceof Set)) {
+            client.ignoredDeletes = new Set();
+        }
+        client.ignoredDeletes.add(message.id);
         setTimeout(() => {
-            message.client.ignoredDeletes?.delete(message.id);
+            if (client.ignoredDeletes) client.ignoredDeletes.delete(message.id);
         }, 15000);
     }
-    return message.delete().catch(() => null);
+
+    return message.delete().catch(() => { });
 }
 
 module.exports = { 

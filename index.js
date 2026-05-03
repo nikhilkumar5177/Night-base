@@ -11,6 +11,7 @@ const client = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
     GatewayIntentBits.DirectMessages,
     GatewayIntentBits.AutoModerationExecution
   ],
@@ -23,7 +24,6 @@ client.aliases = new Collection();
 client.config = config;
 client.cooldowns = new Map();
 client.snipeCache = new Map();
-client.ignoredDeletes = new Set(); // Dedicated set for ghost ping protection
 
 storage.init();
 storage.startPeriodicFlush(120000);

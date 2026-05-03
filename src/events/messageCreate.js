@@ -38,6 +38,7 @@ module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
+    const _t0 = Date.now();
     // 1. Critical Early Exits (0ms processing for irrelevant messages)
     if (message.author.bot) return;
     if (!message.guild) {
@@ -58,6 +59,7 @@ module.exports = {
         aliases: storage.read('aliases.json'),
         analytics: storage.read('analytics.json')
     };
+    console.log(`[PERF] Storage reads: ${Date.now() - _t0}ms`);
 
     const runtimeConfig = allData.config;
     const prefix = runtimeConfig.prefix || client.config.prefix;
@@ -113,7 +115,9 @@ module.exports = {
     }
 
     // Run AutoMod
+    const _t1 = Date.now();
     await handleAutoMod(client, message);
+    console.log(`[PERF] AutoMod: ${Date.now() - _t1}ms`);
 
     // AFK Check (Auto-Remove)
     const afkData = allData.afk;
@@ -373,7 +377,9 @@ module.exports = {
     }
 
     try {
+      const _t2 = Date.now();
       await command.execute(client, message, args);
+      console.log(`[PERF] Command '${command.name}' execute: ${Date.now() - _t2}ms | Total: ${Date.now() - _t0}ms`);
       logger.cmd(message.author.tag, command.name);
     } catch (error) {
       logger.error(`Command ${command.name} failed: ${error.message}`);

@@ -95,7 +95,8 @@ module.exports = {
         } else {
           const cancelContainer = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Mass kick cancelled.**`));
           await i.update({ components: [cancelContainer] });
-          setTimeout(() => sent.delete().catch(() => {}), 5000);
+          const { safeDelete } = require('../../utils/messageHelper');
+          setTimeout(() => safeDelete(sent), 5000);
         }
       });
     } catch (error) {

@@ -27,7 +27,8 @@ module.exports = {
       const progressMsg = await sendAutoDelete(message, { components: [loadContainer], flags: 32768 }, 0);
       
       // Delete command message after sending progress
-      await message.delete().catch(() => {});
+      const { safeDelete } = require('../../utils/messageHelper');
+      await safeDelete(message);
 
       let fetched = await message.channel.messages.fetch({ limit: count });
       let filtered;
@@ -44,7 +45,7 @@ module.exports = {
       } else {
         count = parseInt(type);
         if (isNaN(count) || count < 1) {
-          await progressMsg.delete().catch(() => {});
+          await safeDelete(progressMsg);
           return message.reply({ components: [cv2Error('Invalid message count.')], flags: 32768 });
         }
         filtered = fetched;
@@ -72,7 +73,7 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await progressMsg.edit({ components: [successContainer] }).catch(() => {});
-      setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
+      setTimeout(() => safeDelete(progressMsg), 5000);
     } catch (error) {
       sendAutoDelete(message, { components: [cv2Error(error.message)], flags: 32768 }, 5000);
     }

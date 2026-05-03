@@ -56,7 +56,8 @@ async function executeActions(client, message, violation, moduleConfig) {
   
   try {
     if (actions.includes('delete')) {
-      await message.delete().catch(() => {});
+      const { safeDelete } = require('../../utils/messageHelper');
+      await safeDelete(message);
     }
 
     if (actions.includes('warn')) {

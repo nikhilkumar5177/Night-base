@@ -26,7 +26,8 @@ module.exports = {
       const progressMsg = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
 
       // Delete the command message after replying
-      await message.delete().catch(() => {});
+      const { safeDelete } = require('../../utils/messageHelper');
+      await safeDelete(message);
 
       let fetched = await message.channel.messages.fetch({ limit: 100 });
       let filtered = fetched.filter(m => m.author.bot && m.id !== progressMsg.id);
@@ -54,7 +55,8 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await progressMsg.edit({ components: [container] }).catch(() => {});
-      setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
+      const { safeDelete } = require('../../utils/messageHelper');
+      setTimeout(() => safeDelete(progressMsg), 5000);
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }

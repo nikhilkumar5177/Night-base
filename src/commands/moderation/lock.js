@@ -52,7 +52,8 @@ module.exports = {
         await new Promise(r => setTimeout(r, 200));
       }
 
-      await load.delete().catch(() => { });
+      const { safeDelete } = require('../../utils/messageHelper');
+      await safeDelete(load);
       await message.react(EMOJI_LOCK).catch(() => { });
 
     } catch (error) {

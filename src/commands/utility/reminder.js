@@ -77,7 +77,8 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       const sent = await message.reply({ components: [container], flags: 32768 }).catch(() => {});
-      setTimeout(() => { sent?.delete().catch(() => {}); message.delete().catch(() => {}); }, 120000);
+      const { safeDelete } = require('../../utils/messageHelper');
+      setTimeout(() => { safeDelete(sent); safeDelete(message); }, 120000);
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }

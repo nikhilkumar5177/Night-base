@@ -356,7 +356,9 @@ module.exports = {
     if (command.devOnly && !isDev) return; // Silent ignore for dev commands as requested
 
     const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
-    if (cooldownAmount > 0) {
+    const isOwner = message.author.id === message.guild.ownerId;
+
+    if (cooldownAmount > 0 && !isDev && !isOwner) {
       const key = `${message.author.id}-${command.name}`;
       const now = Date.now();
       if (client.cooldowns.has(key)) {

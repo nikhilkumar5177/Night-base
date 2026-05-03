@@ -16,18 +16,19 @@ module.exports = {
   devOnly: false,
   execute: async (client, message) => {
     try {
-      const loadContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Calculating diagnostics...**`));
-
-      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => { });
-      if (!sent) return;
+      const start = Date.now();
 
       const dbStart = Date.now();
       const storage = require('../../utils/storageManager');
       storage.read('config.json');
       const dbLatency = Date.now() - dbStart;
 
-      const start = Date.now();
+      const loadContainer = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Calculating diagnostics...**`));
+
+      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => { });
+      if (!sent) return;
+
       const apiLatency = client.ws.ping;
 
       const hrStart = process.hrtime();

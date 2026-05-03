@@ -31,20 +31,37 @@ module.exports = {
       const id = Date.now().toString(36);
       const triggerAt = Date.now() + duration;
 
+      const mentions = message.mentions.users.map(u => u.id);
+      const allNotify = [...new Set([message.author.id, ...mentions])];
+
       const reminders = storage.read('reminders.json');
-      reminders.push({ id, userId: message.author.id, channelId: message.channel.id, message: reminderMsg, triggerAt, timestamp: Date.now() });
+      reminders.push({ id, userId: message.author.id, mentions, channelId: message.channel.id, message: reminderMsg, triggerAt, timestamp: Date.now() });
       storage.write('reminders.json', reminders);
 
-      setTimeout(() => {
-        const ch = client.channels.cache.get(message.channel.id);
+      setTimeout(async () => {
+        const ch = client.channels.cache.get(message.channel.id) || await client.channels.fetch(message.channel.id).catch(() => null);
         if (ch) {
           const remindContainer = new ContainerBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
             .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Your reminder:**\n${reminderMsg}`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Reminder:**\n${reminderMsg}`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
-          ch.send({ content: `<@${message.author.id}>`, components: [remindContainer], flags: 32768, allowedMentions: { users: [message.author.id] } }).catch(() => {});
+          
+          await ch.send({ 
+            content: allNotify.map(id => `<@${id}>`).join(' '), 
+            components: [remindContainer], 
+            flags: 32768, 
+            allowedMentions: { users: allNotify } 
+          }).catch(() => {});
+
+          // Send Raw DM to mentioned users (and author)
+          for (const uid of allNotify) {
+            const user = client.users.cache.get(uid) || await client.users.fetch(uid).catch(() => null);
+            if (user) {
+              await user.send(`**Reminder:** ${reminderMsg}`).catch(() => {});
+            }
+          }
         }
         const current = storage.read('reminders.json');
         storage.write('reminders.json', current.filter(r => r.id !== id));

@@ -30,24 +30,41 @@ module.exports = {
     const now = Date.now();
     const pending = [];
 
-    const sendV2Reminder = (channel, userId, text) => {
-      const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
-        .addSeparatorComponents(new SeparatorBuilder())
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Your reminder:**\n${text}`));
-      channel.send({ content: `<@${userId}>`, components: [container], flags: 32768, allowedMentions: { users: [userId] } }).catch(() => {});
+    const triggerReminder = async (reminder) => {
+      const channel = client.channels.cache.get(reminder.channelId) || await client.channels.fetch(reminder.channelId).catch(() => null);
+      const allNotify = [...new Set([reminder.userId, ...(reminder.mentions || [])])];
+
+      if (channel) {
+        const container = new ContainerBuilder()
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
+          .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Reminder:**\n${reminder.message}`));
+        
+        await channel.send({ 
+          content: allNotify.map(id => `<@${id}>`).join(' '), 
+          components: [container], 
+          flags: 32768, 
+          allowedMentions: { users: allNotify } 
+        }).catch(() => {});
+      }
+
+      // Send Raw DM to all notified users
+      for (const uid of allNotify) {
+        const user = client.users.cache.get(uid) || await client.users.fetch(uid).catch(() => null);
+        if (user) {
+          await user.send(`**Reminder:** ${reminder.message}`).catch(() => {});
+        }
+      }
     };
 
     for (const reminder of reminders) {
       if (reminder.triggerAt <= now) {
-        const channel = client.channels.cache.get(reminder.channelId);
-        if (channel) sendV2Reminder(channel, reminder.userId, reminder.message);
+        triggerReminder(reminder);
       } else {
         pending.push(reminder);
         const delay = reminder.triggerAt - now;
         setTimeout(() => {
-          const ch = client.channels.cache.get(reminder.channelId);
-          if (ch) sendV2Reminder(ch, reminder.userId, reminder.message);
+          triggerReminder(reminder);
           const current = storage.read('reminders.json');
           storage.write('reminders.json', current.filter(r => r.id !== reminder.id));
         }, Math.min(delay, 2147483647));

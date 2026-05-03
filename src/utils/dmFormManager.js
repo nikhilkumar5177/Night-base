@@ -1,7 +1,7 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, ChannelType } = require('discord.js');
 const storage = require('./storageManager');
 const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_INFO, FOOTER_TEXT } = require('./constants');
-const { safeSend } = require('./messageHelper');
+const { safeSend, safeDelete } = require('./messageHelper');
 
 /**
  * Handles incoming Direct Messages from users.
@@ -107,7 +107,7 @@ async function handleStaffReply(client, message) {
 
     try {
         // Forward to user
-        await user.send(`${message.content}`).catch(err => {
+        await user.send(message.content).catch(err => {
             message.reply({ content: `\u274C **Failed to DM user:** ${err.message}` });
             throw err;
         });
@@ -122,7 +122,7 @@ async function handleStaffReply(client, message) {
                 `${EMOJI_DOT} **By:** ${message.author.tag}`
             ));
 
-        await message.delete().catch(() => { }); // Clean up the raw staff message
+        await safeDelete(message); // Clean up the raw staff message
         await safeSend(message.channel, { components: [confirmContainer] });
 
     } catch (err) {

@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
-const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
+const { sendUsage, sendAutoDelete, cv2Error, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'purge',
@@ -27,7 +27,7 @@ module.exports = {
       const progressMsg = await sendAutoDelete(message, { components: [loadContainer], flags: 32768 }, 0);
       
       // Delete command message after sending progress
-      await message.delete().catch(() => {});
+      await safeDelete(message);
 
       let fetched = await message.channel.messages.fetch({ limit: count });
       let filtered;
@@ -44,7 +44,7 @@ module.exports = {
       } else {
         count = parseInt(type);
         if (isNaN(count) || count < 1) {
-          await progressMsg.delete().catch(() => {});
+          await safeDelete(progressMsg);
           return message.reply({ components: [cv2Error('Invalid message count.')], flags: 32768 });
         }
         filtered = fetched;
@@ -59,6 +59,14 @@ module.exports = {
         return progressMsg.edit({ components: [warnContainer] });
       }
 
+      // Add to ignoredDeletes before bulkDelete
+      deletable.forEach(m => {
+        if (client.ignoredDeletes) {
+          client.ignoredDeletes.add(m.id);
+          setTimeout(() => client.ignoredDeletes?.delete(m.id), 15000);
+        }
+      });
+
       const deleted = await message.channel.bulkDelete(deletable, true);
 
       const successContainer = new ContainerBuilder()
@@ -72,7 +80,7 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await progressMsg.edit({ components: [successContainer] }).catch(() => {});
-      setTimeout(() => progressMsg.delete().catch(() => {}), 5000);
+      setTimeout(() => safeDelete(progressMsg), 5000);
     } catch (error) {
       sendAutoDelete(message, { components: [cv2Error(error.message)], flags: 32768 }, 5000);
     }

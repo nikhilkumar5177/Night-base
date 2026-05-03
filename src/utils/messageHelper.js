@@ -24,7 +24,7 @@ async function sendAutoDelete(channelOrMessage, options, ms = LIMITS.AUTO_DELETE
             sent = await channel.send(options);
         }
 
-        if (ms > 0) setTimeout(() => sent.delete().catch(() => { }), ms);
+        if (ms > 0) setTimeout(() => safeDelete(sent), ms);
         return sent;
     } catch (err) {
         console.error('Error in sendAutoDelete:', err);
@@ -175,6 +175,22 @@ function cv2Expire() {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 }
 
+/**
+ * Safely deletes a message and adds it to the ignoredDeletes set to prevent ghost ping logs.
+ * @param {import('discord.js').Message} message 
+ * @returns {Promise<import('discord.js').Message>}
+ */
+async function safeDelete(message) {
+    if (!message || !message.delete) return null;
+    if (message.client?.ignoredDeletes) {
+        message.client.ignoredDeletes.add(message.id);
+        setTimeout(() => {
+            message.client.ignoredDeletes?.delete(message.id);
+        }, 15000);
+    }
+    return message.delete().catch(() => null);
+}
+
 module.exports = { 
     sendAutoDelete, 
     sendUsage, 
@@ -185,5 +201,6 @@ module.exports = {
     safeEdit,
     safeUpdate,
     sanitizeContent,
-    injectSafe 
+    injectSafe,
+    safeDelete 
 };

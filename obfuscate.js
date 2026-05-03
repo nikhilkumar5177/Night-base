@@ -13,9 +13,9 @@ function obfuscateFile(inputPath, outputPath) {
   const code = fs.readFileSync(inputPath, 'utf-8');
   const result = JavaScriptObfuscator.obfuscate(code, {
     compact: true,
-    controlFlowFlattening: true,
+    controlFlowFlattening: false,
     controlFlowFlatteningThreshold: 0.5,
-    deadCodeInjection: true,
+    deadCodeInjection: false,
     deadCodeInjectionThreshold: 0.2,
     debugProtection: false,
     disableConsoleOutput: false,

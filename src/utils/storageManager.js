@@ -112,7 +112,7 @@ async function flush() {
 
 function startPeriodicFlush(intervalMs) {
   if (flushInterval) return;
-  flushInterval = setInterval(flush, intervalMs || 30000);
+  flushInterval = setInterval(flush, intervalMs || 120000);
 }
 
 async function stopPeriodicFlush() {

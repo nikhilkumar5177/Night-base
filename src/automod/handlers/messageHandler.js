@@ -5,6 +5,7 @@ const { checkLinks } = require('../modules/links');
 const { checkContent } = require('../modules/content');
 const { checkSecurity } = require('../modules/security');
 const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
+const { safeDelete } = require('../../utils/messageHelper');
 
 const warningCooldowns = new Map();
 
@@ -56,7 +57,7 @@ async function executeActions(client, message, violation, moduleConfig) {
   
   try {
     if (actions.includes('delete')) {
-      await message.delete().catch(() => {});
+      await safeDelete(message);
     }
 
     if (actions.includes('warn')) {
@@ -89,7 +90,7 @@ async function executeActions(client, message, violation, moduleConfig) {
           });
         } catch (e) { }
 
-        if (msg) setTimeout(() => msg.delete().catch(() => { }), 10000);
+        if (msg) setTimeout(() => safeDelete(msg), 10000);
       }
     }
 

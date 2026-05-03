@@ -86,8 +86,7 @@ const DEFAULT_CONFIG = {
   }
 };
 
-// Pre-cached stringified default for faster cloning
-const DEFAULT_CONFIG_STR = JSON.stringify(DEFAULT_CONFIG);
+const cache = new Map();
 
 /**
  * Get the config for a specific guild.
@@ -95,40 +94,38 @@ const DEFAULT_CONFIG_STR = JSON.stringify(DEFAULT_CONFIG);
  * @returns {object}
  */
 async function getConfig(guildId) {
-  const cached = cache.get(guildId);
-  if (cached) return cached;
+  if (cache.has(guildId)) return cache.get(guildId);
 
   const filePath = path.join(CONFIG_DIR, `${guildId}.json`);
-  let config = JSON.parse(DEFAULT_CONFIG_STR);
+  let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
-  try {
-    const data = await fs.promises.readFile(filePath, 'utf8');
-    const loaded = JSON.parse(data);
-    
-    // Efficient shallow merge for top level, specific deep merge for modules
-    config = {
-      ...config,
-      ...loaded,
-      modules: {
-        ...config.modules,
-        ...(loaded.modules || {})
-      }
-    };
-    
-    // Merge module-specific defaults
-    for (const key in config.modules) {
-      config.modules[key] = {
-        ...DEFAULT_CONFIG.modules[key],
-        ...config.modules[key]
+  if (fs.existsSync(filePath)) {
+    try {
+      const data = await fs.promises.readFile(filePath, 'utf8');
+      const loaded = JSON.parse(data);
+      
+      // Deep merge modules to handle missing modules or fields
+      config = {
+        ...DEFAULT_CONFIG,
+        ...loaded,
+        modules: {
+          ...DEFAULT_CONFIG.modules,
+          ...(loaded.modules || {})
+        }
       };
-    }
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      // File doesn't exist, use default and save it
-      await saveConfig(guildId, config);
-    } else {
+      
+      // Ensure each module has its own defaults merged
+      for (const key in config.modules) {
+        config.modules[key] = {
+          ...DEFAULT_CONFIG.modules[key],
+          ...config.modules[key]
+        };
+      }
+    } catch (err) {
       console.error(`Error reading config for guild ${guildId}:`, err);
     }
+  } else {
+    await saveConfig(guildId, config);
   }
   
   cache.set(guildId, config);

@@ -46,21 +46,22 @@ function init() {
 }
 
 function read(file) {
-  if (cache.has(file)) {
-    return cache.get(file);
-  }
-
   const defaultData = DEFAULT_FILES[file] || {};
-  const filePath = path.join(STORAGE_DIR, file);
   let data;
-
-  try {
-    data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch {
-    data = JSON.parse(JSON.stringify(defaultData));
+  
+  if (cache.has(file)) {
+    data = cache.get(file);
+  } else {
+    const filePath = path.join(STORAGE_DIR, file);
+    try {
+      data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    } catch {
+      data = JSON.parse(JSON.stringify(defaultData));
+    }
+    cache.set(file, data);
   }
 
-  // Ensure defaults are present only when first loading from disk
+  // Deep merge/ensure defaults for top-level keys if it's an object
   if (data && typeof data === 'object' && !Array.isArray(data) && defaultData && typeof defaultData === 'object' && !Array.isArray(defaultData)) {
     let changed = false;
     for (const [key, value] of Object.entries(defaultData)) {
@@ -69,13 +70,9 @@ function read(file) {
         changed = true;
       }
     }
-    if (changed) {
-      const content = JSON.stringify(data);
-      fs.writeFileSync(filePath, content);
-    }
+    if (changed) write(file, data);
   }
 
-  cache.set(file, data);
   return data;
 }
 

@@ -38,33 +38,40 @@ module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
-    const { handleIncomingDM, handleStaffReply } = require('../utils/dmFormManager');
-
-    // 1. Handle DM Logging (User -> Bot or Bot -> User)
+    // 1. Critical Early Exits (0ms processing for irrelevant messages)
+    if (message.author.bot) return;
     if (!message.guild) {
+      const { handleIncomingDM } = require('../utils/dmFormManager');
       await handleIncomingDM(client, message);
-      if (message.author.bot) return; // Still skip processing commands for bots
-      return; // Stop processing for DMs
+      return;
     }
 
-    // 2. Handle Staff Replies in Forms Channel (Staff -> User)
-    const config = storage.read('config.json');
-    if (message.channel.isThread() && message.channel.parentId === config.dmLogChannelId) {
-      if (message.author.bot) return; // Don't forward bot's own confirmations
+    // 2. Consolidate Storage Access (Read once per message)
+    const allData = {
+        config: storage.read('config.json'),
+        afk: storage.read('afk.json'),
+        vouch: storage.read('vouch.json'),
+        staff: storage.read('staff.json'),
+        security: storage.read('security.json'),
+        blacklist: storage.read('blacklist.json'),
+        cmdBlacklist: storage.read('cmdBlacklist.json'),
+        aliases: storage.read('aliases.json'),
+        analytics: storage.read('analytics.json')
+    };
+
+    const runtimeConfig = allData.config;
+    const prefix = runtimeConfig.prefix || client.config.prefix;
+    const isDev = (process.env.DEV_ID || '').split(',').includes(message.author.id);
+
+    // 3. Handle Staff Replies in Forms Channel
+    if (message.channel.isThread() && message.channel.parentId === runtimeConfig.dmLogChannelId) {
+      const { handleStaffReply } = require('../utils/dmFormManager');
       await handleStaffReply(client, message);
       return;
     }
 
-    if (message.author.bot) return;
-    if (!message.guild) return;
-
-    const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
-    const isDev = devIds.includes(message.author.id);
-    const runtimeConfig = storage.read('config.json');
-    const prefix = runtimeConfig.prefix || client.config.prefix;
-
     // Vouch Logic
-    const vouchData = storage.read('vouch.json');
+    const vouchData = allData.vouch;
     const guildVouchChannels = vouchData[message.guild.id]?.channels || [];
     if (guildVouchChannels.includes(message.channel.id)) {
       if (message.content.startsWith(prefix)) {
@@ -109,7 +116,7 @@ module.exports = {
     await handleAutoMod(client, message);
 
     // AFK Check (Auto-Remove)
-    const afkData = storage.read('afk.json');
+    const afkData = allData.afk;
     const guildAfk = afkData[message.guild.id] || {};
     if (guildAfk[message.author.id]) {
       const { reason, timestamp } = guildAfk[message.author.id];
@@ -167,7 +174,7 @@ module.exports = {
     }
 
     if (message.webhookId && message.guild) {
-      const securityConfig = storage.read('security.json');
+      const securityConfig = allData.security;
       if (securityConfig.enabled) {
         if (!client._webhookTracker) client._webhookTracker = new Map();
         const guildId = message.guild.id;
@@ -188,7 +195,7 @@ module.exports = {
             const webhooks = await message.channel.fetchWebhooks().catch(() => null);
             if (webhooks) { for (const [, wh] of webhooks) { await wh.delete('Security: Webhook spam').catch(() => { }); } }
             const owner = await message.guild.fetchOwner().catch(() => null);
-            const staffData = storage.read('staff.json');
+            const staffData = allData.staff;
             const guildRoles = staffData[message.guild.id]?.roles || [];
             const staffMentions = guildRoles.map(r => `<@&${r}>`).join(' ');
 
@@ -229,7 +236,7 @@ module.exports = {
     if (runtimeConfig.maintenance && !isDev) return;
 
     if (runtimeConfig.aliasMode !== false) {
-      const aliasData = storage.read('aliases.json');
+      const aliasData = allData.aliases;
       const triggerMap = getGuildTriggerMap(aliasData, message.guild);
 
       const content = message.content.toLowerCase().trim();
@@ -315,19 +322,26 @@ module.exports = {
     if (runtimeConfig.disabledCommands?.includes(command.name)) return;
     if (command.enabled === false) return;
 
-    const blacklistData = storage.read('blacklist.json');
+    const blacklistData = allData.blacklist;
     if (blacklistData.users?.includes(message.author.id)) return;
 
-    const cmdBlacklist = storage.read('cmdBlacklist.json');
+    const cmdBlacklist = allData.cmdBlacklist;
     if (cmdBlacklist[message.channel.id]?.includes(command.name)) return;
 
-    const staffData = storage.read('staff.json');
+    const staffData = allData.staff;
     const guildRoles = staffData[message.guild.id]?.roles || [];
-    const memberRoles = message.member ? message.member.roles.cache.map(r => r.id) : [];
-    const isStaff = guildRoles.some(r => memberRoles.includes(r));
+    let isStaff = false;
+    if (guildRoles.length > 0) {
+        for (const roleId of guildRoles) {
+            if (message.member.roles.cache.has(roleId)) {
+                isStaff = true;
+                break;
+            }
+        }
+    }
 
     if (command.staffOnly && !isStaff && !isDev) {
-      return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);
+        return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);
     }
 
     if (runtimeConfig.channelCommands?.[message.channel.id]?.disabled?.includes(command.name)) return;
@@ -375,7 +389,7 @@ module.exports = {
       await sendAutoDelete(message, { components: [cv2Error(`An error occurred: \`${error.message}\``)], flags: MessageFlags.IsComponentsV2 }, 5000).catch(() => { });
     }
 
-    const analytics = storage.read('analytics.json');
+    const analytics = allData.analytics;
     if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0, users: {} };
     analytics[command.name].uses++;
     analytics[command.name].lastUsed = Date.now();

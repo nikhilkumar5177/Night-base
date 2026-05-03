@@ -49,19 +49,16 @@ function read(file) {
   const defaultData = DEFAULT_FILES[file] || {};
   let data;
   
-  if (cache.has(file)) {
-    data = cache.get(file);
-  } else {
-    const filePath = path.join(STORAGE_DIR, file);
-    try {
-      data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    } catch {
-      data = JSON.parse(JSON.stringify(defaultData));
-    }
-    cache.set(file, data);
+  if (cache.has(file)) return cache.get(file);
+
+  const filePath = path.join(STORAGE_DIR, file);
+  try {
+    data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {
+    data = JSON.parse(JSON.stringify(defaultData));
   }
 
-  // Deep merge/ensure defaults for top-level keys if it's an object
+  // Ensure defaults only once during initial load
   if (data && typeof data === 'object' && !Array.isArray(data) && defaultData && typeof defaultData === 'object' && !Array.isArray(defaultData)) {
     let changed = false;
     for (const [key, value] of Object.entries(defaultData)) {
@@ -70,8 +67,13 @@ function read(file) {
         changed = true;
       }
     }
-    if (changed) write(file, data);
+    if (changed) {
+        fs.writeFileSync(filePath, JSON.stringify(data));
+    }
   }
+
+  cache.set(file, data);
+  return data;
 
   return data;
 }

@@ -13,6 +13,7 @@ module.exports = {
   staffOnly: true,
   devOnly: false,
   execute: async (client, message, args) => {
+
     try {
       if (args.length < 2) return sendUsage(message, module.exports);
 
@@ -43,7 +44,7 @@ module.exports = {
         const { triggerReminder } = require('../../utils/messageHelper');
         await triggerReminder(client, reminderData);
 
-        console.log(`[Reminder] Triggered for ${message.author.tag} (${message.author.id})`);
+
         const current = storage.read('reminders.json');
         storage.write('reminders.json', current.filter(r => r.id !== id));
       }, Math.min(duration, 2147483647));

@@ -99,6 +99,7 @@ async function flushFile(file) {
     await fs.promises.writeFile(tmpPath, content);
     await fs.promises.rename(tmpPath, filePath);
   } catch (err) {
+
     try { await fs.promises.unlink(tmpPath); } catch {}
   }
   dirty.delete(file);

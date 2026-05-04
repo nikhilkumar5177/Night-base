@@ -217,41 +217,46 @@ module.exports = {
  * @param {object} reminder 
  */
 async function triggerReminder(client, reminder) {
-    const channel = client.channels.cache.get(reminder.channelId) || await client.channels.fetch(reminder.channelId).catch(() => null);
-    const allNotify = [...new Set([reminder.userId, ...(reminder.mentions || [])])];
-    
-    // Check if setter is Dev or Guild Owner
-    const devIds = (process.env.DEV_ID || '').split(',');
-    const isDev = devIds.includes(reminder.userId);
-    let isOwner = false;
-    
-    if (channel && channel.guild) {
-        if (channel.guild.ownerId === reminder.userId) isOwner = true;
-    }
 
-    if (channel) {
-        const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Reminder:**\n${reminder.message}`))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+    try {
+        const channel = client.channels.cache.get(reminder.channelId) || await client.channels.fetch(reminder.channelId).catch(() => null);
+        const allNotify = [...new Set([reminder.userId, ...(reminder.mentions || [])])];
+        
+        // Check if setter is Dev or Guild Owner
+        const devIds = (process.env.DEV_ID || '').split(',');
+        const isDev = devIds.includes(reminder.userId);
+        let isOwner = false;
+        
+        if (channel && channel.guild) {
+            if (channel.guild.ownerId === reminder.userId) isOwner = true;
+        }
 
-        await channel.send({
-            content: allNotify.map(id => `<@${id}>`).join(' '),
-            components: [container],
-            flags: MessageFlags.IsComponentsV2,
-            allowedMentions: { users: allNotify }
-        }).catch(() => { });
-    }
+        if (channel) {
+            const container = new ContainerBuilder()
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Reminder:**\n${reminder.message}`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-    // Send Raw DM ONLY IF setter is Dev or Guild Owner
-    if (isDev || isOwner) {
-        for (const uid of allNotify) {
-            const user = client.users.cache.get(uid) || await client.users.fetch(uid).catch(() => null);
-            if (user) {
-                await user.send(`**Reminder:** ${reminder.message}`).catch(() => { });
+            await channel.send({
+                content: allNotify.map(id => `<@${id}>`).join(' '),
+                components: [container],
+                flags: MessageFlags.IsComponentsV2,
+                allowedMentions: { users: allNotify }
+            }).catch(() => { });
+        }
+
+        // Send Raw DM ONLY IF setter is Dev or Guild Owner
+        if (isDev || isOwner) {
+            for (const uid of allNotify) {
+                const user = client.users.cache.get(uid) || await client.users.fetch(uid).catch(() => null);
+                if (user) {
+                    await user.send(`**Reminder:** ${reminder.message}`).catch(() => { });
+                }
             }
         }
+    } catch (err) {
+        // Silently catch or log properly
     }
 }

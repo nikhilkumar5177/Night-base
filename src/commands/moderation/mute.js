@@ -1,5 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, MessageFlags } = require('discord.js');
 const { resolveMember } = require('../../utils/resolver');
+const storage = require('../../utils/storageManager');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
 const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
 
@@ -28,8 +29,17 @@ module.exports = {
       if (!target.moderatable) {
         return message.reply({ components: [cv2Error('I cannot timeout this user.')], flags: 32768 });
       }
-      if (target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
-        return message.reply({ components: [cv2Error('Target has a higher or equal role.')], flags: 32768 });
+      if (target.id === message.guild.ownerId) {
+        return message.reply({ components: [cv2Error('You cannot timeout the server owner.')], flags: 32768 });
+      }
+
+      // Staff-aware hierarchy: only enforce between staff members
+      const staffData = storage.read('staff.json');
+      const guildStaffRoles = staffData[message.guild.id]?.roles || [];
+      const isTargetStaff = guildStaffRoles.some(roleId => target.roles.cache.has(roleId));
+
+      if (isTargetStaff && target.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
+        return message.reply({ components: [cv2Error('Target is a staff member with a higher or equal role.')], flags: 32768 });
       }
 
       const timeStr = args[1]?.toLowerCase();

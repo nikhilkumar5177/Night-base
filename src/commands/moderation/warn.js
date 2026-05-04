@@ -33,8 +33,28 @@ module.exports = {
       if (targetUser.id === message.author.id) {
         return message.reply({ components: [cv2Error('You cannot warn yourself.')], flags: 32768 });
       }
-      if (targetMember && targetMember.roles.highest.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {
-        return message.reply({ components: [cv2Error('Target has a higher or equal role.')], flags: 32768 });
+      if (targetMember) {
+        if (targetMember.id === message.guild.ownerId) {
+          return message.reply({ components: [cv2Error('You cannot warn the server owner.')], flags: 32768 });
+        }
+        
+        // Check if target is staff
+        const staffData = storage.read('staff.json');
+        const guildStaffRoles = staffData[message.guild.id]?.roles || [];
+        const isTargetStaff = guildStaffRoles.some(roleId => targetMember.roles.cache.has(roleId));
+        const isModeratorOwner = message.author.id === message.guild.ownerId;
+
+        if (isTargetStaff) {
+          // Hierarchy strictly enforced between staff
+          if (targetMember.roles.highest.position >= message.member.roles.highest.position && !isModeratorOwner) {
+            return message.reply({ components: [cv2Error('Target is a staff member with a higher or equal role.')], flags: 32768 });
+          }
+        }
+
+        // Always protect the bot itself
+        if (targetMember.roles.highest.position >= message.guild.members.me.roles.highest.position) {
+          return message.reply({ components: [cv2Error('Target has a higher or equal role than me.')], flags: 32768 });
+        }
       }
 
       const loadContainer = new ContainerBuilder()

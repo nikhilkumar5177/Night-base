@@ -30,41 +30,16 @@ module.exports = {
     const now = Date.now();
     const pending = [];
 
-    const triggerReminder = async (reminder) => {
-      const channel = client.channels.cache.get(reminder.channelId) || await client.channels.fetch(reminder.channelId).catch(() => null);
-      const allNotify = [...new Set([reminder.userId, ...(reminder.mentions || [])])];
-
-      if (channel) {
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Reminder:**\n${reminder.message}`));
-        
-        await channel.send({ 
-          content: allNotify.map(id => `<@${id}>`).join(' '), 
-          components: [container], 
-          flags: 32768, 
-          allowedMentions: { users: allNotify } 
-        }).catch(() => {});
-      }
-
-      // Send Raw DM to all notified users
-      for (const uid of allNotify) {
-        const user = client.users.cache.get(uid) || await client.users.fetch(uid).catch(() => null);
-        if (user) {
-          await user.send(`**Reminder:** ${reminder.message}`).catch(() => {});
-        }
-      }
-    };
-
+    const { triggerReminder } = require('../utils/messageHelper');
+    
     for (const reminder of reminders) {
       if (reminder.triggerAt <= now) {
-        triggerReminder(reminder);
+        triggerReminder(client, reminder);
       } else {
         pending.push(reminder);
         const delay = reminder.triggerAt - now;
         setTimeout(() => {
-          triggerReminder(reminder);
+          triggerReminder(client, reminder);
           const current = storage.read('reminders.json');
           storage.write('reminders.json', current.filter(r => r.id !== reminder.id));
         }, Math.min(delay, 2147483647));

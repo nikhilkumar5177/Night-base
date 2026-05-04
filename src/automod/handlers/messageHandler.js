@@ -1,5 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, EmbedBuilder } = require('discord.js');
 const { getConfig } = require('../database');
+const { safeDelete } = require('../../utils/messageHelper');
 const { checkSpam } = require('../modules/spam');
 const { checkLinks } = require('../modules/links');
 const { checkContent } = require('../modules/content');
@@ -56,7 +57,6 @@ async function executeActions(client, message, violation, moduleConfig) {
   
   try {
     if (actions.includes('delete')) {
-      const { safeDelete } = require('../../utils/messageHelper');
       await safeDelete(message);
     }
 

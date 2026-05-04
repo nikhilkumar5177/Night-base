@@ -1,5 +1,5 @@
 const { EmbedBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { LIMITS, SEP, EMOJI_ERROR, EMOJI_ARROW, FOOTER_TEXT } = require('./constants');
+const { LIMITS, SEP, EMOJI_ERROR, EMOJI_ARROW, EMOJI_INFO, FOOTER_TEXT } = require('./constants');
 
 /**
  * Sends a message and automatically deletes it after a specified time.
@@ -207,5 +207,51 @@ module.exports = {
     safeUpdate,
     sanitizeContent,
     injectSafe,
-    safeDelete 
+    safeDelete,
+    triggerReminder
 };
+
+/**
+ * Shared utility to trigger a reminder (used by command and ready event)
+ * @param {import('discord.js').Client} client 
+ * @param {object} reminder 
+ */
+async function triggerReminder(client, reminder) {
+    const channel = client.channels.cache.get(reminder.channelId) || await client.channels.fetch(reminder.channelId).catch(() => null);
+    const allNotify = [...new Set([reminder.userId, ...(reminder.mentions || [])])];
+    
+    // Check if setter is Dev or Guild Owner
+    const devIds = (process.env.DEV_ID || '').split(',');
+    const isDev = devIds.includes(reminder.userId);
+    let isOwner = false;
+    
+    if (channel && channel.guild) {
+        if (channel.guild.ownerId === reminder.userId) isOwner = true;
+    }
+
+    if (channel) {
+        const container = new ContainerBuilder()
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Reminder:**\n${reminder.message}`))
+            .addSeparatorComponents(new SeparatorBuilder())
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+
+        await channel.send({
+            content: allNotify.map(id => `<@${id}>`).join(' '),
+            components: [container],
+            flags: MessageFlags.IsComponentsV2,
+            allowedMentions: { users: allNotify }
+        }).catch(() => { });
+    }
+
+    // Send Raw DM ONLY IF setter is Dev or Guild Owner
+    if (isDev || isOwner) {
+        for (const uid of allNotify) {
+            const user = client.users.cache.get(uid) || await client.users.fetch(uid).catch(() => null);
+            if (user) {
+                await user.send(`**Reminder:** ${reminder.message}`).catch(() => { });
+            }
+        }
+    }
+}

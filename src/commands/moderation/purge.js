@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
-const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
+const { sendUsage, sendAutoDelete, cv2Error, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'purge',
@@ -27,7 +27,6 @@ module.exports = {
       const progressMsg = await sendAutoDelete(message, { components: [loadContainer], flags: 32768 }, 0);
       
       // Delete command message after sending progress
-      const { safeDelete } = require('../../utils/messageHelper');
       await safeDelete(message);
 
       let fetched = await message.channel.messages.fetch({ limit: count });

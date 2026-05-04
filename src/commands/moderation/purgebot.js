@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
-const { cv2Error } = require('../../utils/messageHelper');
+const { cv2Error, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'purgebot',
@@ -26,7 +26,6 @@ module.exports = {
       const progressMsg = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
 
       // Delete the command message after replying
-      const { safeDelete } = require('../../utils/messageHelper');
       await safeDelete(message);
 
       let fetched = await message.channel.messages.fetch({ limit: 100 });
@@ -55,7 +54,6 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
       await progressMsg.edit({ components: [container] }).catch(() => {});
-      const { safeDelete } = require('../../utils/messageHelper');
       setTimeout(() => safeDelete(progressMsg), 5000);
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});

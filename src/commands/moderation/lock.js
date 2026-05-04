@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ChannelType, PermissionsBitField, MessageFlags } = require('discord.js');
 const { EMOJI_SUCCESS, EMOJI_LOADING, EMOJI_LOCK } = require('../../utils/constants');
-const { cv2Error } = require('../../utils/messageHelper');
+const { cv2Error, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'lock',
@@ -52,7 +52,6 @@ module.exports = {
         await new Promise(r => setTimeout(r, 200));
       }
 
-      const { safeDelete } = require('../../utils/messageHelper');
       await safeDelete(load);
       await message.react(EMOJI_LOCK).catch(() => { });
 

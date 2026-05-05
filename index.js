@@ -24,6 +24,7 @@ client.aliases = new Collection();
 client.config = config;
 client.cooldowns = new Map();
 client.snipeCache = new Map();
+client.activeGames = new Map();
 
 storage.init();
 storage.startPeriodicFlush(120000);

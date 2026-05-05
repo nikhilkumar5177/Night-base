@@ -108,7 +108,7 @@ module.exports = {
 
         if (guess === targetNumber) {
           winner = m.author;
-          await m.react(getReactId(EMOJI_CONGRATS)).catch(() => { });
+          await m.react(getReactId('✅')).catch(() => { });
           collector.stop('win');
         } else if (useHints) {
           // Anti-spam: 2 seconds cooldown per user for hints to prevent rate limits

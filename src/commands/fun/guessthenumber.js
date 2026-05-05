@@ -6,7 +6,8 @@ module.exports = {
   name: 'guessthenumber',
   aliases: ['gtn', 'guess'],
   description: 'Play a game of Guess the Number!',
-  usage: 'guess [min] [max] [hint/nohint]',
+  usage: 'guess start\nguess [min] [max] [hint/nohint]',
+  example: 'guess start\nguess 1 100 hint',
   cooldown: 5,
   enabled: true,
   data: new SlashCommandBuilder()
@@ -39,14 +40,23 @@ module.exports = {
         max = message.options.getInteger('max') || 100;
         mode = message.options.getString('mode') || 'nohint';
       } else {
-        if (args[0]?.toLowerCase() === 'start') {
+        // No arguments → show usage
+        if (!args.length || !args[0]) {
+          const { sendUsage } = require('../../utils/messageHelper');
+          return sendUsage(message, module.exports);
+        }
+
+        if (args[0].toLowerCase() === 'start') {
           min = Math.floor(Math.random() * 50) + 1; // 1-50
           max = Math.floor(Math.random() * 450) + 51; // 51-500
           mode = Math.random() > 0.5 ? 'hint' : 'nohint';
-        } else {
+        } else if (!isNaN(args[0])) {
           min = parseInt(args[0]) || 1;
           max = parseInt(args[1]) || 100;
           mode = (args[2] || '').toLowerCase() === 'hint' ? 'hint' : 'nohint';
+        } else {
+          const { sendUsage } = require('../../utils/messageHelper');
+          return sendUsage(message, module.exports);
         }
       }
 

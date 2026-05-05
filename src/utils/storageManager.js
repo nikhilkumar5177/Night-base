@@ -33,14 +33,46 @@ function init() {
   }
   for (const [file, defaultData] of Object.entries(DEFAULT_FILES)) {
     const filePath = path.join(STORAGE_DIR, file);
+    
     if (!fs.existsSync(filePath)) {
+      // File doesn't exist — create with defaults
       fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
-    }
-    try {
-      const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      cache.set(file, data);
-    } catch {
       cache.set(file, JSON.parse(JSON.stringify(defaultData)));
+    } else {
+      // File exists — read it and merge any missing default keys
+      try {
+        const raw = fs.readFileSync(filePath, 'utf-8').trim();
+        let data;
+
+        // Handle empty or corrupted files
+        if (!raw || raw === '') {
+          data = JSON.parse(JSON.stringify(defaultData));
+        } else {
+          data = JSON.parse(raw);
+        }
+
+        // Deep merge: add missing default keys without overwriting existing data
+        if (data && typeof data === 'object' && !Array.isArray(data) && 
+            defaultData && typeof defaultData === 'object' && !Array.isArray(defaultData)) {
+          let changed = false;
+          for (const [key, value] of Object.entries(defaultData)) {
+            if (data[key] === undefined) {
+              data[key] = JSON.parse(JSON.stringify(value));
+              changed = true;
+            }
+          }
+          if (changed) {
+            fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+          }
+        }
+
+        cache.set(file, data);
+      } catch {
+        // File is corrupted — use defaults but log it
+        console.error(`[Storage] ${file} is corrupted, resetting to defaults.`);
+        cache.set(file, JSON.parse(JSON.stringify(defaultData)));
+        fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
+      }
     }
   }
 }

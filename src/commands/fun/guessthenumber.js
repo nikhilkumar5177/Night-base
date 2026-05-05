@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_COMMAND, EMOJI_DOT, FOOTER_TEXT, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_UPVOTE, EMOJI_DOWNVOTE } = require('../../utils/constants');
+const { EMOJI_COMMAND, EMOJI_DOT, FOOTER_TEXT, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_INFO, EMOJI_UPVOTE, EMOJI_DOWNVOTE, EMOJI_CONGRATS } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -72,7 +72,7 @@ module.exports = {
 
       const filter = m => !m.author.bot;
       const collector = message.channel.createMessageCollector({ filter, time: 300000 });
-      
+
       // Store collector globally so /end command can access it
       client.activeGames.set(message.channel.id, {
         collector,
@@ -108,27 +108,27 @@ module.exports = {
 
         if (guess === targetNumber) {
           winner = m.author;
-          await m.react(getReactId(EMOJI_CONGRATS)).catch(() => {});
+          await m.react(getReactId(EMOJI_CONGRATS)).catch(() => { });
           collector.stop('win');
         } else if (useHints) {
           // Anti-spam: 2 seconds cooldown per user for hints to prevent rate limits
           if (userCooldowns.has(m.author.id)) return;
           userCooldowns.add(m.author.id);
-          setTimeout(() => userCooldowns.delete(m.author.id), 2000);
+          setTimeout(() => userCooldowns.delete(m.author.id), 1000);
 
           const emojiStr = guess < targetNumber ? EMOJI_UPVOTE : EMOJI_DOWNVOTE;
-          await m.react(getReactId(emojiStr)).catch(() => {});
+          await m.react(getReactId(emojiStr)).catch(() => { });
         }
       });
 
       collector.on('end', async (collected, reason) => {
         client.activeGames.delete(message.channel.id);
-        
+
         let finalContent = '';
         let mention = '';
 
         if (reason === 'win' && winner) {
-          finalContent = `${EMOJI_SUCCESS} **We have a winner!**\nThe number was **${targetNumber}**.\n\n` +
+          finalContent = `${EMOJI_CONGRATS} **We have a winner!**\nThe number was **${targetNumber}**.\n\n` +
             `${EMOJI_DOT} **Winner:** ${winner}\n` +
             `${EMOJI_DOT} **Total Guesses:** \`${collected.size}\``;
           mention = `${winner} ${starter}`;
@@ -149,9 +149,9 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-        await message.channel.send({ 
-          content: mention, 
-          components: [endContainer], 
+        await message.channel.send({
+          content: mention,
+          components: [endContainer],
           flags: MessageFlags.IsComponentsV2,
           allowedMentions: { users: [starter.id, winner?.id].filter(Boolean) }
         }).catch(() => { });

@@ -167,9 +167,8 @@ module.exports = {
 
         await message.channel.send({
           components: [endContainer],
-          flags: MessageFlags.IsComponentsV2,
-          allowedMentions: { users: [starter.id, winner?.id].filter(Boolean) }
-        }).catch(() => { });
+          flags: MessageFlags.IsComponentsV2
+        }).catch((err) => console.error('[GuessGame End Error]', err.message));
       });
 
     } catch (error) {

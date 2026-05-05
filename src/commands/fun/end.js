@@ -25,8 +25,8 @@ module.exports = {
 
       // Check Permissions
       const isStarter = user.id === game.starterId;
-      const isOwner = message.guild.ownerId === user.id;
-      const isAdmin = message.member.permissions.has(PermissionFlagsBits.Administrator);
+      const isOwner = message.guild?.ownerId === user.id;
+      const isAdmin = message.member?.permissions?.has(PermissionFlagsBits.Administrator) || false;
       const devIds = (process.env.DEV_ID || '').split(',');
       const isDev = devIds.includes(user.id);
 

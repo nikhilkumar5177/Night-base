@@ -92,7 +92,7 @@ module.exports = {
         // Handle ?end
         if (m.content.toLowerCase() === `${prefix}end`) {
           const isStarter = m.author.id === starter.id;
-          const isOwner = m.guild.ownerId === m.author.id;
+          const isOwner = m.guild?.ownerId === m.author.id;
           const devIds = (process.env.DEV_ID || '').split(',');
           const isDev = devIds.includes(m.author.id);
 
@@ -129,17 +129,17 @@ module.exports = {
 
         if (reason === 'win' && winner) {
           finalContent = `${EMOJI_CONGRATS} **We have a winner!**\nThe number was **${targetNumber}**.\n\n` +
-            `${EMOJI_DOT} **Winner:** ${winner}\n` +
+            `${EMOJI_DOT} **Winner:** <@${winner.id}>\n` +
             `${EMOJI_DOT} **Total Guesses:** \`${collected.size}\``;
-          mention = `${winner} ${starter}`;
+          mention = `<@${winner.id}> <@${starter.id}>`;
         } else if (reason === 'cancelled') {
           finalContent = `${EMOJI_WARN} **Game Cancelled!**\nThe game was ended by an authorized user.\n\n` +
             `${EMOJI_DOT} **The number was:** \`${targetNumber}\``;
-          mention = `${starter}`;
+          mention = `<@${starter.id}>`;
         } else {
           finalContent = `${EMOJI_ERROR} **Game Over!**\nNo one guessed the number in time.\n\n` +
             `${EMOJI_DOT} **The number was:** \`${targetNumber}\``;
-          mention = `${starter}`;
+          mention = `<@${starter.id}>`;
         }
 
         const endContainer = new ContainerBuilder()

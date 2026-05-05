@@ -161,10 +161,11 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(finalContent))
           .addSeparatorComponents(new SeparatorBuilder())
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(mention))
+          .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
         await message.channel.send({
-          content: mention,
           components: [endContainer],
           flags: MessageFlags.IsComponentsV2,
           allowedMentions: { users: [starter.id, winner?.id].filter(Boolean) }

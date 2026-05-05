@@ -75,7 +75,7 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_COMMAND} **Game Started!**\nI have picked a number between **${min} and ${max}**.\n\n` +
           `${EMOJI_DOT} **Anyone** can type their guess in the chat.\n` +
-          `${EMOJI_DOT} **Hints:** \`${useHints ? `Enabled ` : 'Disabled'}\`\n` +
+          `${EMOJI_DOT} **Hints:** \`${useHints ? `Enabled` : 'Disabled'}\`\n` +
           `${EMOJI_DOT} Use \`${prefix}end\` to stop the game.`
         ))
         .addSeparatorComponents(new SeparatorBuilder())

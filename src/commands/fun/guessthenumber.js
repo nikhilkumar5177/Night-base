@@ -159,8 +159,7 @@ module.exports = {
 
     } catch (error) {
       console.error(error);
-      const errTarget = message.reply ? message : message.channel;
-      errTarget.send({ components: [cv2Error(error.message)], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+      message.reply({ components: [cv2Error(error.message)], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
     }
   }
 };

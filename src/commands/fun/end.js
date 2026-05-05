@@ -17,6 +17,10 @@ module.exports = {
       const isInteraction = !message.author;
       const channelId = message.channel.id;
       const user = isInteraction ? message.user : message.author;
+
+      // Safety: initialize activeGames if not yet set
+      if (!client.activeGames) client.activeGames = new Map();
+
       const game = client.activeGames.get(channelId);
 
       if (!game) {

@@ -20,6 +20,9 @@ module.exports = {
     ).setRequired(false)),
   execute: async (client, message, args) => {
     try {
+      // Safety: initialize activeGames if not yet set (e.g. bot hasn't restarted)
+      if (!client.activeGames) client.activeGames = new Map();
+
       // Check if a game is already running in this channel
       if (client.activeGames.has(message.channel.id)) {
         return message.reply({ components: [cv2Error('A game is already running in this channel. Use `?end` to stop it.')], flags: MessageFlags.IsComponentsV2 }).catch(() => { });

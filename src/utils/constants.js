@@ -53,7 +53,7 @@ const EMOJIS = {
 };
 
 const SEP = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
-const FOOTER_TEXT = 'Wild Wolf \u2502 Premium Security \u2502 v2.0';
+const FOOTER_TEXT = 'Premium Security 2.0';
 
 module.exports = {
   ...EMOJIS,

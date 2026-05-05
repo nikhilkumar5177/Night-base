@@ -75,7 +75,7 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_COMMAND} **Game Started!**\nI have picked a number between **${min} and ${max}**.\n\n` +
           `${EMOJI_DOT} **Anyone** can type their guess in the chat.\n` +
-          `${EMOJI_DOT} **Hints:** \`${useHints ? `Enabled (${EMOJI_UPVOTE}/${EMOJI_DOWNVOTE} Reactions)` : 'Disabled'}\`\n` +
+          `${EMOJI_DOT} **Hints:** \`${useHints ? `Enabled ` : 'Disabled'}\`\n` +
           `${EMOJI_DOT} Use \`${prefix}end\` to stop the game.`
         ))
         .addSeparatorComponents(new SeparatorBuilder())
@@ -115,9 +115,10 @@ module.exports = {
           }
         }
 
-        if (isNaN(m.content)) return;
-        const guess = parseInt(m.content);
-        if (guess < min || guess > max) return;
+        const trimmed = m.content.trim();
+        if (!/^\d+$/.test(trimmed)) return;
+        const guess = parseInt(trimmed, 10);
+        if (isNaN(guess) || guess < min || guess > max) return;
 
         if (guess === targetNumber) {
           winner = m.author;

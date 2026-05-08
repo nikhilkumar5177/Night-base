@@ -170,6 +170,7 @@ module.exports = {
     const runtimeConfig = allData.config;
     const prefix = runtimeConfig.prefix || client.config.prefix;
     const isDev = (process.env.DEV_ID || '').split(',').includes(message.author.id);
+    const isOwner = message.author.id === message.guild.ownerId;
 
     // 3. Handle Staff Replies in Forms Channel
     if (message.channel.isThread() && message.channel.parentId === runtimeConfig.dmLogChannelId) {
@@ -409,7 +410,10 @@ module.exports = {
     const staffData = allData.staff;
     const guildRoles = staffData[message.guild.id]?.roles || [];
     let isStaff = false;
-    if (guildRoles.length > 0) {
+    
+    // The Staff Role system is a Premium feature. 
+    // If the guild is not premium, we ignore the configured staff roles.
+    if (isPremium && guildRoles.length > 0) {
       for (const roleId of guildRoles) {
         if (message.member.roles.cache.has(roleId)) {
           isStaff = true;
@@ -418,7 +422,7 @@ module.exports = {
       }
     }
 
-    if (command.staffOnly && !isStaff && !isDev) {
+    if (command.staffOnly && !isStaff && !isOwner && !isDev) {
       return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);
     }
 
@@ -455,7 +459,7 @@ module.exports = {
     if (command.devOnly && !isDev) return; // Silent ignore for dev commands as requested
 
     const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
-    const isOwner = message.author.id === message.guild.ownerId;
+
 
     if (cooldownAmount > 0 && !isDev && !isOwner) {
       const key = `${message.author.id}-${command.name}`;

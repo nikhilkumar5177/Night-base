@@ -8,7 +8,7 @@ module.exports = {
   name: 'premium',
   aliases: ['setpremium'],
   description: 'Manage premium status for a guild',
-  usage: 'premium <guild_id> [true|false|enable|disable] [duration]',
+  usage: 'premium <guild_id> [true|false|enable|disable|permanent] [duration]',
   cooldown: 0,
   enabled: true,
   staffOnly: false,
@@ -33,7 +33,7 @@ module.exports = {
     let setState = !isCurrentlyPremium;
     if (args[stateArgIndex]) {
       const stateArg = args[stateArgIndex].toLowerCase();
-      if (stateArg === 'true' || stateArg === 'enable') setState = true;
+      if (stateArg === 'true' || stateArg === 'enable' || stateArg === 'permanent') setState = true;
       if (stateArg === 'false' || stateArg === 'disable') setState = false;
     }
 

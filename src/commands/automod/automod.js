@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ContainerBuilder, TextDisplayB
 const { getConfig, saveConfig, resetConfig } = require('../../automod/database');
 const { createDashboard } = require('../../automod/ui/dashboard');
 const { createCategoryPanel } = require('../../automod/ui/panels');
-const { createSpamModal, createLinkModal, createContentModal, createRaidModal, createSecurityModal, createGlobalModal, createEscalationModal } = require('../../automod/ui/modals');
+const { createSpamModal, createLinkModal, createContentModal, createRaidModal, createSecurityModal, createGlobalModal } = require('../../automod/ui/modals');
 const { SEP, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
@@ -54,11 +54,6 @@ module.exports = {
             await saveConfig(guildId, config);
             const panel = createCategoryPanel(moduleName.charAt(0).toUpperCase() + moduleName.slice(1), config);
             return interaction.update({ ...panel, flags: 32768 });
-          } else if (moduleName === 'escalation') {
-            config.escalation.enabled = !config.escalation.enabled;
-            await saveConfig(guildId, config);
-            const panel = createCategoryPanel('Escalation', config);
-            return interaction.update({ ...panel, flags: 32768 });
           }
         }
 
@@ -71,7 +66,6 @@ module.exports = {
             case 'content': modal = createContentModal(config.modules.content); break;
             case 'raid': modal = createRaidModal(config.modules.raid); break;
             case 'security': modal = createSecurityModal(config.modules.security); break;
-            case 'escalation': modal = createEscalationModal(config.escalation); break;
           }
           if (modal) return interaction.showModal(modal);
         }
@@ -161,7 +155,6 @@ module.exports = {
         if (interaction.customId === 'automod_modal_raid') {
           config.modules.raid.joinLimit = parseInt(interaction.fields.getTextInputValue('raid_limit')) || config.modules.raid.joinLimit;
           config.modules.raid.window = parseInt(interaction.fields.getTextInputValue('raid_window')) || config.modules.raid.window;
-          config.modules.raid.minAccountAge = parseInt(interaction.fields.getTextInputValue('raid_age')) || config.modules.raid.minAccountAge;
 
           const rawActions = interaction.fields.getTextInputValue('raid_punishment').toLowerCase();
           config.modules.raid.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['kick', 'ban'].includes(a));
@@ -172,36 +165,13 @@ module.exports = {
         }
 
         if (interaction.customId === 'automod_modal_security') {
-          config.modules.security.nukeThreshold = parseInt(interaction.fields.getTextInputValue('security_nuke_threshold')) || config.modules.security.nukeThreshold;
-          
-          const toggles = interaction.fields.getTextInputValue('security_toggles').toLowerCase();
-          config.modules.security.antiNuke = toggles.includes('antinuke: yes');
-          config.modules.security.antiWebhook = toggles.includes('antiwebhook: yes');
+          config.modules.security.minAccountAge = parseInt(interaction.fields.getTextInputValue('security_age')) || config.modules.security.minAccountAge;
 
           const rawActions = interaction.fields.getTextInputValue('security_punishment').toLowerCase();
           config.modules.security.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));
 
           await saveConfig(guildId, config);
           const panel = createCategoryPanel('security', config);
-          return interaction.update({ ...panel, flags: 32768 });
-        }
-
-        if (interaction.customId === 'automod_modal_escalation') {
-          const raw = interaction.fields.getTextInputValue('escalation_steps');
-          const steps = raw.split('\n').map(line => {
-            const parts = line.split(',').map(p => p.trim());
-            if (parts.length < 2) return null;
-            const warns = parseInt(parts[0]);
-            const action = parts[1].toLowerCase();
-            if (isNaN(warns) || !['warn', 'mute', 'kick', 'ban'].includes(action)) return null;
-            const step = { warns, action };
-            if (parts[2]) step.duration = parts[2];
-            return step;
-          }).filter(Boolean).sort((a, b) => a.warns - b.warns);
-
-          config.escalation.steps = steps;
-          await saveConfig(guildId, config);
-          const panel = createCategoryPanel('Escalation', config);
           return interaction.update({ ...panel, flags: 32768 });
         }
 

@@ -36,8 +36,7 @@ function createDashboard(config) {
         { label: 'Link Filter', value: 'links', description: 'Control external links and invites' },
         { label: 'Raid Protection', value: 'raid', description: 'Detect and prevent server raids' },
         { label: 'Content Filter', value: 'content', description: 'Filter words, caps, and ghost pings' },
-        { label: 'Security & Anti-Nuke', value: 'security', description: 'Account age and safety checks' },
-        { label: 'Escalation', value: 'escalation', description: 'Auto-escalation warn thresholds' }
+        { label: 'Security & Anti-Nuke', value: 'security', description: 'Account age and safety checks' }
       ])
   );
 

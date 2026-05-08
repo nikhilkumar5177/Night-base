@@ -192,14 +192,6 @@ function createRaidModal(config) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
-  const ageLimitInput = new TextInputBuilder()
-    .setCustomId('raid_age')
-    .setLabel('Min Account Age (Days)')
-    .setPlaceholder('e.g. 1')
-    .setValue(String(config.minAccountAge || 1))
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-
   const punishmentInput = new TextInputBuilder()
     .setCustomId('raid_punishment')
     .setLabel('Actions (comma separated)')
@@ -211,7 +203,6 @@ function createRaidModal(config) {
   modal.addComponents(
     new ActionRowBuilder().addComponents(joinLimitInput),
     new ActionRowBuilder().addComponents(windowInput),
-    new ActionRowBuilder().addComponents(ageLimitInput),
     new ActionRowBuilder().addComponents(punishmentInput)
   );
 
@@ -226,19 +217,11 @@ function createSecurityModal(config) {
     .setCustomId('automod_modal_security')
     .setTitle('Security Settings');
 
-  const nukeLimitInput = new TextInputBuilder()
-    .setCustomId('security_nuke_threshold')
-    .setLabel('Anti-Nuke Threshold')
-    .setPlaceholder('Actions before trigger (e.g. 3)')
-    .setValue(String(config.nukeThreshold || 3))
-    .setStyle(TextInputStyle.Short)
-    .setRequired(true);
-
-  const togglesInput = new TextInputBuilder()
-    .setCustomId('security_toggles')
-    .setLabel('Toggles (yes/no) - AntiNuke, AntiWebhook')
-    .setPlaceholder('AntiNuke: yes, AntiWebhook: yes')
-    .setValue(`AntiNuke: ${config.antiNuke ? 'yes' : 'no'}, AntiWebhook: ${config.antiWebhook ? 'yes' : 'no'}`)
+  const ageLimitInput = new TextInputBuilder()
+    .setCustomId('security_age')
+    .setLabel('Min Account Age (Days)')
+    .setPlaceholder('e.g. 7')
+    .setValue(String(config.minAccountAge || 1))
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
@@ -251,8 +234,7 @@ function createSecurityModal(config) {
     .setRequired(true);
 
   modal.addComponents(
-    new ActionRowBuilder().addComponents(nukeLimitInput),
-    new ActionRowBuilder().addComponents(togglesInput),
+    new ActionRowBuilder().addComponents(ageLimitInput),
     new ActionRowBuilder().addComponents(punishmentInput)
   );
 
@@ -300,35 +282,11 @@ function createGlobalModal(config) {
   return modal;
 }
 
-/**
- * Create a modal for Escalation settings.
- */
-function createEscalationModal(config) {
-  const modal = new ModalBuilder()
-    .setCustomId('automod_modal_escalation')
-    .setTitle('Escalation Settings');
-
-  const stepsInput = new TextInputBuilder()
-    .setCustomId('escalation_steps')
-    .setLabel('Steps (one per line: warns, action, duration)')
-    .setPlaceholder('3, mute, 1h\n5, kick\n7, ban')
-    .setValue(config.steps ? config.steps.map(s => `${s.warns}, ${s.action}${s.duration ? ', ' + s.duration : ''}`).join('\n') : '')
-    .setStyle(TextInputStyle.Paragraph)
-    .setRequired(true);
-
-  modal.addComponents(
-    new ActionRowBuilder().addComponents(stepsInput)
-  );
-
-  return modal;
-}
-
 module.exports = {
   createSpamModal,
   createLinkModal,
   createContentModal,
   createRaidModal,
   createSecurityModal,
-  createGlobalModal,
-  createEscalationModal
+  createGlobalModal
 };

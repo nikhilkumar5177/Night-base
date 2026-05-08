@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ContainerBuilder, TextDisplayB
 const { getConfig, saveConfig, resetConfig } = require('../../automod/database');
 const { createDashboard } = require('../../automod/ui/dashboard');
 const { createCategoryPanel } = require('../../automod/ui/panels');
-const { createSpamModal, createLinkModal, createContentModal, createRaidModal, createSecurityModal, createGlobalModal } = require('../../automod/ui/modals');
+const { createSpamModal, createLinkModal, createContentModal, createRaidModal, createSecurityModal, createGlobalModal, createEscalationModal } = require('../../automod/ui/modals');
 const { SEP, EMOJI_ERROR } = require('../../utils/constants');
 
 module.exports = {
@@ -54,6 +54,11 @@ module.exports = {
             await saveConfig(guildId, config);
             const panel = createCategoryPanel(moduleName.charAt(0).toUpperCase() + moduleName.slice(1), config);
             return interaction.update({ ...panel, flags: 32768 });
+          } else if (moduleName === 'escalation') {
+            config.escalation.enabled = !config.escalation.enabled;
+            await saveConfig(guildId, config);
+            const panel = createCategoryPanel('Escalation', config);
+            return interaction.update({ ...panel, flags: 32768 });
           }
         }
 
@@ -66,6 +71,7 @@ module.exports = {
             case 'content': modal = createContentModal(config.modules.content); break;
             case 'raid': modal = createRaidModal(config.modules.raid); break;
             case 'security': modal = createSecurityModal(config.modules.security); break;
+            case 'escalation': modal = createEscalationModal(config.escalation); break;
           }
           if (modal) return interaction.showModal(modal);
         }
@@ -100,6 +106,9 @@ module.exports = {
         if (interaction.customId === 'automod_modal_spam') {
           config.modules.spam.limit = parseInt(interaction.fields.getTextInputValue('spam_limit')) || config.modules.spam.limit;
           config.modules.spam.window = parseInt(interaction.fields.getTextInputValue('spam_window')) || config.modules.spam.window;
+          
+          const toggles = interaction.fields.getTextInputValue('spam_toggles').toLowerCase();
+          config.modules.spam.duplicateDetection = toggles.includes('duplicates: yes');
 
           // Handle actions as array
           const rawActions = interaction.fields.getTextInputValue('spam_punishment').toLowerCase();
@@ -141,6 +150,8 @@ module.exports = {
           const limits = interaction.fields.getTextInputValue('content_limits').toLowerCase();
           config.modules.content.capsLimit = parseInt(limits.match(/caps:\s*(\d+)/)?.[1]) || config.modules.content.capsLimit;
           config.modules.content.lineLimit = parseInt(limits.match(/lines:\s*(\d+)/)?.[1]) || config.modules.content.lineLimit;
+          config.modules.content.emojiLimit = parseInt(limits.match(/emojis:\s*(\d+)/)?.[1]) || config.modules.content.emojiLimit;
+          config.modules.content.ghostPing = limits.includes('ghostping: yes');
 
           const rawActions = interaction.fields.getTextInputValue('content_punishment').toLowerCase();
           config.modules.content.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));
@@ -156,6 +167,9 @@ module.exports = {
           config.modules.raid.joinLimit = parseInt(interaction.fields.getTextInputValue('raid_limit')) || config.modules.raid.joinLimit;
           config.modules.raid.window = parseInt(interaction.fields.getTextInputValue('raid_window')) || config.modules.raid.window;
 
+          const toggles = interaction.fields.getTextInputValue('raid_toggles').toLowerCase();
+          config.modules.raid.autoLockdown = toggles.includes('auto-lock: yes');
+
           const rawActions = interaction.fields.getTextInputValue('raid_punishment').toLowerCase();
           config.modules.raid.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['kick', 'ban'].includes(a));
 
@@ -166,6 +180,11 @@ module.exports = {
 
         if (interaction.customId === 'automod_modal_security') {
           config.modules.security.minAccountAge = parseInt(interaction.fields.getTextInputValue('security_age')) || config.modules.security.minAccountAge;
+          config.modules.security.nukeThreshold = parseInt(interaction.fields.getTextInputValue('security_nuke_limit')) || config.modules.security.nukeThreshold;
+
+          const toggles = interaction.fields.getTextInputValue('security_toggles').toLowerCase();
+          config.modules.security.antiNuke = toggles.includes('anti-nuke: yes');
+          config.modules.security.antiWebhook = toggles.includes('anti-webhook: yes');
 
           const rawActions = interaction.fields.getTextInputValue('security_punishment').toLowerCase();
           config.modules.security.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));
@@ -183,6 +202,31 @@ module.exports = {
           await saveConfig(guildId, config);
           const dashboard = createDashboard(config);
           return interaction.update({ ...dashboard, flags: 32768 });
+        }
+
+        if (interaction.customId === 'automod_modal_escalation') {
+          const rawSteps = interaction.fields.getTextInputValue('escalation_steps').split(',');
+          const newSteps = [];
+
+          for (const rawStep of rawSteps) {
+            const [warns, action, duration] = rawStep.trim().split(':');
+            if (warns && action) {
+              newSteps.push({
+                warns: parseInt(warns),
+                action: action.toLowerCase().trim(),
+                duration: duration ? duration.toLowerCase().trim() : null
+              });
+            }
+          }
+
+          if (newSteps.length > 0) {
+            config.escalation.steps = newSteps.sort((a, b) => a.warns - b.warns);
+            await saveConfig(guildId, config);
+            const panel = createCategoryPanel('escalation', config);
+            return interaction.update({ ...panel, flags: 32768 });
+          } else {
+            return interaction.reply({ components: [cv2Error('Invalid escalation steps format.')], flags: 32768, ephemeral: true }).catch(() => {});
+          }
         }
       }
     } catch (error) {

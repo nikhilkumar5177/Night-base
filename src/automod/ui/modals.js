@@ -40,9 +40,18 @@ function createSpamModal(config) {
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(false);
 
+  const togglesInput = new TextInputBuilder()
+    .setCustomId('spam_toggles')
+    .setLabel('Toggles (yes/no) - Duplicates')
+    .setPlaceholder('Duplicates: yes')
+    .setValue(`Duplicates: ${config.duplicateDetection ? 'yes' : 'no'}`)
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
   modal.addComponents(
     new ActionRowBuilder().addComponents(limitInput),
     new ActionRowBuilder().addComponents(windowInput),
+    new ActionRowBuilder().addComponents(togglesInput),
     new ActionRowBuilder().addComponents(punishmentInput),
     new ActionRowBuilder().addComponents(responseMessageInput)
   );
@@ -61,7 +70,7 @@ function createLinkModal(config) {
   const allowedLinksInput = new TextInputBuilder()
     .setCustomId('allowed_links')
     .setLabel('Allowed Links (One per line)')
-    .setPlaceholder('e.g. discord.gg/wolf\ngithub.com')
+    .setPlaceholder('e.g. discord.gg/nightbase\ngithub.com')
     .setValue(config.allowedLinks ? config.allowedLinks.join('\n') : '')
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(false);
@@ -135,9 +144,9 @@ function createContentModal(config) {
 
   const limitsInput = new TextInputBuilder()
     .setCustomId('content_limits')
-    .setLabel('Limits (Caps %, Lines)')
-    .setPlaceholder('Caps: 70, Lines: 10')
-    .setValue(`Caps: ${config.capsLimit || 70}, Lines: ${config.lineLimit || 10}`)
+    .setLabel('Limits (Caps %, Lines, Emojis, GhostPing)')
+    .setPlaceholder('Caps: 70, Lines: 10, Emojis: 5, GhostPing: yes')
+    .setValue(`Caps: ${config.capsLimit || 70}, Lines: ${config.lineLimit || 10}, Emojis: ${config.emojiLimit || 5}, GhostPing: ${config.ghostPing ? 'yes' : 'no'}`)
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
@@ -200,9 +209,18 @@ function createRaidModal(config) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
+  const togglesInput = new TextInputBuilder()
+    .setCustomId('raid_toggles')
+    .setLabel('Toggles (yes/no) - Auto-Lock')
+    .setPlaceholder('Auto-Lock: yes')
+    .setValue(`Auto-Lock: ${config.autoLockdown ? 'yes' : 'no'}`)
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
   modal.addComponents(
     new ActionRowBuilder().addComponents(joinLimitInput),
     new ActionRowBuilder().addComponents(windowInput),
+    new ActionRowBuilder().addComponents(togglesInput),
     new ActionRowBuilder().addComponents(punishmentInput)
   );
 
@@ -233,8 +251,26 @@ function createSecurityModal(config) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
+  const nukeLimitInput = new TextInputBuilder()
+    .setCustomId('security_nuke_limit')
+    .setLabel('Anti-Nuke Threshold (Actions)')
+    .setPlaceholder('e.g. 3')
+    .setValue(String(config.nukeThreshold || 3))
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
+  const togglesInput = new TextInputBuilder()
+    .setCustomId('security_toggles')
+    .setLabel('Toggles (yes/no) - Anti-Nuke, Anti-Webhook')
+    .setPlaceholder('Anti-Nuke: yes, Anti-Webhook: yes')
+    .setValue(`Anti-Nuke: ${config.antiNuke ? 'yes' : 'no'}, Anti-Webhook: ${config.antiWebhook ? 'yes' : 'no'}`)
+    .setStyle(TextInputStyle.Short)
+    .setRequired(true);
+
   modal.addComponents(
     new ActionRowBuilder().addComponents(ageLimitInput),
+    new ActionRowBuilder().addComponents(nukeLimitInput),
+    new ActionRowBuilder().addComponents(togglesInput),
     new ActionRowBuilder().addComponents(punishmentInput)
   );
 
@@ -282,11 +318,33 @@ function createGlobalModal(config) {
   return modal;
 }
 
+/**
+ * Create a modal for Auto-Escalation configuration.
+ */
+function createEscalationModal(config) {
+  const modal = new ModalBuilder()
+    .setCustomId('automod_modal_escalation')
+    .setTitle('Auto-Escalation Settings');
+
+  const stepsInput = new TextInputBuilder()
+    .setCustomId('escalation_steps')
+    .setLabel('Punishment Steps (Threshold:Action:Time)')
+    .setPlaceholder('e.g. 3:warn, 5:mute:1h, 7:kick, 9:ban')
+    .setValue(config.steps ? config.steps.map(s => `${s.warns}:${s.action}${s.duration ? `:${s.duration}` : ''}`).join(', ') : '3:warn, 5:mute:1h, 7:kick, 9:ban')
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true);
+
+  modal.addComponents(new ActionRowBuilder().addComponents(stepsInput));
+
+  return modal;
+}
+
 module.exports = {
   createSpamModal,
   createLinkModal,
   createContentModal,
   createRaidModal,
   createSecurityModal,
-  createGlobalModal
+  createGlobalModal,
+  createEscalationModal
 };

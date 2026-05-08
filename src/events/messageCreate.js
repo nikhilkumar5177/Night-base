@@ -10,6 +10,10 @@ const resolver = require('../utils/resolver');
 let lastAliasData = null;
 let aliasTriggerMap = new Map(); // guildId -> Map of triggers
 
+const LINK_REGEX = /https?:\/\/[^\s]+/gi;
+const INVITE_REGEX = /(discord\.(gg|io|me|li|com\/invite|app\.com\/invite)|\.gg\/|discord\.com\/vanity)\/[a-zA-Z0-9_-]+/gi;
+const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discord-nitro|dlscord)/i;
+
 function getGuildTriggerMap(aliasData, guild) {
   const guildId = guild.id;
   const guildAliases = aliasData[guildId] || {};
@@ -38,9 +42,110 @@ module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
+    if (message.webhookId && message.guild) {
+      const { getConfig } = require('../automod/database');
+      const automodConfig = await getConfig(message.guild.id);
+
+      if (automodConfig.enabled && automodConfig.modules.security.enabled && automodConfig.modules.security.antiWebhook) {
+        if (!client._webhookTracker) client._webhookTracker = new Map();
+        const guildId = message.guild.id;
+        const now = Date.now();
+        if (!client._webhookTracker.has(guildId)) client._webhookTracker.set(guildId, { messages: [], alertSent: false });
+        
+        const tracker = client._webhookTracker.get(guildId);
+        tracker.messages.push({ id: message.webhookId, timestamp: now });
+        tracker.messages = tracker.messages.filter(t => now - t.timestamp < 10000);
+
+        const mentionsEveryone = message.content.includes('@everyone') || message.content.includes('@here');
+        const hasPhish = PHISHING_REGEX.test(message.content);
+        const hasInvite = INVITE_REGEX.test(message.content);
+        const linkCount = (message.content.match(LINK_REGEX) || []).length;
+        const hasExcessiveLinks = linkCount >= 3;
+
+        let largeMention = false;
+        message.mentions.roles.forEach(role => {
+          if (role.members.size / message.guild.memberCount >= 0.8) largeMention = true;
+        });
+
+        const isMalicious = mentionsEveryone || largeMention || hasPhish || hasInvite || hasExcessiveLinks;
+        const isSpamming = tracker.messages.length >= 3;
+
+        if (isMalicious || isSpamming) {
+          let violationType = 'Webhook Spam';
+          if (hasPhish) violationType = 'Phishing/Scam Link';
+          else if (hasInvite) violationType = 'Unauthorized Invite';
+          else if (hasExcessiveLinks) violationType = 'Mass Link Spam';
+          else if (isSpamming) violationType = 'Webhook Message Flood';
+          else if (mentionsEveryone || largeMention) violationType = 'Mass Mention Spam';
+
+          try {
+            await message.delete().catch(() => { });
+            
+            // Targeted Neutralization
+            const suspectIds = [...new Set(tracker.messages.map(r => r.id))];
+            if (!suspectIds.includes(message.webhookId)) suspectIds.push(message.webhookId);
+
+            const purgeSuspects = async () => {
+              const chanWebhooks = await message.channel.fetchWebhooks().catch(() => null);
+              if (chanWebhooks) {
+                const toDelete = chanWebhooks.filter(wh => suspectIds.includes(wh.id));
+                await Promise.all(toDelete.map(wh => wh.delete(`Security: ${violationType}`).catch(() => { })));
+              }
+            };
+
+            await purgeSuspects();
+            setTimeout(purgeSuspects, 2000);
+
+            const owner = await message.guild.fetchOwner().catch(() => null);
+            const staffData = storage.read('staff.json');
+            const guildRoles = staffData[message.guild.id]?.roles || [];
+            const staffMentions = guildRoles.map(r => `<@&${r}>`).join(' ');
+
+            if (!tracker.alertSent) {
+              tracker.alertSent = true;
+              
+              const alertContainer = new ContainerBuilder()
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+                  `${EMOJI_ERROR} **${violationType} Neutralized**\nTargeted security threat neutralized in ${message.channel}. Malicious webhooks have been destroyed.`
+                ));
+
+              const logCh = message.guild.channels.cache.get(automodConfig.logChannel) ||
+                message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) ||
+                message.channel;
+
+              safeSend(logCh, {
+                content: `${owner || ''} ${staffMentions}`,
+                components: [alertContainer],
+                allowedMentions: { parse: ['users', 'roles'] }
+              }).catch(() => { });
+
+              // Public Notice in Current Channel
+              const publicAlert = new ContainerBuilder()
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Neutralized`))
+                .addSeparatorComponents(new SeparatorBuilder())
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+                  `${EMOJI_WARN} **Raiders? Fuckyou bitches. by NightBase**\nSecurity Status: \`● SECURED\``
+                ));
+
+              await message.channel.send({ components: [publicAlert], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
+            }
+          } catch (e) { }
+          
+          if (tracker.messages.length > 0) {
+            if (client._webhookTrackerCleanup) clearTimeout(client._webhookTrackerCleanup);
+            client._webhookTrackerCleanup = setTimeout(() => client._webhookTracker.delete(guildId), 15000);
+          }
+          return;
+        }
+      }
+      return;
+    }
+
     const _t0 = Date.now();
     // 1. Critical Early Exits (0ms processing for irrelevant messages)
-    if (message.author.bot) return;
+    if (message.author.bot && !message.webhookId) return;
     if (!message.guild) {
       const { handleIncomingDM } = require('../utils/dmFormManager');
       await handleIncomingDM(client, message);
@@ -49,15 +154,15 @@ module.exports = {
 
     // 2. Consolidate Storage Access (Read once per message)
     const allData = {
-        config: storage.read('config.json'),
-        afk: storage.read('afk.json'),
-        vouch: storage.read('vouch.json'),
-        staff: storage.read('staff.json'),
-        security: storage.read('security.json'),
-        blacklist: storage.read('blacklist.json'),
-        cmdBlacklist: storage.read('cmdBlacklist.json'),
-        aliases: storage.read('aliases.json'),
-        analytics: storage.read('analytics.json')
+      config: storage.read('config.json'),
+      afk: storage.read('afk.json'),
+      vouch: storage.read('vouch.json'),
+      staff: storage.read('staff.json'),
+      security: storage.read('security.json'),
+      blacklist: storage.read('blacklist.json'),
+      cmdBlacklist: storage.read('cmdBlacklist.json'),
+      aliases: storage.read('aliases.json'),
+      analytics: storage.read('analytics.json')
     };
 
 
@@ -177,56 +282,6 @@ module.exports = {
       return safeReply(message, { components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
     }
 
-    if (message.webhookId && message.guild) {
-      const securityConfig = allData.security;
-      if (securityConfig.enabled) {
-        if (!client._webhookTracker) client._webhookTracker = new Map();
-        const guildId = message.guild.id;
-        const now = Date.now();
-        if (!client._webhookTracker.has(guildId)) client._webhookTracker.set(guildId, []);
-        const tracked = client._webhookTracker.get(guildId);
-        tracked.push(now);
-        const recent = tracked.filter(t => now - t < 10000);
-        client._webhookTracker.set(guildId, recent);
-        const mentionsEveryone = message.content.includes('@everyone') || message.content.includes('@here');
-        let largeMention = false;
-        message.mentions.roles.forEach(role => {
-          if (role.members.size / message.guild.memberCount >= 0.8) largeMention = true;
-        });
-        if (recent.length >= 2 && (mentionsEveryone || largeMention)) {
-          try {
-            await message.delete().catch(() => { });
-            const webhooks = await message.channel.fetchWebhooks().catch(() => null);
-            if (webhooks) { for (const [, wh] of webhooks) { await wh.delete('Security: Webhook spam').catch(() => { }); } }
-            const owner = await message.guild.fetchOwner().catch(() => null);
-            const staffData = allData.staff;
-            const guildRoles = staffData[message.guild.id]?.roles || [];
-            const staffMentions = guildRoles.map(r => `<@&${r}>`).join(' ');
-
-            const alertContainer = new ContainerBuilder()
-              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
-              .addSeparatorComponents(new SeparatorBuilder())
-              .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-                `${EMOJI_ERROR} **Webhook Spam Detected**\nSuspicious activity neutralized in ${message.channel}.`
-              ));
-
-            const logCh = message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) || message.channel;
-            await safeSend(logCh, {
-              content: `${owner || ''} ${staffMentions}`,
-              components: [alertContainer],
-              allowedMentions: { parse: ['users', 'roles'] } // Security Alert Override
-            }).catch(() => { });
-
-            const logs = securityConfig.logs || [];
-            logs.push({ type: 'webhook_spam', guildId, channelId: message.channel.id, timestamp: now });
-            securityConfig.logs = logs.slice(-100);
-            storage.write('security.json', securityConfig);
-          } catch { }
-          client._webhookTracker.delete(guildId);
-          return;
-        }
-      }
-    }
 
     if (message.content.toLowerCase() === 'stop') {
       if (!isDev) return;
@@ -336,16 +391,16 @@ module.exports = {
     const guildRoles = staffData[message.guild.id]?.roles || [];
     let isStaff = false;
     if (guildRoles.length > 0) {
-        for (const roleId of guildRoles) {
-            if (message.member.roles.cache.has(roleId)) {
-                isStaff = true;
-                break;
-            }
+      for (const roleId of guildRoles) {
+        if (message.member.roles.cache.has(roleId)) {
+          isStaff = true;
+          break;
         }
+      }
     }
 
     if (command.staffOnly && !isStaff && !isDev) {
-        return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);
+      return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);
     }
 
     if (runtimeConfig.channelCommands?.[message.channel.id]?.disabled?.includes(command.name)) return;

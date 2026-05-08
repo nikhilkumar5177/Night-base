@@ -8,7 +8,8 @@ const { EMOJI_TOOL, EMOJI_DOT, EMOJI_INFO, EMOJI_ACTIVE, EMOJI_INACTIVE, EMOJI_W
  * @returns {object} { components }
  */
 function createCategoryPanel(category, config) {
-  const categoryData = config.modules[category.toLowerCase()];
+  const c = category.toLowerCase();
+  const categoryData = c === 'escalation' ? config.escalation : config.modules[c];
   const isEnabled = categoryData.enabled;
 
   const container = new ContainerBuilder()
@@ -20,8 +21,9 @@ function createCategoryPanel(category, config) {
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${EMOJI_INFO} **Status:** ${isEnabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``}\n` +
+      (c === 'escalation' ? `${EMOJI_WARN} **Steps:** \`${categoryData.steps?.length || 0}\` configured thresholds` : 
       `${EMOJI_WARN} **Actions:** ${categoryData.actions?.length ? categoryData.actions.map(a => `\`${a.toUpperCase()}\``).join(', ') : '`None`'}\n` +
-      `${EMOJI_BYPASS} **Exemptions:** Roles: \`${categoryData.exemptRoles.length}\` \u2502 Channels: \`${categoryData.exemptChannels.length}\``
+      `${EMOJI_BYPASS} **Exemptions:** Roles: \`${categoryData.exemptRoles?.length || 0}\` \u2502 Channels: \`${categoryData.exemptChannels?.length || 0}\``)
     ))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
@@ -65,6 +67,8 @@ function formatConfig(category, data) {
     details = `${EMOJI_DOT} Blocked Words: \`${data.blockedWords.length}\` (Whole) \u2502 \`${data.partialBlockedWords?.length || 0}\` (Partial)\n${EMOJI_DOT} Caps Limit: \`${data.capsLimit}%\`\n${EMOJI_DOT} Emoji Limit: \`${data.emojiLimit}\`\n${EMOJI_DOT} Ghost Ping: \`${data.ghostPing ? 'Yes' : 'No'}\``;
   } else if (c === 'security') {
     details = `${EMOJI_DOT} Anti-Nuke: \`${data.antiNuke ? 'Yes' : 'No'}\` (Limit: \`${data.nukeThreshold}\` actions)\n${EMOJI_DOT} Anti-Webhook: \`${data.antiWebhook ? 'Yes' : 'No'}\``;
+  } else if (c === 'escalation') {
+    details = data.steps?.map(step => `${EMOJI_DOT} \`${step.warns} Warns\` \u2192 \`${step.action.toUpperCase()}\`${step.duration ? ` (\`${step.duration}\`)` : ''}`).join('\n');
   }
 
   return details || '`No data available`';

@@ -183,4 +183,19 @@ function trimArray(file, key, maxLength) {
   }
 }
 
-module.exports = { init, read, write, flush, flushFile, startPeriodicFlush, stopPeriodicFlush, sweep, trimArray };
+function isPremium(guildId) {
+  if (!guildId) return false;
+  const premiumData = read('premium.json');
+  if (!premiumData.guilds) return false;
+  const premiumGuild = premiumData.guilds[guildId];
+  if (!premiumGuild || !premiumGuild.active) return false;
+  
+  if (premiumGuild.expiresAt && Date.now() > premiumGuild.expiresAt) {
+    premiumGuild.active = false;
+    write('premium.json', premiumData);
+    return false;
+  }
+  return true;
+}
+
+module.exports = { init, read, write, flush, flushFile, startPeriodicFlush, stopPeriodicFlush, sweep, trimArray, isPremium };

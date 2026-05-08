@@ -180,16 +180,7 @@ module.exports = {
     }
 
     // 4. Premium Enforcement
-    let isPremium = false;
-    const premiumGuild = allData.premium?.guilds?.[message.guild.id];
-    if (premiumGuild?.active) {
-      if (premiumGuild.expiresAt && Date.now() > premiumGuild.expiresAt) {
-        premiumGuild.active = false;
-        storage.write('premium.json', allData.premium);
-      } else {
-        isPremium = true;
-      }
-    }
+    const isPremium = storage.isPremium(message.guild.id);
 
     const isCommandHeuristic = message.content.startsWith(prefix) || (runtimeConfig.noPrefixUsers && runtimeConfig.noPrefixUsers.some(u => typeof u === 'string' ? u === message.author.id : u.id === message.author.id));
 

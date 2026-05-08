@@ -4,6 +4,8 @@ module.exports = {
   name: 'voiceStateUpdate',
   once: false,
   execute: async (client, oldState, newState) => {
+    const guildId = newState.guild?.id || oldState.guild?.id;
+    if (!guildId || !storage.isPremium(guildId)) return;
     const aliasData = storage.read('aliases.json');
 
     for (const [, config] of Object.entries(aliasData)) {

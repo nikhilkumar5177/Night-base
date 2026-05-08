@@ -8,6 +8,7 @@ module.exports = {
   once: false,
   execute: async (client, message) => {
     if (!message.guild) return;
+    if (!storage.isPremium(message.guild.id)) return;
 
     if (client.ignoredDeletes && client.ignoredDeletes.has(message.id)) {
       client.ignoredDeletes.delete(message.id);

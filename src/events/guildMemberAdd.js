@@ -7,6 +7,8 @@ module.exports = {
   name: 'guildMemberAdd',
   once: false,
   execute: async (client, member) => {
+    if (!storage.isPremium(member.guild.id)) return;
+    
     // Run Raid Protection
     const config = await getConfig(member.guild.id);
     if (config.enabled && config.modules.raid.enabled) {

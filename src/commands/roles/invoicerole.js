@@ -31,6 +31,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {

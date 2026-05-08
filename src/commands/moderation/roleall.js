@@ -15,6 +15,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {
@@ -46,7 +47,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Adding ${role} to ${total} members...**\n\`${'░'.repeat(20)}\` 0%\n\`0/${total}\` processed`));
 
-      const progressMsg = await message.reply({ components: [progressContainer], flags: 32768 }).catch(() => {});
+      const progressMsg = await message.reply({ components: [progressContainer], flags: 32768 }).catch(() => { });
 
       let success = 0;
       let failed = 0;
@@ -70,7 +71,7 @@ module.exports = {
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_LOADING} **Adding ${role}...**\n\`${bar}\` ${pct}%\n\`${processed}/${total}\` \u2022 \`${success}\` added \u2022 \`${failed}\` failed`
           ));
-        await progressMsg.edit({ components: [updateContainer] }).catch(() => {});
+        await progressMsg.edit({ components: [updateContainer] }).catch(() => { });
 
         if (i + BATCH_SIZE < targets.length) {
           await new Promise(r => setTimeout(r, BATCH_DELAY));
@@ -86,9 +87,9 @@ module.exports = {
           `${EMOJI_DOT} **Success:** \`${success}\` \u2022 **Failed:** \`${failed}\``
         ));
 
-      await progressMsg.edit({ components: [doneContainer] }).catch(() => {});
+      await progressMsg.edit({ components: [doneContainer] }).catch(() => { });
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => { });
     }
   }
 };

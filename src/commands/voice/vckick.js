@@ -12,6 +12,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: false,
   userPermissions: ['MoveMembers'],
   execute: async (client, message, args) => {
     try {

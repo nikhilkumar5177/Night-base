@@ -18,6 +18,7 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   staffOnly: true,
   devOnly: false,
+  premiumOnly: true,
   cooldown: 5,
   enabled: true,
 
@@ -28,7 +29,7 @@ module.exports = {
 
       if (interaction.isChatInputCommand && interaction.isChatInputCommand()) {
         const dashboard = createDashboard(config);
-        return interaction.reply({ ...dashboard, flags: 32768, ephemeral: true }).catch(() => {});
+        return interaction.reply({ ...dashboard, flags: 32768, ephemeral: true }).catch(() => { });
       }
 
       // Handle Button Interactions
@@ -82,7 +83,7 @@ module.exports = {
         }
 
         if (customId === 'automod_dismiss') {
-          return interaction.message.delete().catch(() => {});
+          return interaction.message.delete().catch(() => { });
         }
 
         if (customId === 'automod_reset') {
@@ -106,7 +107,7 @@ module.exports = {
         if (interaction.customId === 'automod_modal_spam') {
           config.modules.spam.limit = parseInt(interaction.fields.getTextInputValue('spam_limit')) || config.modules.spam.limit;
           config.modules.spam.window = parseInt(interaction.fields.getTextInputValue('spam_window')) || config.modules.spam.window;
-          
+
           const toggles = interaction.fields.getTextInputValue('spam_toggles').toLowerCase();
           config.modules.spam.duplicateDetection = toggles.includes('duplicates: yes');
 
@@ -123,7 +124,7 @@ module.exports = {
 
         if (interaction.customId === 'automod_modal_links') {
           config.modules.links.allowedLinks = interaction.fields.getTextInputValue('allowed_links').split('\n').map(l => l.trim()).filter(l => l !== '');
-          
+
           const gifInput = interaction.fields.getTextInputValue('allowed_gifs').split('\n').map(l => l.trim()).filter(l => l !== '');
           config.modules.links.allowedGifs = gifInput.filter(item => isNaN(item) || item.includes('.'));
           config.modules.links.exemptGifsRoles = gifInput.filter(item => !isNaN(item) && item.length >= 17);
@@ -146,7 +147,7 @@ module.exports = {
         if (interaction.customId === 'automod_modal_content') {
           config.modules.content.blockedWords = interaction.fields.getTextInputValue('blocked_words').split(',').map(w => w.trim()).filter(w => w !== '');
           config.modules.content.partialBlockedWords = interaction.fields.getTextInputValue('partial_words').split(',').map(w => w.trim()).filter(w => w !== '');
-          
+
           const limits = interaction.fields.getTextInputValue('content_limits').toLowerCase();
           config.modules.content.capsLimit = parseInt(limits.match(/caps:\s*(\d+)/)?.[1]) || config.modules.content.capsLimit;
           config.modules.content.lineLimit = parseInt(limits.match(/lines:\s*(\d+)/)?.[1]) || config.modules.content.lineLimit;
@@ -225,7 +226,7 @@ module.exports = {
             const panel = createCategoryPanel('escalation', config);
             return interaction.update({ ...panel, flags: 32768 });
           } else {
-            return interaction.reply({ components: [cv2Error('Invalid escalation steps format.')], flags: 32768, ephemeral: true }).catch(() => {});
+            return interaction.reply({ components: [cv2Error('Invalid escalation steps format.')], flags: 32768, ephemeral: true }).catch(() => { });
           }
         }
       }

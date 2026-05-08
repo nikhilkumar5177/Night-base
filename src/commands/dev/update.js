@@ -25,6 +25,7 @@ module.exports = {
     .addStringOption(opt => opt.setName('commit').setDescription('Specific commit ID to update to').setRequired(false)),
   staffOnly: false,
   devOnly: true,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     const isInteraction = !message.author;
     const user = isInteraction ? message.user : message.author;

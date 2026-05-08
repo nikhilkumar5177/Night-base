@@ -162,7 +162,8 @@ module.exports = {
       blacklist: storage.read('blacklist.json'),
       cmdBlacklist: storage.read('cmdBlacklist.json'),
       aliases: storage.read('aliases.json'),
-      analytics: storage.read('analytics.json')
+      analytics: storage.read('analytics.json'),
+      premium: storage.read('premium.json')
     };
 
 
@@ -175,6 +176,24 @@ module.exports = {
       const { handleStaffReply } = require('../utils/dmFormManager');
       await handleStaffReply(client, message);
       return;
+    }
+
+    // 4. Premium Enforcement
+    let isPremium = false;
+    const premiumGuild = allData.premium?.guilds?.[message.guild.id];
+    if (premiumGuild?.active) {
+      if (premiumGuild.expiresAt && Date.now() > premiumGuild.expiresAt) {
+        premiumGuild.active = false;
+        storage.write('premium.json', allData.premium);
+      } else {
+        isPremium = true;
+      }
+    }
+
+    const isCommandHeuristic = message.content.startsWith(prefix) || (runtimeConfig.noPrefixUsers && runtimeConfig.noPrefixUsers.some(u => typeof u === 'string' ? u === message.author.id : u.id === message.author.id));
+
+    if (!isPremium && !isCommandHeuristic && !isDev) {
+      return; // Ignore all messages in non-premium servers, except commands
     }
 
     // Vouch Logic
@@ -401,6 +420,27 @@ module.exports = {
 
     if (command.staffOnly && !isStaff && !isDev) {
       return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);
+    }
+
+    if (command.premiumOnly && !isDev) {
+      if (!isPremium) {
+        const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+        const devId = process.env.DEV_ID ? process.env.DEV_ID.split(',')[0] : null;
+        
+        const components = [cv2Error('This command is only available for **Premium** servers.\\nUse `?redeem <key>` if you have a premium key, or contact the bot owner to upgrade.')];
+        
+        if (devId) {
+          const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setLabel('Contact Bot Owner')
+              .setStyle(ButtonStyle.Link)
+              .setURL(`https://discord.com/users/${devId}`)
+          );
+          components.push(row);
+        }
+
+        return sendAutoDelete(message, { components, flags: MessageFlags.IsComponentsV2 }, 15000);
+      }
     }
 
     if (runtimeConfig.channelCommands?.[message.channel.id]?.disabled?.includes(command.name)) return;

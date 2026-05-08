@@ -14,6 +14,7 @@ module.exports = {
     .setDescription('Display bot information'),
   staffOnly: false,
   devOnly: false,
+  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const mem = process.memoryUsage();

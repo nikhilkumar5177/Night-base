@@ -38,6 +38,7 @@ module.exports = {
     .addStringOption(opt => opt.setName('command').setDescription('The command to get help for').setRequired(false)),
   staffOnly: false,
   devOnly: false,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     const isInteraction = !message.author;
     const user = isInteraction ? message.user : message.author;
@@ -98,6 +99,10 @@ module.exports = {
             new ButtonBuilder().setCustomId('help_prev').setEmoji(EMOJI_ARROW_LEFT).setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId('help_next').setEmoji(EMOJI_ARROW_RIGHT).setStyle(ButtonStyle.Secondary)
           );
+        }
+
+        if (state.view === 'command' && state.historyView) {
+          buttonRow.addComponents(new ButtonBuilder().setCustomId('help_back').setLabel('Back').setStyle(ButtonStyle.Secondary));
         }
 
         buttonRow.addComponents(new ButtonBuilder().setLabel('Support').setStyle(ButtonStyle.Link).setURL(client.config.supportServer));
@@ -204,7 +209,8 @@ module.exports = {
         if (i.customId === 'help_home') state = { view: 'home', category: null, page: 0 };
         else if (i.customId === 'help_all') state = { view: 'all', category: null, page: 0 };
         else if (i.customId === 'help_cat') state = { view: 'category', category: i.values[0], page: 0 };
-        else if (i.customId === 'help_cmd') state = { ...state, view: 'command', commandObj: client.commands.get(i.values[0]) };
+        else if (i.customId === 'help_cmd') state = { ...state, historyView: state.view, view: 'command', commandObj: client.commands.get(i.values[0]) };
+        else if (i.customId === 'help_back') state = { ...state, view: state.historyView || 'category', commandObj: null };
         else if (i.customId === 'help_prev' && state.page > 0) state.page--;
         else if (i.customId === 'help_next') state.page++;
 
@@ -223,14 +229,26 @@ function buildCommandContainer(client, command) {
   const perms = command.staffOnly ? 'Staff Only' : command.userPermissions?.join(', ') || 'Everyone';
   const trigger = command.slash ? '/' : client.config.prefix;
 
+  let extraDoc = '';
+  if (command.name === 'automod') {
+    extraDoc = `\n\n**AutoMod Guide:**\n${EMOJI_DOT} AutoMod allows you to automatically delete messages that contain banned words, links, or excessive spam.\n${EMOJI_DOT} **Auto Escalation:** Configure the bot to automatically warn, mute, or ban users who trigger AutoMod multiple times. Use the dashboard to set rules like \`3:warn, 5:mute:1h\`.\n${EMOJI_DOT} **Webhook Security:** Zero-tolerance detection for phishing and mass mentions.`;
+  } else if (command.name === 'aliasrole' || command.name === 'addalias' || command.name === 'aliases' || command.category === 'roles') {
+    extraDoc = `\n\n**Alias Guide:**\n${EMOJI_DOT} Aliases are used for fast role giving.\n${EMOJI_DOT} Only members with \`Manage Roles\` permissions (or Staff) can give or use them.\n${EMOJI_DOT} **Usage:** \`?aliasrole addalias <primary> <newAlias>\` — Links a quick word (newAlias) to a role name (primary), so typing the quick word instantly gives the role.`;
+  } else if (command.name === 'staff' || command.category === 'staff') {
+    extraDoc = `\n\n**Staff System Guide:**\n${EMOJI_DOT} The staff system allows you to define which roles are considered "Staff".\n${EMOJI_DOT} Users with these roles can bypass certain restrictions and use moderation commands without needing raw Discord permissions.`;
+  } else if (command.premiumOnly) {
+    extraDoc = `\n\n**Premium Feature:**\n${EMOJI_DOT} This command requires the server to have an active Premium subscription.`;
+  }
+
   return new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${command.name}`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf │ ${command.name}`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${command.description || 'No description'}\n\n` +
       `**Usage:** \`${trigger}${command.usage || command.name}\`\n` +
       `**Aliases:** ${command.aliases?.map(a => `\`${a}\``).join(', ') || 'None'}\n` +
       `**Permissions:** \`${perms}\`\n` +
-      `**Cooldown:** \`${command.cooldown || 0}s\``
+      `**Cooldown:** \`${command.cooldown || 0}s\`` +
+      extraDoc
     ));
 }

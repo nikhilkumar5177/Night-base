@@ -14,6 +14,7 @@ module.exports = {
     .setDescription('Check bot and API latency'),
   staffOnly: false,
   devOnly: false,
+  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const start = Date.now();

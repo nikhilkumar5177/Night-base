@@ -11,6 +11,7 @@ module.exports = {
   enabled: true,
   staffOnly: false,
   devOnly: true,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       console.clear();

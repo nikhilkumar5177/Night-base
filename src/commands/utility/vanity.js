@@ -11,6 +11,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const g = message.guild;

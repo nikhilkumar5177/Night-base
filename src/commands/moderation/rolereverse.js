@@ -15,6 +15,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {
@@ -46,7 +47,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Removing ${role} from ${total} members...**\n\`${'░'.repeat(20)}\` 0%`));
 
-      const progressMsg = await message.reply({ components: [progressContainer], flags: 32768 }).catch(() => {});
+      const progressMsg = await message.reply({ components: [progressContainer], flags: 32768 }).catch(() => { });
 
       let success = 0, failed = 0;
 
@@ -66,7 +67,7 @@ module.exports = {
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_LOADING} **Removing ${role}...**\n\`${bar}\` ${pct}%\n\`${processed}/${total}\` \u2022 \`${success}\` removed \u2022 \`${failed}\` failed`
           ));
-        await progressMsg.edit({ components: [updateContainer] }).catch(() => {});
+        await progressMsg.edit({ components: [updateContainer] }).catch(() => { });
 
         if (i + BATCH_SIZE < targets.length) await new Promise(r => setTimeout(r, BATCH_DELAY));
       }
@@ -80,9 +81,9 @@ module.exports = {
           `${EMOJI_DOT} **Removed:** \`${success}\` \u2022 **Failed:** \`${failed}\``
         ));
 
-      await progressMsg.edit({ components: [doneContainer] }).catch(() => {});
+      await progressMsg.edit({ components: [doneContainer] }).catch(() => { });
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => { });
     }
   }
 };

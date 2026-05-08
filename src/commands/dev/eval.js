@@ -11,6 +11,7 @@ module.exports = {
   enabled: true,
   staffOnly: false,
   devOnly: true,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     if (message.author.id !== process.env.DEV_ID) return;
     const code = args.join(' ');

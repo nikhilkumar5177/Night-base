@@ -12,6 +12,7 @@ module.exports = {
   enabled: true,
   staffOnly: false,
   devOnly: true,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {

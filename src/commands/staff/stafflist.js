@@ -12,6 +12,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: true,
   execute: async (client, message) => {
     try {
       const staffData = storage.read('staff.json');

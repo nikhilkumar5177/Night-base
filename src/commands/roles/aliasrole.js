@@ -33,6 +33,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {
@@ -112,7 +113,7 @@ module.exports = {
 
       return sendUsage(message, module.exports);
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => { });
     }
   }
 };

@@ -11,6 +11,7 @@ module.exports = {
   enabled: true,
   staffOnly: true,
   devOnly: false,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const snipes = client.snipeCache.get(message.channel.id);

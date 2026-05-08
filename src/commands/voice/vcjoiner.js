@@ -14,6 +14,7 @@ module.exports = {
   enabled: true,
   staffOnly: false,
   devOnly: true,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     const isOwner = message.author.id === message.guild.ownerId;
     const isDev = message.author.id === process.env.DEV_ID;

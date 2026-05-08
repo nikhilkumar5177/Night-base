@@ -21,7 +21,8 @@ const DEFAULT_FILES = {
   'autorole.json': {},
   'privateChannels.json': {},
   'vcjoiner.json': {},
-  'afk.json': {}
+  'afk.json': {},
+  'premium.json': { guilds: {}, keys: {} }
 };
 
 let flushInterval = null;

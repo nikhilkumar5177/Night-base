@@ -90,5 +90,31 @@ module.exports = {
     } catch {
       return null;
     }
+  },
+
+  /**
+   * Parses a time string (e.g. 10m, 2h, 3d, 1mo) into milliseconds
+   * @param {string} timeStr 
+   * @returns {number|null} Milliseconds or null if invalid
+   */
+  parseDuration: (timeStr) => {
+    if (!timeStr || typeof timeStr !== 'string') return null;
+    const match = timeStr.toLowerCase().match(/^(\d+)(s|m|h|d|w|mo|y)$/);
+    if (!match) return null;
+    
+    const amount = parseInt(match[1], 10);
+    const unit = match[2];
+    
+    const multipliers = {
+      s: 1000,
+      m: 60 * 1000,
+      h: 60 * 60 * 1000,
+      d: 24 * 60 * 60 * 1000,
+      w: 7 * 24 * 60 * 60 * 1000,
+      mo: 30 * 24 * 60 * 60 * 1000,
+      y: 365 * 24 * 60 * 60 * 1000
+    };
+    
+    return amount * multipliers[unit];
   }
 };

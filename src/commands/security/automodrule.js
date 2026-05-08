@@ -20,6 +20,7 @@ module.exports = {
     ),
   staffOnly: false,
   devOnly: true,
+  premiumOnly: true,
   execute: async (client, interaction) => {
     try {
       await interaction.deferReply({ ephemeral: true });

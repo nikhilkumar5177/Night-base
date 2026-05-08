@@ -10,6 +10,7 @@ module.exports = {
   enabled: true,
   staffOnly: false,
   devOnly: true,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const guilds = client.guilds.cache.map(g => ({

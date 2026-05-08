@@ -16,6 +16,7 @@ module.exports = {
     .addUserOption(opt => opt.setName('user').setDescription('The user to get info for').setRequired(false)),
   staffOnly: false,
   devOnly: false,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const { resolveUser } = require('../../utils/resolver');

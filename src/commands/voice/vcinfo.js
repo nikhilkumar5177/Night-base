@@ -11,6 +11,7 @@ module.exports = {
   enabled: true,
   staffOnly: false,
   devOnly: false,
+  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[0]) || message.member.voice.channel;

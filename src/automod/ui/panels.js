@@ -8,6 +8,11 @@ const { EMOJI_TOOL, EMOJI_DOT, EMOJI_INFO, EMOJI_ACTIVE, EMOJI_INACTIVE, EMOJI_W
  * @returns {object} { components }
  */
 function createCategoryPanel(category, config) {
+  // Special handling for Escalation (not under config.modules)
+  if (category.toLowerCase() === 'escalation') {
+    return createEscalationPanel(config);
+  }
+
   const categoryData = config.modules[category.toLowerCase()];
   const isEnabled = categoryData.enabled;
 
@@ -49,6 +54,51 @@ function createCategoryPanel(category, config) {
   return { 
     components: [container, buttons] 
   };
+}
+
+function createEscalationPanel(config) {
+  const esc = config.escalation || { enabled: true, steps: [] };
+
+  const stepsText = esc.steps && esc.steps.length > 0
+    ? esc.steps.map((s, i) =>
+        `${EMOJI_DOT} **Step ${i + 1}:** \`${s.warns}\` warns \u2192 \`${s.action.toUpperCase()}\`${s.duration ? ` for \`${s.duration}\`` : ''}`
+      ).join('\n')
+    : '`No steps configured`';
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Escalation`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `Automatically escalate punishments based on accumulated warnings.`
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_INFO} **Status:** ${esc.enabled ? `${EMOJI_ACTIVE} \`Enabled\`` : `${EMOJI_INACTIVE} \`Disabled\``}`
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_TOOL} **Escalation Steps**\n${stepsText}`
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+
+  const buttons = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('automod_toggle_escalation')
+      .setLabel(esc.enabled ? 'Disable Escalation' : 'Enable Escalation')
+      .setStyle(esc.enabled ? ButtonStyle.Danger : ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('automod_edit_escalation')
+      .setLabel('Edit Steps')
+      .setEmoji(EMOJI_TOOL)
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('automod_home')
+      .setLabel('Back')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  return { components: [container, buttons] };
 }
 
 function formatConfig(category, data) {

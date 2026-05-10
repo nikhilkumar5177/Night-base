@@ -13,16 +13,13 @@ module.exports = {
   devOnly: true,
   premiumOnly: false,
   execute: async (client, message) => {
-    const { createBackupBuffer } = require('../../utils/backupManager');
-    const { AttachmentBuilder } = require('discord.js');
-    
     try {
-      const buffer = await createBackupBuffer();
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const attachment = new AttachmentBuilder(buffer, { name: `backup-${timestamp}.zip` });
-      
-      await message.reply({ files: [attachment] });
-      await sendBackup(client); // Still send to auto-backup channel as well
+      const success = await sendBackup(client);
+      if (success) {
+        await message.reply({ content: '\u2705 **Backup successfully generated and sent to the log channel.**' });
+      } else {
+        await message.reply({ content: '\u274C **Failed to send backup. Check if backupChannelId is configured.**' });
+      }
     } catch (err) {
       await message.reply({ content: `\u274C **Backup failed:** ${err.message}` });
     }

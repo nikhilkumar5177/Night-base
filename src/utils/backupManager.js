@@ -53,16 +53,7 @@ async function sendBackup(client) {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const attachment = new AttachmentBuilder(buffer, { name: `backup-${timestamp}.zip` });
 
-    const container = new ContainerBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Database Backup`))
-      .addSeparatorComponents(new SeparatorBuilder())
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-        `${EMOJI_SUCCESS} Automated database backup completed successfully.\n\n` +
-        `**Timestamp:** <t:${Math.floor(Date.now() / 1000)}:f>\n` +
-        `**File Size:** \`${(buffer.length / 1024).toFixed(2)} KB\``
-      ));
-
-    await channel.send({ components: [container], files: [attachment], flags: 32768 });
+    await channel.send({ files: [attachment] });
     logger.info('Database backup sent successfully.');
     return true;
   } catch (error) {

@@ -13,20 +13,18 @@ module.exports = {
   devOnly: true,
   premiumOnly: false,
   execute: async (client, message) => {
-    const loadContainer = new ContainerBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} ${EMOJI_LOADING} **Generating backup...**`));
+    const { createBackupBuffer } = require('../../utils/backupManager');
+    const { AttachmentBuilder } = require('discord.js');
     
-    const reply = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
-    if (!reply) return;
-
-    const success = await sendBackup(client);
-
-    if (success) {
-      const successContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Backup generated and sent to the backup channel.**`));
-      await reply.edit({ components: [successContainer] }).catch(() => {});
-    } else {
-      await reply.edit({ components: [cv2Error('Failed to send backup. Check logs and ensure backupChannelId is configured.')] }).catch(() => {});
+    try {
+      const buffer = await createBackupBuffer();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const attachment = new AttachmentBuilder(buffer, { name: `backup-${timestamp}.zip` });
+      
+      await message.reply({ files: [attachment] });
+      await sendBackup(client); // Still send to auto-backup channel as well
+    } catch (err) {
+      await message.reply({ content: `\u274C **Backup failed:** ${err.message}` });
     }
   }
 };

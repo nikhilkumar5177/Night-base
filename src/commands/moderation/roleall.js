@@ -49,6 +49,7 @@ module.exports = {
 
       const progressMsg = await message.reply({ components: [progressContainer], flags: 32768 }).catch(() => { });
 
+      const startTime = Date.now();
       let success = 0;
       let failed = 0;
 
@@ -78,13 +79,18 @@ module.exports = {
         }
       }
 
+      const duration = Date.now() - startTime;
+      const seconds = (duration / 1000).toFixed(1);
+      const speed = ((success + failed) / (duration / 1000)).toFixed(1);
+
       const doneContainer = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Role Assignment Complete`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **Role assignment finished.**\n` +
           `${EMOJI_DOT} **Role:** ${role}\n` +
-          `${EMOJI_DOT} **Success:** \`${success}\` \u2022 **Failed:** \`${failed}\``
+          `${EMOJI_DOT} **Success:** \`${success}\` \u2022 **Failed:** \`${failed}\` \u2022 **Time:** \`${seconds}s\`\n` +
+          `${EMOJI_DOT} **Speed:** \`${speed} actions/s\``
         ));
 
       await progressMsg.edit({ components: [doneContainer] }).catch(() => { });

@@ -62,11 +62,15 @@ module.exports = {
         const filled = Math.round(pct / 5);
         const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(20 - filled);
 
+        const durationSoFar = Date.now() - startTime;
+        const currentSpeed = (processed / (durationSoFar / 1000)).toFixed(1);
+
         const updateContainer = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Role Removal`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_LOADING} **Removing ${role}...**\n\`${bar}\` ${pct}%\n\`${processed}/${total}\` \u2022 \`${success}\` removed \u2022 \`${failed}\` failed`
+            `${EMOJI_LOADING} **Removing ${role}...**\n\`${bar}\` ${pct}%\n\`${processed}/${total}\` \u2022 \`${success}\` removed \u2022 \`${failed}\` failed\n` +
+            `${EMOJI_DOT} **Speed:** \`${currentSpeed} actions/s\``
           ));
         await progressMsg.edit({ components: [updateContainer] }).catch(() => { });
 

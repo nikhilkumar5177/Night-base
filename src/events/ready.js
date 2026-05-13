@@ -64,7 +64,7 @@ module.exports = {
     }, 300000);
 
     const { sendBackup } = require('../utils/backupManager');
-    setInterval(() => sendBackup(client), 3600000);
+    setInterval(() => sendBackup(client), 1800000);
 
     setInterval(() => runRotation(client), 60000);
     try { runRotation(client); } catch (err) { logger.error(`Initial VC rotation failed: ${err.message}`); }

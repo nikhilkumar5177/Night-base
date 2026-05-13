@@ -1,23 +1,42 @@
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
-const { AttachmentBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { AttachmentBuilder } = require('discord.js');
 const logger = require('./logger');
-const { EMOJI_SUCCESS, FOOTER_TEXT } = require('./constants');
+const { EMOJI_SUCCESS } = require('./constants');
 
 /**
  * Creates a ZIP buffer containing the storage directory.
  * @returns {Promise<Buffer>}
  */
 async function createBackupBuffer() {
+  const storagePath = path.join(__dirname, '..', '..', 'storage');
+  
+  if (!fs.existsSync(storagePath)) {
+    logger.error(`Backup failed: Storage directory not found at ${storagePath}`);
+    throw new Error('Storage directory not found');
+  }
+
   return new Promise((resolve, reject) => {
-    const storagePath = path.join(__dirname, '..', '..', 'storage');
     const chunks = [];
     const archive = archiver('zip', { zlib: { level: 9 } });
 
-    archive.on('error', (err) => reject(err));
+    archive.on('error', (err) => {
+      logger.error(`Archiver error: ${err.message}`);
+      reject(err);
+    });
+
     archive.on('data', (chunk) => chunks.push(chunk));
-    archive.on('end', () => resolve(Buffer.concat(chunks)));
+    
+    archive.on('end', () => {
+      const buffer = Buffer.concat(chunks);
+      logger.info(`Backup ZIP created. Size: ${buffer.length} bytes.`);
+      if (buffer.length === 0) {
+        reject(new Error('Backup ZIP is empty'));
+      } else {
+        resolve(buffer);
+      }
+    });
 
     archive.directory(storagePath, false);
     archive.finalize();
@@ -48,39 +67,23 @@ async function sendBackup(client) {
 
     if (!channel) return false;
 
+    // Create the ZIP buffer
     const buffer = await createBackupBuffer();
-    const sizeKB = (buffer.length / 1024).toFixed(2);
     const timestamp = new Date().toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true
     });
 
     const fileTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const attachment = new AttachmentBuilder(buffer, { name: `backup-${fileTimestamp}.zip` });
 
-    const container = new ContainerBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Database Backup`))
-      .addSeparatorComponents(new SeparatorBuilder())
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Automated database backup completed successfully.**`))
-      .addSeparatorComponents(new SeparatorBuilder())
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-        `**Timestamp:** ${timestamp}\n` +
-        `**File Size:** ${sizeKB} KB`
-      ))
-      .addSeparatorComponents(new SeparatorBuilder())
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
-
+    // Send only the file with a simple text notification
     await channel.send({ 
-      components: [container], 
-      files: [attachment],
-      flags: MessageFlags.IsComponentsV2
+      content: `${EMOJI_SUCCESS} **Automated database backup completed.**\n**Timestamp:** ${timestamp}`,
+      files: [attachment]
     });
 
-    logger.info('Database backup sent successfully.');
+    logger.info(`Database backup sent to channel ${channelId}.`);
     return true;
   } catch (error) {
     logger.error(`Failed to send database backup: ${error.message}`);

@@ -6,6 +6,7 @@ const {
   EMOJI_ARROW,
   EMOJI_ARROW_LEFT,
   EMOJI_ARROW_RIGHT,
+  EMOJI_PREMIUM,
   FOOTER_TEXT
 } = require('../../utils/constants');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
@@ -152,7 +153,7 @@ module.exports = {
       const buildCategoryContainer = (catKey) => {
         const cmds = categories[catKey];
         const meta = CATEGORY_META[catKey] || { label: catKey };
-        const cmdList = cmds.map(c => `${EMOJI_DOT}\`${c.name}\`${c.premiumOnly ? ' 👑' : ''}`).join('\n');
+        const cmdList = cmds.map(c => `${EMOJI_DOT}\`${c.name}\`${c.premiumOnly ? ` ${EMOJI_PREMIUM}` : ''}`).join('\n');
 
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${meta.label}`))
@@ -174,7 +175,7 @@ module.exports = {
           for (let i = 0; i < catCmds.length; i += 3) {
             const row = catCmds.slice(i, i + 3).map(name => {
               const cmd = client.commands.get(name);
-              return `\`${name}\`${cmd?.premiumOnly ? '👑' : ''}`;
+              return `\`${name}\`${cmd?.premiumOnly ? EMOJI_PREMIUM : ''}`;
             }).join(' \u2022 ');
             block.push(`${EMOJI_DOT} ${row}`);
           }

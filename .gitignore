@@ -9,7 +9,5 @@ logs/
 *.log
 .DS_Store
 
-# Ignore the local JSON database files but keep the directory
-storage/*.json
-storage/**/*.json
-!storage/.gitkeep
+# Ignore the storage folder entirely
+storage/

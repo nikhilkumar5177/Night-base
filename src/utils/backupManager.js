@@ -2,9 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
 const { AttachmentBuilder, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const storage = require('./storageManager');
 const logger = require('./logger');
-const { EMOJI_SUCCESS } = require('./constants');
+const { EMOJI_SUCCESS, FOOTER_TEXT } = require('./constants');
 
 /**
  * Creates a ZIP buffer containing the storage directory.
@@ -50,10 +49,37 @@ async function sendBackup(client) {
     if (!channel) return false;
 
     const buffer = await createBackupBuffer();
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const attachment = new AttachmentBuilder(buffer, { name: `backup-${timestamp}.zip` });
+    const sizeKB = (buffer.length / 1024).toFixed(2);
+    const timestamp = new Date().toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
 
-    await channel.send({ files: [attachment] });
+    const fileTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const attachment = new AttachmentBuilder(buffer, { name: `backup-${fileTimestamp}.zip` });
+
+    const container = new ContainerBuilder()
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Database Backup`))
+      .addSeparatorComponents(new SeparatorBuilder())
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Automated database backup completed successfully.**`))
+      .addSeparatorComponents(new SeparatorBuilder())
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+        `**Timestamp:** ${timestamp}\n` +
+        `**File Size:** ${sizeKB} KB`
+      ))
+      .addSeparatorComponents(new SeparatorBuilder())
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
+
+    await channel.send({ 
+      components: [container], 
+      files: [attachment],
+      flags: MessageFlags.IsComponentsV2
+    });
+
     logger.info('Database backup sent successfully.');
     return true;
   } catch (error) {

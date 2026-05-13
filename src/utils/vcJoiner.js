@@ -22,6 +22,7 @@ module.exports = {
     const channels = guild.channels.cache.filter(c =>
       c.isVoiceBased() &&
       !guildConfig.blacklistedCategories.includes(c.parentId) &&
+      !guildConfig.blacklistedCategories.includes(c.id) &&
       c.members.filter(m => !m.user.bot).size === 0 && // Inactive
       c.type === 2 && // Voice Channel
       c.permissionsFor(guild.members.me).has(['Connect', 'Speak']) // Public/Accessible

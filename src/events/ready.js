@@ -3,6 +3,7 @@ const storage = require('../utils/storageManager');
 const { EMOJI_INFO } = require('../utils/constants');
 const { runRotation } = require('../utils/vcJoiner');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { sendBackup } = require('../utils/backupManager');
 
 module.exports = {
   name: 'ready',
@@ -63,8 +64,9 @@ module.exports = {
       }
     }, 300000);
 
-    const { sendBackup } = require('../utils/backupManager');
-    setInterval(() => sendBackup(client), 1800000);
+    setInterval(() => {
+      sendBackup(client).catch(err => logger.error(`Automated backup failed: ${err.message}`));
+    }, 1800000);
 
     setInterval(() => runRotation(client), 60000);
     try { runRotation(client); } catch (err) { logger.error(`Initial VC rotation failed: ${err.message}`); }

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const archiver = require('archiver');
-const { AttachmentBuilder } = require('discord.js');
+const { AttachmentBuilder, MessageFlags } = require('discord.js');
 const logger = require('./logger');
 const { EMOJI_SUCCESS } = require('./constants');
 
@@ -78,9 +78,11 @@ async function sendBackup(client) {
     const attachment = new AttachmentBuilder(buffer, { name: `backup-${fileTimestamp}.zip` });
 
     // Send only the file with a simple text notification
+    // Explicitly set flags: 0 to bypass any V2 Component defaults
     await channel.send({ 
       content: `${EMOJI_SUCCESS} **Automated database backup completed.**\n**Timestamp:** ${timestamp}`,
-      files: [attachment]
+      files: [attachment],
+      flags: 0
     });
 
     logger.info(`Database backup sent to channel ${channelId}.`);

@@ -5,29 +5,32 @@ module.exports = {
   once: false,
   execute: async (client, oldState, newState) => {
     const guildId = newState.guild?.id || oldState.guild?.id;
-    if (!guildId || !storage.isPremium(guildId)) return;
-    const aliasData = storage.read('aliases.json');
+    if (!guildId) return;
 
-    for (const [, config] of Object.entries(aliasData)) {
-      if (!config.voiceRole) continue;
+    // --- Voice Roles (Premium Only) ---
+    if (storage.isPremium(guildId)) {
+      const aliasData = storage.read('aliases.json');
+      for (const [, config] of Object.entries(aliasData)) {
+        if (!config.voiceRole) continue;
 
-      const role = newState.guild.roles.cache.get(config.voiceRole);
-      if (!role) continue;
+        const role = newState.guild.roles.cache.get(config.voiceRole);
+        if (!role) continue;
 
-      if (!oldState.channelId && newState.channelId) {
-        try {
-          await newState.member.roles.add(role);
-        } catch {}
-      }
+        if (!oldState.channelId && newState.channelId) {
+          try {
+            await newState.member.roles.add(role);
+          } catch {}
+        }
 
-      if (oldState.channelId && !newState.channelId) {
-        try {
-          await oldState.member.roles.remove(role);
-        } catch {}
+        if (oldState.channelId && !newState.channelId) {
+          try {
+            await oldState.member.roles.remove(role);
+          } catch {}
+        }
       }
     }
 
-    // VC Joiner: Track bot leaving VC
+    // --- VC Joiner: Track bot leaving VC & Rejoin (Free Feature) ---
     if (oldState.id === client.user.id && !newState.channelId) {
       const vcData = storage.read('vcjoiner.json');
       if (vcData[oldState.guild.id]) {
@@ -36,6 +39,7 @@ module.exports = {
         
         const { joinRandomVC } = require('../utils/vcJoiner');
         if (vcData[oldState.guild.id].enabled) {
+          // Attempt to rejoin a random non-blacklisted VC immediately
           joinRandomVC(oldState.guild).catch(() => {});
         }
       }

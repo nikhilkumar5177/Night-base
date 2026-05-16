@@ -33,22 +33,31 @@ module.exports = {
    */
   resolveRole: (guild, input) => {
     if (!input || typeof input !== 'string') return null;
+    const lowInput = input.toLowerCase();
+
+    // 1. Try ID or Mention
     const id = input.replace(/[<@&>]/g, '');
-    
-    // Try ID
     let role = guild.roles.cache.get(id);
     if (role) return role;
-    
-    // Try Name (case-insensitive)
-    let matched = guild.roles.cache.find(r => r.name.toLowerCase() === input.toLowerCase());
+
+    // 2. Try Exact Name (case-insensitive)
+    let matched = guild.roles.cache.find(r => r.name.toLowerCase() === lowInput);
     if (matched) return matched;
 
-    // Try Starts With
-    matched = guild.roles.cache.find(r => r.name.toLowerCase().startsWith(input.toLowerCase()));
+    // 3. Try Word match (matches if any word in the role name is exactly the input)
+    // For example: "Mod" matches "Server Mod"
+    matched = guild.roles.cache.find(r => 
+      r.name.toLowerCase().split(/[^a-z0-9]/).includes(lowInput)
+    );
     if (matched) return matched;
 
-    // Try Includes
-    return guild.roles.cache.find(r => r.name.toLowerCase().includes(input.toLowerCase()));
+    // 4. Try Starts With (prefix matching)
+    // For example: "mode" matches "Moderator"
+    matched = guild.roles.cache.find(r => r.name.toLowerCase().startsWith(lowInput));
+    if (matched) return matched;
+
+    // 5. Try Includes (global search)
+    return guild.roles.cache.find(r => r.name.toLowerCase().includes(lowInput));
   },
 
   /**

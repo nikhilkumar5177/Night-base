@@ -23,11 +23,16 @@ module.exports = {
       }
 
       const target = await resolveMember(message.guild, args[0]);
-      const roleInput = args.slice(1).join(' ');
+      const roleInput = args.slice(1).join(' ').trim();
+      
+      if (!target || !roleInput) {
+        return sendUsage(message, module.exports);
+      }
+
       const role = resolveRole(message.guild, roleInput);
 
-      if (!target || !role) {
-        return sendUsage(message, module.exports);
+      if (!role) {
+        return message.reply({ components: [cv2Error(`Could not find a role matching \`${roleInput}\`.`)], flags: 32768 });
       }
 
       if (role.position >= message.member.roles.highest.position && message.author.id !== message.guild.ownerId) {

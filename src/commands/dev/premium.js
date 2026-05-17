@@ -20,7 +20,7 @@ module.exports = {
     let targetGuildId = message.guild.id;
     let stateArgIndex = 0;
 
-    if (args[0] && /^\\d{17,20}$/.test(args[0])) {
+    if (args[0] && /^\d{17,20}$/.test(args[0])) {
       targetGuildId = args[0];
       stateArgIndex = 1;
     }
@@ -29,12 +29,28 @@ module.exports = {
     if (!premiumData.guilds) premiumData.guilds = {};
 
     const isCurrentlyPremium = !!premiumData.guilds[targetGuildId]?.active;
-    
-    let setState = !isCurrentlyPremium;
-    if (args[stateArgIndex]) {
-      const stateArg = args[stateArgIndex].toLowerCase();
-      if (stateArg === 'true' || stateArg === 'enable' || stateArg === 'permanent') setState = true;
-      if (stateArg === 'false' || stateArg === 'disable') setState = false;
+
+    // If no state argument is provided, show current status instead of toggling
+    if (!args[stateArgIndex]) {
+      const guildData = premiumData.guilds[targetGuildId];
+      const statusText = isCurrentlyPremium
+        ? `Guild \`${targetGuildId}\` is **PREMIUM ACTIVE**${guildData?.durationLabel ? ` (${guildData.durationLabel})` : ''}`
+        : `Guild \`${targetGuildId}\` is **NOT PREMIUM**`;
+      const container = new ContainerBuilder()
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} **Premium Status**`))
+        .addSeparatorComponents(new SeparatorBuilder())
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(statusText + `\nUse \`premium [guild_id] enable/disable [duration]\` to change.`));
+      return message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+    }
+
+    let setState;
+    const stateArg = args[stateArgIndex].toLowerCase();
+    if (stateArg === 'true' || stateArg === 'enable' || stateArg === 'permanent') {
+      setState = true;
+    } else if (stateArg === 'false' || stateArg === 'disable') {
+      setState = false;
+    } else {
+      return message.reply({ components: [cv2Error(`Invalid state. Use \`enable\`, \`disable\`, \`true\`, or \`false\`.`)], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
     }
 
     let durationMs = null;

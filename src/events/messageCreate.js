@@ -46,6 +46,11 @@ module.exports = {
       const { getConfig } = require('../automod/database');
       const automodConfig = await getConfig(message.guild.id);
 
+      const whitelistedWebhooks = automodConfig.modules?.security?.whitelistedWebhooks || [];
+      if (whitelistedWebhooks.includes(message.webhookId)) {
+        return; // Whitelisted Webhook
+      }
+
       if (automodConfig.enabled && automodConfig.modules.security.enabled && automodConfig.modules.security.antiWebhook) {
         if (!client._webhookTracker) client._webhookTracker = new Map();
         const guildId = message.guild.id;

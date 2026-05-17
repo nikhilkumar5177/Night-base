@@ -73,7 +73,8 @@ const DEFAULT_CONFIG = {
       actions: ['kick'],
       exemptChannels: [],
       exemptRoles: [],
-      exemptUsers: []
+      exemptUsers: [],
+      whitelistedWebhooks: []
     }
   },
   escalation: {

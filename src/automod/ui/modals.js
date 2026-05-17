@@ -267,11 +267,20 @@ function createSecurityModal(config) {
     .setStyle(TextInputStyle.Short)
     .setRequired(true);
 
+  const webhookWhitelistInput = new TextInputBuilder()
+    .setCustomId('security_webhook_whitelist')
+    .setLabel('Whitelisted Webhook IDs (one per line)')
+    .setPlaceholder('Enter Whitelisted Webhook IDs...')
+    .setValue(config.whitelistedWebhooks ? config.whitelistedWebhooks.join('\n') : '')
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(false);
+
   modal.addComponents(
     new ActionRowBuilder().addComponents(ageLimitInput),
     new ActionRowBuilder().addComponents(nukeLimitInput),
     new ActionRowBuilder().addComponents(togglesInput),
-    new ActionRowBuilder().addComponents(punishmentInput)
+    new ActionRowBuilder().addComponents(punishmentInput),
+    new ActionRowBuilder().addComponents(webhookWhitelistInput)
   );
 
   return modal;

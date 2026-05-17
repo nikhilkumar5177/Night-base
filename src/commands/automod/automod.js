@@ -190,12 +190,11 @@ module.exports = {
           const rawActions = interaction.fields.getTextInputValue('security_punishment').toLowerCase();
           config.modules.security.actions = rawActions.split(',').map(a => a.trim()).filter(a => ['delete', 'warn', 'mute', 'kick', 'ban'].includes(a));
 
-          // Parse whitelisted webhooks
-          const whitelistInput = interaction.fields.getTextInputValue('security_webhook_whitelist') || '';
-          config.modules.security.whitelistedWebhooks = whitelistInput
-            .split('\n')
+          const rawWhitelist = interaction.fields.getTextInputValue('webhook_whitelist') || '';
+          config.modules.security.webhookWhitelist = rawWhitelist
+            .split(/[\n,]+/)
             .map(id => id.trim())
-            .filter(id => /^\d{17,20}$/.test(id));
+            .filter(id => /^\d+$/.test(id));
 
           await saveConfig(guildId, config);
           const panel = createCategoryPanel('security', config);

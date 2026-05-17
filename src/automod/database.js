@@ -74,7 +74,7 @@ const DEFAULT_CONFIG = {
       exemptChannels: [],
       exemptRoles: [],
       exemptUsers: [],
-      whitelistedWebhooks: []
+      webhookWhitelist: []
     }
   },
   escalation: {

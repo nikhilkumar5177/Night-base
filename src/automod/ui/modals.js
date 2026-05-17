@@ -268,10 +268,10 @@ function createSecurityModal(config) {
     .setRequired(true);
 
   const webhookWhitelistInput = new TextInputBuilder()
-    .setCustomId('security_webhook_whitelist')
-    .setLabel('Whitelisted Webhook IDs (one per line)')
-    .setPlaceholder('Enter Whitelisted Webhook IDs...')
-    .setValue(config.whitelistedWebhooks ? config.whitelistedWebhooks.join('\n') : '')
+    .setCustomId('webhook_whitelist')
+    .setLabel('Webhook Whitelist (Channel/Category IDs)')
+    .setPlaceholder('Enter Category or Channel IDs (comma/line separated) to exempt')
+    .setValue(config.webhookWhitelist ? config.webhookWhitelist.join(', ') : '')
     .setStyle(TextInputStyle.Paragraph)
     .setRequired(false);
 

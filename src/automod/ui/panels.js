@@ -66,7 +66,7 @@ function formatConfig(category, data) {
   } else if (c === 'content') {
     details = `${EMOJI_DOT} Blocked Words: \`${data.blockedWords.length}\` (Whole) \u2502 \`${data.partialBlockedWords?.length || 0}\` (Partial)\n${EMOJI_DOT} Caps Limit: \`${data.capsLimit}%\`\n${EMOJI_DOT} Emoji Limit: \`${data.emojiLimit}\`\n${EMOJI_DOT} Ghost Ping: \`${data.ghostPing ? 'Yes' : 'No'}\``;
   } else if (c === 'security') {
-    details = `${EMOJI_DOT} Anti-Nuke: \`${data.antiNuke ? 'Yes' : 'No'}\` (Limit: \`${data.nukeThreshold}\` actions)\n${EMOJI_DOT} Anti-Webhook: \`${data.antiWebhook ? 'Yes' : 'No'}\`\n${EMOJI_DOT} Whitelisted Webhooks: \`${data.whitelistedWebhooks?.length || 0}\` IDs`;
+    details = `${EMOJI_DOT} Anti-Nuke: \`${data.antiNuke ? 'Yes' : 'No'}\` (Limit: \`${data.nukeThreshold}\` actions)\n${EMOJI_DOT} Anti-Webhook: \`${data.antiWebhook ? 'Yes' : 'No'}\`${data.webhookWhitelist?.length ? ` (Whitelisted: \`${data.webhookWhitelist.length}\` IDs)` : ''}`;
   } else if (c === 'escalation') {
     details = data.steps?.map(step => `${EMOJI_DOT} \`${step.warns} Warns\` \u2192 \`${step.action.toUpperCase()}\`${step.duration ? ` (\`${step.duration}\`)` : ''}`).join('\n');
   }

@@ -19,17 +19,46 @@ module.exports = {
     if (!process.env.DEV_ID.split(',').includes(message.author.id)) return;
 
     let count = 1;
-    if (args[0] && !isNaN(args[0])) count = parseInt(args[0]);
+    let durationInput = null;
+
+    if (args.length > 0) {
+      const arg0 = args[0];
+      const arg1 = args[1];
+
+      // Check if arg0 is count (a strict positive integer string)
+      if (/^\d+$/.test(arg0)) {
+        count = parseInt(arg0, 10);
+        if (arg1) {
+          durationInput = arg1;
+        }
+      } else {
+        // arg0 is not a clean integer, so treat it as duration input
+        durationInput = arg0;
+        // if there's a second argument and it is a strict positive integer, treat it as the count
+        if (arg1 && /^\d+$/.test(arg1)) {
+          count = parseInt(arg1, 10);
+        }
+      }
+    }
+
     if (count > 50) count = 50;
+    if (count < 1) count = 1;
 
     let durationMs = null;
     let durationLabel = 'Lifetime';
-    if (args[1]) {
-      durationMs = parseDuration(args[1]);
-      if (!durationMs) {
-        return message.reply({ components: [cv2Error(`Invalid duration format \`${args[1]}\`. Use formats like 30d, 3mo, 1y.`)], flags: MessageFlags.IsComponentsV2 });
+
+    if (durationInput) {
+      const lowerInput = durationInput.toLowerCase();
+      if (lowerInput !== 'lifetime' && lowerInput !== 'permanent' && lowerInput !== 'inf' && lowerInput !== 'infinite') {
+        durationMs = parseDuration(durationInput);
+        if (!durationMs) {
+          return message.reply({ 
+            components: [cv2Error(`Invalid duration format \`${durationInput}\`. Use formats like 30d, 3mo, 1y, or lifetime.`)], 
+            flags: MessageFlags.IsComponentsV2 
+          });
+        }
+        durationLabel = durationInput;
       }
-      durationLabel = args[1];
     }
 
     const premiumData = storage.read('premium.json');
@@ -37,7 +66,11 @@ module.exports = {
 
     const generatedKeys = [];
     for (let i = 0; i < count; i++) {
-      const key = 'NW-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+      let key;
+      do {
+        key = 'NW-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+      } while (premiumData.keys[key]);
+
       premiumData.keys[key] = {
         generatedBy: message.author.id,
         generatedAt: Date.now(),

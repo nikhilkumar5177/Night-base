@@ -27,6 +27,7 @@ const DEFAULT_FILES = {
 
 let flushInterval = null;
 let debounceTimers = new Map();
+const corruptedAlerts = [];
 
 function init() {
   if (!fs.existsSync(STORAGE_DIR)) {
@@ -68,9 +69,16 @@ function init() {
         }
 
         cache.set(file, data);
-      } catch {
-        // File is corrupted — use defaults but log it
-        console.error(`[Storage] ${file} is corrupted, resetting to defaults.`);
+      } catch (err) {
+        // File is corrupted — backup the corrupted file first so no data is lost!
+        const backupPath = `${filePath}.corrupted.${Date.now()}`;
+        try {
+          fs.copyFileSync(filePath, backupPath);
+          console.error(`[CRITICAL] [Storage] ${file} is corrupted! A backup has been saved to: ${path.basename(backupPath)}`);
+          corruptedAlerts.push({ file, filePath: backupPath, error: err.message });
+        } catch (backupErr) {
+          console.error(`[CRITICAL] [Storage] Failed to create backup for corrupted file ${file}: ${backupErr.message}`);
+        }
         cache.set(file, JSON.parse(JSON.stringify(defaultData)));
         fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
       }
@@ -87,7 +95,17 @@ function read(file) {
   const filePath = path.join(STORAGE_DIR, file);
   try {
     data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch {
+  } catch (err) {
+    if (fs.existsSync(filePath)) {
+      const backupPath = `${filePath}.corrupted.${Date.now()}`;
+      try {
+        fs.copyFileSync(filePath, backupPath);
+        console.error(`[CRITICAL] [Storage] ${file} read failed or corrupted! A backup has been saved to: ${path.basename(backupPath)}`);
+        corruptedAlerts.push({ file, filePath: backupPath, error: err.message });
+      } catch (backupErr) {
+        console.error(`[CRITICAL] [Storage] Failed to create backup for read-failed file ${file}: ${backupErr.message}`);
+      }
+    }
     data = JSON.parse(JSON.stringify(defaultData));
   }
 
@@ -198,4 +216,12 @@ function isPremium(guildId) {
   return true;
 }
 
-module.exports = { init, read, write, flush, flushFile, startPeriodicFlush, stopPeriodicFlush, sweep, trimArray, isPremium };
+function getCorruptedAlerts() {
+  return corruptedAlerts;
+}
+
+function clearCorruptedAlerts() {
+  corruptedAlerts.length = 0;
+}
+
+module.exports = { init, read, write, flush, flushFile, startPeriodicFlush, stopPeriodicFlush, sweep, trimArray, isPremium, getCorruptedAlerts, clearCorruptedAlerts };

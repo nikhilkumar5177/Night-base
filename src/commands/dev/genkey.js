@@ -25,17 +25,17 @@ module.exports = {
       const arg0 = args[0];
       const arg1 = args[1];
 
-      // Check if arg0 is count (a strict positive integer string)
-      if (/^\d+$/.test(arg0)) {
+      // Check if arg0 is count (a number)
+      if (!isNaN(arg0)) {
         count = parseInt(arg0, 10);
         if (arg1) {
           durationInput = arg1;
         }
       } else {
-        // arg0 is not a clean integer, so treat it as duration input
+        // arg0 is not a number, so it must be the duration input
         durationInput = arg0;
-        // if there's a second argument and it is a strict positive integer, treat it as the count
-        if (arg1 && /^\d+$/.test(arg1)) {
+        // if there's a second argument and it's a number, it's the count
+        if (arg1 && !isNaN(arg1)) {
           count = parseInt(arg1, 10);
         }
       }
@@ -66,11 +66,7 @@ module.exports = {
 
     const generatedKeys = [];
     for (let i = 0; i < count; i++) {
-      let key;
-      do {
-        key = 'NW-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
-      } while (premiumData.keys[key]);
-
+      const key = 'NW-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
       premiumData.keys[key] = {
         generatedBy: message.author.id,
         generatedAt: Date.now(),

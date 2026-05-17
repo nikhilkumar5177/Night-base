@@ -43,29 +43,32 @@ module.exports = {
         return message.reply({ components: [cv2Error('Target is a staff member with a higher or equal role.')], flags: 32768 });
       }
 
-      const timeStr = args[1]?.toLowerCase();
       let durationMs = 10 * 60 * 1000;
       let durationLabel = '10 minutes';
+      let reasonIndex = 1;
 
-      if (timeStr) {
+      if (args[1]) {
+        const timeStr = args[1].toLowerCase();
         const timeMatch = timeStr.match(/^(\d+)(s|m|h|d)$/);
         if (timeMatch) {
-          const amount = parseInt(timeMatch[1]);
+          const amount = parseInt(timeMatch[1], 10);
           const unit = timeMatch[2];
           const multipliers = { s: 1000, m: 60000, h: 3600000, d: 86400000 };
           durationMs = amount * multipliers[unit];
           durationLabel = `${amount}${unit}`;
+          reasonIndex = 2;
         } else {
-          const amount = parseInt(timeStr);
+          const amount = parseInt(timeStr, 10);
           if (!isNaN(amount)) {
             durationMs = amount * 60 * 1000;
             durationLabel = `${amount} minutes`;
+            reasonIndex = 2;
           }
         }
       }
 
       durationMs = Math.min(durationMs, 28 * 24 * 60 * 60 * 1000);
-      const reason = args.slice(2).join(' ') || 'No reason provided';
+      const reason = args.slice(reasonIndex).join(' ') || 'No reason provided';
 
       const loadContainer = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Applying timeout...**`));

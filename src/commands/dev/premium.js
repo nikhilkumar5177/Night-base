@@ -57,11 +57,14 @@ module.exports = {
     let durationLabel = 'Lifetime';
     if (setState && args[stateArgIndex + 1]) {
       const timeInput = args[stateArgIndex + 1];
-      durationMs = parseDuration(timeInput);
-      if (!durationMs) {
-         return message.reply({ components: [cv2Error(`Invalid duration format \`${timeInput}\`. Use formats like 30d, 3mo, 1y.`)], flags: MessageFlags.IsComponentsV2 });
+      const lowerTimeInput = timeInput.toLowerCase();
+      if (lowerTimeInput !== 'lifetime' && lowerTimeInput !== 'permanent' && lowerTimeInput !== 'inf' && lowerTimeInput !== 'infinite') {
+        durationMs = parseDuration(timeInput);
+        if (!durationMs) {
+           return message.reply({ components: [cv2Error(`Invalid duration format \`${timeInput}\`. Use formats like 30d, 3mo, 1y, or lifetime.`)], flags: MessageFlags.IsComponentsV2 });
+        }
+        durationLabel = timeInput;
       }
-      durationLabel = timeInput;
     }
 
     premiumData.guilds[targetGuildId] = {

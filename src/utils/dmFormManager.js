@@ -106,8 +106,9 @@ async function handleStaffReply(client, message) {
     if (!user) return;
 
     try {
-        // Forward to user
-        await user.send(message.content).catch(err => {
+        // Forward to user including any attachments
+        const files = message.attachments.map(a => a.url);
+        await user.send({ content: message.content || undefined, files: files.length > 0 ? files : undefined }).catch(err => {
             message.reply({ content: `\u274C **Failed to DM user:** ${err.message}` });
             throw err;
         });

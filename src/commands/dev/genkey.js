@@ -32,10 +32,10 @@ module.exports = {
           durationInput = arg1;
         }
       } else {
-        // arg0 is not a number, so it must be the duration input
+        // arg0 is not a clean integer, so treat it as duration input
         durationInput = arg0;
-        // if there's a second argument and it's a number, it's the count
-        if (arg1 && !isNaN(arg1)) {
+        // if there's a second argument and it is a strict positive integer, treat it as the count
+        if (arg1 && /^\d+$/.test(arg1)) {
           count = parseInt(arg1, 10);
         }
       }
@@ -52,9 +52,9 @@ module.exports = {
       if (lowerInput !== 'lifetime' && lowerInput !== 'permanent' && lowerInput !== 'inf' && lowerInput !== 'infinite') {
         durationMs = parseDuration(durationInput);
         if (!durationMs) {
-          return message.reply({ 
-            components: [cv2Error(`Invalid duration format \`${durationInput}\`. Use formats like 30d, 3mo, 1y, or lifetime.`)], 
-            flags: MessageFlags.IsComponentsV2 
+          return message.reply({
+            components: [cv2Error(`Invalid duration format \`${durationInput}\`. Use formats like 30d, 3mo, 1y, or lifetime.`)],
+            flags: MessageFlags.IsComponentsV2
           });
         }
         durationLabel = durationInput;
@@ -66,7 +66,11 @@ module.exports = {
 
     const generatedKeys = [];
     for (let i = 0; i < count; i++) {
-      const key = 'NW-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+      let key;
+      do {
+        key = 'NW-' + crypto.randomBytes(4).toString('hex').toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
+      } while (premiumData.keys[key]);
+
       premiumData.keys[key] = {
         generatedBy: message.author.id,
         generatedAt: Date.now(),
@@ -87,6 +91,6 @@ module.exports = {
       .addSeparatorComponents(new SeparatorBuilder())
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Successfully generated ${count} key(s) with duration **${durationLabel}**:\n${keyList}`));
 
-    message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+    message.reply({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
   }
 };

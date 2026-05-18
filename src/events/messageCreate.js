@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, PermissionsBitField } = require('discord.js');
 const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_LEGIT, EMOJI_DOT, SEP } = require('../utils/constants');
 
-const { sendAutoDelete, cv2Error, safeReply, safeSend } = require('../utils/messageHelper');
+const { sendAutoDelete, cv2Error, safeReply, safeSend, safeDelete } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
 const resolver = require('../utils/resolver');
 
@@ -202,16 +202,16 @@ module.exports = {
           content: `${message.author}`,
           components: [cv2Error('Commands are not allowed in this channel. Please use slowmode to manage spam.')]
         }).catch(() => { });
-        await message.delete().catch(() => { });
-        if (alertMsg) setTimeout(() => alertMsg.delete().catch(() => { }), 5000);
+        await safeDelete(message);
+        if (alertMsg) setTimeout(() => safeDelete(alertMsg), 5000);
         return;
       }
       try {
         const now = Date.now();
         if (message.content.match(/https?:\/\/[^\s]+/gi)) {
           const linkMsg = await message.channel.send({ content: `${message.author}`, components: [cv2Error('Links are not allowed in vouches.')] }).catch(() => { });
-          await message.delete().catch(() => { });
-          if (linkMsg) setTimeout(() => linkMsg.delete().catch(() => { }), 5000);
+          await safeDelete(message);
+          if (linkMsg) setTimeout(() => safeDelete(linkMsg), 5000);
           return;
         }
 
@@ -228,7 +228,7 @@ module.exports = {
           ));
 
         const sent = await safeSend(message.channel, { components: [container] }).catch(() => { });
-        await message.delete().catch(() => { });
+        await safeDelete(message);
         if (sent) await sent.react(EMOJI_LEGIT).catch(() => { });
         console.log(`[Vouch] Logged vouch by ${message.author.tag} in ${message.channel.name}`);
       } catch (e) { console.error('[Vouch Error]', e); }

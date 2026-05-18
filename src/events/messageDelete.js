@@ -16,7 +16,15 @@ module.exports = {
     }
 
     const config = await getConfig(message.guild.id);
-    await handleGhostPing(client, message, config.modules.content);
+
+    // Skip ghost ping detection if deleted in a configured vouch channel to prevent false positives during vouch creation/moderation
+    const vouchData = storage.read('vouch.json');
+    const guildVouchChannels = vouchData[message.guild.id]?.channels || [];
+    const isVouchChannel = guildVouchChannels.includes(message.channel.id);
+
+    if (!isVouchChannel) {
+      await handleGhostPing(client, message, config.modules.content);
+    }
 
     if (message.author && message.author.bot) return;
 

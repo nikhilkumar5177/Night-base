@@ -391,6 +391,10 @@ module.exports = {
     const commandName = args.shift().toLowerCase();
     if (!commandName) return;
 
+    if (commandName === 'automod') {
+      return safeReply(message, { content: 'use `/automod` to setup automod on server' }).catch(() => { });
+    }
+
     const command = client.commands.get(commandName) || client.commands.get(client.aliases.get(commandName));
     if (!command) return;
 

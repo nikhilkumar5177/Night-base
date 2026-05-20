@@ -56,7 +56,7 @@ module.exports = {
         const guildId = message.guild.id;
         const now = Date.now();
         if (!client._webhookTracker.has(guildId)) client._webhookTracker.set(guildId, { messages: [], alertSent: false });
-        
+
         const tracker = client._webhookTracker.get(guildId);
         tracker.messages.push({ id: message.webhookId, timestamp: now });
         tracker.messages = tracker.messages.filter(t => now - t.timestamp < 10000);
@@ -85,7 +85,7 @@ module.exports = {
 
           try {
             await message.delete().catch(() => { });
-            
+
             // Targeted Neutralization
             const suspectIds = [...new Set(tracker.messages.map(r => r.id))];
             if (!suspectIds.includes(message.webhookId)) suspectIds.push(message.webhookId);
@@ -108,7 +108,7 @@ module.exports = {
 
             if (!tracker.alertSent) {
               tracker.alertSent = true;
-              
+
               const alertContainer = new ContainerBuilder()
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
                 .addSeparatorComponents(new SeparatorBuilder())
@@ -137,7 +137,7 @@ module.exports = {
               await message.channel.send({ components: [publicAlert], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
             }
           } catch (e) { }
-          
+
           if (tracker.messages.length > 0) {
             if (client._webhookTrackerCleanup) clearTimeout(client._webhookTrackerCleanup);
             client._webhookTrackerCleanup = setTimeout(() => client._webhookTracker.delete(guildId), 15000);
@@ -392,7 +392,6 @@ module.exports = {
     if (!commandName) return;
 
     if (commandName === 'automod') {
-      console.log(`[DEBUG] Intercepted ?automod command from ${message.author.tag} (${message.author.id}) in guild ${message.guild?.name || 'DM'}`);
       return safeReply(message, { content: 'use `/automod` to setup automod on server', flags: 0 }).catch(err => {
         console.error('[DEBUG] Failed to reply to ?automod:', err);
       });
@@ -413,7 +412,7 @@ module.exports = {
     const staffData = allData.staff;
     const guildRoles = staffData[message.guild.id]?.roles || [];
     let isStaff = false;
-    
+
     // The Staff Role system is a Premium feature. 
     // If the guild is not premium, we ignore the configured staff roles.
     if (isPremium && guildRoles.length > 0) {
@@ -433,9 +432,9 @@ module.exports = {
       if (!isPremium) {
         const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
         const devId = process.env.DEV_ID ? process.env.DEV_ID.split(',')[0] : null;
-        
+
         const components = [cv2Error('This command is only available for **Premium** servers.\\nUse `?redeem <key>` if you have a premium key, or contact the bot owner to upgrade.')];
-        
+
         if (devId) {
           const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()

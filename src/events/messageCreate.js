@@ -393,7 +393,7 @@ module.exports = {
 
     if (commandName === 'automod') {
       console.log(`[DEBUG] Intercepted ?automod command from ${message.author.tag} (${message.author.id}) in guild ${message.guild?.name || 'DM'}`);
-      return safeReply(message, { content: 'use `/automod` to setup automod on server' }).catch(err => {
+      return safeReply(message, { content: 'use `/automod` to setup automod on server', flags: 0 }).catch(err => {
         console.error('[DEBUG] Failed to reply to ?automod:', err);
       });
     }

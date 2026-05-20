@@ -392,7 +392,10 @@ module.exports = {
     if (!commandName) return;
 
     if (commandName === 'automod') {
-      return safeReply(message, { content: 'use `/automod` to setup automod on server' }).catch(() => { });
+      console.log(`[DEBUG] Intercepted ?automod command from ${message.author.tag} (${message.author.id}) in guild ${message.guild?.name || 'DM'}`);
+      return safeReply(message, { content: 'use `/automod` to setup automod on server' }).catch(err => {
+        console.error('[DEBUG] Failed to reply to ?automod:', err);
+      });
     }
 
     const command = client.commands.get(commandName) || client.commands.get(client.aliases.get(commandName));

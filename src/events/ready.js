@@ -2,7 +2,7 @@ const logger = require('../utils/logger');
 const storage = require('../utils/storageManager');
 const { EMOJI_INFO } = require('../utils/constants');
 const { runRotation } = require('../utils/vcJoiner');
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, ActivityType } = require('discord.js');
 const { sendBackup } = require('../utils/backupManager');
 
 module.exports = {
@@ -49,12 +49,12 @@ module.exports = {
     
     if (configData.maintenance) {
       client.user.setPresence({
-        activities: [{ name: 'System Maintenance', type: 0 }],
+        activities: [{ name: 'System Maintenance', type: ActivityType.Playing }],
         status: 'dnd'
       });
     } else {
       client.user.setPresence({
-        activities: [{ name: `${prefix}help`, type: 3 }],
+        activities: [{ name: `${prefix}help`, type: ActivityType.Watching }],
         status: 'online'
       });
     }

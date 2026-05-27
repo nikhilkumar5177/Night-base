@@ -1,4 +1,4 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, ActivityType } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { EMOJI_OWNER, EMOJI_WARN, EMOJI_SUCCESS } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
@@ -23,7 +23,7 @@ module.exports = {
 
       if (configData.maintenance) {
         client.user.setPresence({
-          activities: [{ name: 'System Maintenance', type: 0 }],
+          activities: [{ name: 'System Maintenance', type: ActivityType.Playing }],
           status: 'dnd'
         });
         
@@ -40,7 +40,7 @@ module.exports = {
         await message.reply({ components: [container], flags: 32768 }).catch(() => {});
       } else {
         client.user.setPresence({
-          activities: [{ name: `${prefix}help`, type: 3 }],
+          activities: [{ name: `${prefix}help`, type: ActivityType.Watching }],
           status: 'online'
         });
 

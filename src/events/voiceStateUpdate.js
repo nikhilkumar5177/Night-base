@@ -9,11 +9,11 @@ module.exports = {
 
     // --- Voice Roles (Premium Only) ---
     if (storage.isPremium(guildId)) {
-      const aliasData = storage.read('aliases.json');
-      for (const [, config] of Object.entries(aliasData)) {
-        if (!config.voiceRole) continue;
+      const voiceData = storage.read('voiceroles.json');
+      const roles = voiceData[guildId] || [];
 
-        const role = newState.guild.roles.cache.get(config.voiceRole);
+      for (const roleId of roles) {
+        const role = newState.guild.roles.cache.get(roleId);
         if (!role) continue;
 
         if (!oldState.channelId && newState.channelId) {

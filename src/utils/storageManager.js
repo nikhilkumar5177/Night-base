@@ -21,6 +21,7 @@ const DEFAULT_FILES = {
   'autorole.json': {},
   'privateChannels.json': {},
   'vcjoiner.json': {},
+  'voiceroles.json': {},
   'afk.json': {},
   'premium.json': { guilds: {}, keys: {} }
 };

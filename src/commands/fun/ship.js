@@ -1,5 +1,11 @@
 const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
-const sharp = require('sharp');
+
+let sharp;
+try {
+  sharp = require('sharp');
+} catch (e) {
+  console.error('[Ship] Missing "sharp" dependency! Please run "npm install sharp" on your server.');
+}
 
 // ══════════════════════════════════════════════
 // COMPATIBILITY QUOTES
@@ -73,6 +79,10 @@ module.exports = {
   enabled: true,
   execute: async (client, message, args) => {
     try {
+      if (!sharp) {
+        return message.reply({ content: '❌ The `sharp` library is missing on this host! Please run `npm install sharp` in the console to fix this.' });
+      }
+
       const author = message.author;
       let target;
 

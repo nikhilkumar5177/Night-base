@@ -20,7 +20,9 @@ module.exports = {
     if (!cmd) return message.reply({ components: [cv2Error('Provide a command to execute.')], flags: 32768 });
 
     // Show processing state
-    const processMsg = await message.reply({ content: '⏳ Executing command...', flags: 32768 });
+    const loadingContainer = new ContainerBuilder()
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent('⏳ Executing command...'));
+    const processMsg = await message.reply({ components: [loadingContainer], flags: 32768 });
 
     exec(cmd, { timeout: 15000 }, (error, stdout, stderr) => {
       let output = stdout || stderr || 'No output.';
@@ -38,7 +40,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Output:**\n\`\`\`bash\n${output}\n\`\`\``));
 
-      processMsg.edit({ content: null, components: [container] }).catch(() => {});
+      processMsg.edit({ components: [container], flags: 32768 }).catch(() => {});
     });
   }
 };

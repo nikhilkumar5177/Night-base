@@ -123,9 +123,6 @@ module.exports = {
         }
       }
 
-      // Show loading state immediately for perceived performance
-      const loadingMsg = await message.reply({ content: '💘 Calculating assets...' });
-
       // ── Deterministic percentage ──
       const seed = BigInt(author.id) + BigInt(target.id);
       const percentage = Number(seed % 101n);
@@ -191,7 +188,7 @@ module.exports = {
         .setImage('attachment://ship.png')
         .setFooter({ text: 'Wild Wolf • Love Meter' });
 
-      await loadingMsg.edit({
+      await message.reply({
         content: `${author} ❤️ ${target}`,
         embeds: [embed],
         files: [attachment],
@@ -200,11 +197,7 @@ module.exports = {
 
     } catch (error) {
       console.error('[Ship Command Error]', error);
-      if (typeof loadingMsg !== 'undefined') {
-        loadingMsg.edit({ content: '❌ Something went wrong while shipping!' }).catch(() => {});
-      } else {
-        message.reply({ content: '❌ Something went wrong while shipping!' }).catch(() => {});
-      }
+      message.reply({ content: '❌ Something went wrong while shipping!' }).catch(() => {});
     }
   }
 };

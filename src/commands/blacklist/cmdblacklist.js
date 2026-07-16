@@ -10,9 +10,7 @@ module.exports = {
   usage: 'cmdblacklist <add|remove|list> [channel] [command]',
   cooldown: 0,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {

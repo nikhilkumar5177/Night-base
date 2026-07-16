@@ -13,9 +13,7 @@ module.exports = {
     .setName('avatar')
     .setDescription('View user avatar with format options')
     .addUserOption(opt => opt.setName('user').setDescription('The user to view avatar of').setRequired(false)),
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const resolver = require('../../utils/resolver');

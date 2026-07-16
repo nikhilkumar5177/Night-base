@@ -20,9 +20,7 @@ module.exports = {
   example: 'ts ko Hello how are you\nts ja Good morning',
   cooldown: 3,
   enabled: true,
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       if (args.length < 2) {

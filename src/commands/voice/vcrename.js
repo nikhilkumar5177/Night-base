@@ -9,9 +9,7 @@ module.exports = {
   usage: 'vcrename <new name>',
   cooldown: 10,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const newName = args.join(' ');

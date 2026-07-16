@@ -9,9 +9,7 @@ module.exports = {
   usage: 'emoji <emoji>',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (!args.length) return message.reply({ components: [cv2Error('Please provide at least one custom emoji.')], flags: 32768 });

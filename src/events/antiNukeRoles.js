@@ -9,7 +9,6 @@ module.exports = {
   execute: async (client, role) => {
     const config = await getConfig(role.guild.id);
     const storage = require('../utils/storageManager');
-    if (!storage.isPremium(role.guild.id)) return;
 
     const security = config.modules.security;
     if (!config.enabled || !security.enabled || !security.antiNuke) return;

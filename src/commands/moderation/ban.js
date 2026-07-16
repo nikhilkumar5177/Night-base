@@ -9,7 +9,6 @@ module.exports = {
   usage: 'ban <user> [reason]',
   cooldown: 10,
   enabled: true,
-  staffOnly: true,
   userPermissions: ['BanMembers'],
   execute: async (client, message, args) => {
     try {

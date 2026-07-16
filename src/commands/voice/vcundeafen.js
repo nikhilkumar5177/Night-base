@@ -10,9 +10,7 @@ module.exports = {
   usage: 'vcundeafen <@user/id>',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const target = await resolveMember(message.guild, args[0]);

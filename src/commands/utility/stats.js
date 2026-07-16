@@ -13,9 +13,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('stats')
     .setDescription('View command usage analytics'),
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const analytics = storage.read('analytics.json');

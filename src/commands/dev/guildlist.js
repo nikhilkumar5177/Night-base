@@ -8,9 +8,7 @@ module.exports = {
   usage: 'guildlist',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const guilds = client.guilds.cache.map(g => ({

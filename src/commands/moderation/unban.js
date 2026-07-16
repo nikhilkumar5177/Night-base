@@ -10,7 +10,6 @@ module.exports = {
   example: 'unban 123456789 appeal accepted\nunban 123456789 987654321 mass appeal',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   userPermissions: ['BanMembers'],
   execute: async (client, message, args) => {
     try {

@@ -12,9 +12,7 @@ module.exports = {
   example: 'mute @User 30m spamming\nmute 123456789 2h repetitive messages',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {

@@ -9,9 +9,7 @@ module.exports = {
   usage: 'setprefix <new prefix>',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {

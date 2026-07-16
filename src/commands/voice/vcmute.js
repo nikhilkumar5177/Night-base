@@ -10,9 +10,7 @@ module.exports = {
   usage: 'vcmute <@user/id>',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   userPermissions: ['MuteMembers'],
   execute: async (client, message, args) => {
     try {

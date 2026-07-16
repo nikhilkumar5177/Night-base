@@ -10,9 +10,7 @@ module.exports = {
   usage: 'vckick <@user/id>',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   userPermissions: ['MoveMembers'],
   execute: async (client, message, args) => {
     try {

@@ -10,9 +10,7 @@ module.exports = {
   usage: 'vcmove <@user/id> <#channel/id>',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   userPermissions: ['MoveMembers'],
   execute: async (client, message, args) => {
     try {

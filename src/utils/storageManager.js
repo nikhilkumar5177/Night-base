@@ -9,21 +9,19 @@ const DEFAULT_FILES = {
   'warns.json': {},
   'blacklist.json': { users: [] },
   'aliases.json': {},
-  'staff.json': {},
   'cmdBlacklist.json': {},
   'snipe.json': {},
   'vouch.json': {},
   'reminders.json': [],
   'analytics.json': {},
   'security.json': { enabled: false, logs: [], nukeThreshold: 3, nukeWindow: 10000 },
-  'config.json': { channelCommands: {}, disabledCommands: [], noPrefixUsers: [], aliasMode: true, maintenance: false, dmLogChannelId: "" },
+  'config.json': { channelCommands: {}, disabledCommands: [], noPrefixUsers: [], aliasMode: true, maintenance: false, dmLogChannelId: "", defaultyServers: [] },
   'dmThreads.json': {},
   'autorole.json': {},
   'privateChannels.json': {},
   'vcjoiner.json': {},
   'voiceroles.json': {},
-  'afk.json': {},
-  'premium.json': { guilds: {}, keys: {} }
+  'afk.json': {}
 };
 
 let flushInterval = null;
@@ -126,8 +124,6 @@ function read(file) {
 
   cache.set(file, data);
   return data;
-
-  return data;
 }
 
 function write(file, data) {
@@ -152,7 +148,7 @@ async function flushFile(file) {
     await fs.promises.rename(tmpPath, filePath);
   } catch (err) {
 
-    try { await fs.promises.unlink(tmpPath); } catch {}
+    try { await fs.promises.unlink(tmpPath); } catch (e) {}
   }
   dirty.delete(file);
 }
@@ -202,20 +198,6 @@ function trimArray(file, key, maxLength) {
   }
 }
 
-function isPremium(guildId) {
-  if (!guildId) return false;
-  const premiumData = read('premium.json');
-  if (!premiumData.guilds) return false;
-  const premiumGuild = premiumData.guilds[guildId];
-  if (!premiumGuild || !premiumGuild.active) return false;
-  
-  if (premiumGuild.expiresAt && Date.now() > premiumGuild.expiresAt) {
-    premiumGuild.active = false;
-    write('premium.json', premiumData);
-    return false;
-  }
-  return true;
-}
 
 function getCorruptedAlerts() {
   return corruptedAlerts;
@@ -225,4 +207,4 @@ function clearCorruptedAlerts() {
   corruptedAlerts.length = 0;
 }
 
-module.exports = { init, read, write, flush, flushFile, startPeriodicFlush, stopPeriodicFlush, sweep, trimArray, isPremium, getCorruptedAlerts, clearCorruptedAlerts };
+module.exports = { init, read, write, flush, flushFile, startPeriodicFlush, stopPeriodicFlush, sweep, trimArray, getCorruptedAlerts, clearCorruptedAlerts };

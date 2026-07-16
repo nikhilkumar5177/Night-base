@@ -9,9 +9,7 @@ module.exports = {
   usage: 'vclimit <number> [#channel]',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const limit = parseInt(args[0]);

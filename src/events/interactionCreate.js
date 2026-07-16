@@ -30,15 +30,7 @@ module.exports = {
       const blacklistData = storage.read('blacklist.json');
       if (blacklistData.users?.includes(interaction.user.id)) return;
 
-      if (command.staffOnly) {
-        const staffData = storage.read('staff.json');
-        const guildRoles = staffData[interaction.guildId]?.roles || [];
-        const memberRoles = interaction.member ? interaction.member.roles.cache.map(r => r.id) : [];
-        const isStaff = guildRoles.some(r => memberRoles.includes(r));
-        if (!isStaff && !isDev) {
-          return safeReply(interaction, { components: [cv2Error('You are not a **Staff member** of this server.')], ephemeral: true });
-        }
-      }
+
 
       if (command.devOnly && !isDev) {
         return safeReply(interaction, { components: [cv2Error(`${EMOJI_OWNER} This is an **Owner Command**.`)], ephemeral: true });

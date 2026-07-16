@@ -9,9 +9,7 @@ module.exports = {
   usage: 'lock [#channel] [reason]',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has(PermissionsBitField.Flags.ManageChannels)) {

@@ -12,9 +12,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('serverinfo')
     .setDescription('Display server information'),
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const g = message.guild;

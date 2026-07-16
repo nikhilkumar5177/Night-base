@@ -23,9 +23,7 @@ module.exports = {
     .setName('update')
     .setDescription('Update the bot to the latest version or a specific commit')
     .addStringOption(opt => opt.setName('commit').setDescription('Specific commit ID to update to').setRequired(false)),
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     const isInteraction = !message.author;
     const user = isInteraction ? message.user : message.author;

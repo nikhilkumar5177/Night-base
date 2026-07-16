@@ -9,9 +9,7 @@ module.exports = {
   usage: 'vcunmuteall',
   cooldown: 10,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   userPermissions: ['MuteMembers'],
   execute: async (client, message, args) => {
     try {

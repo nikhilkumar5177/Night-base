@@ -12,9 +12,7 @@ module.exports = {
   example: 'vcjoiner on\nvcjoiner bl 123456789\nvcjoiner join 987654321',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     const isOwner = message.author.id === message.guild.ownerId;
     const isDev = message.author.id === process.env.DEV_ID;
@@ -55,7 +53,7 @@ module.exports = {
           container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Joiner Disabled.** Wold Wolf has left the voice channel.`));
           break;
 
-        case 'bl':
+        case 'bl': {
           const blId = args[1];
           if (!blId) return message.reply({ components: [cv2Error('Provide a Category or Channel ID to blacklist.')], flags: 32768 });
           if (!guildConfig.blacklistedCategories.includes(blId)) {
@@ -64,16 +62,18 @@ module.exports = {
           }
           container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} ID \`${blId}\` has been **blacklisted** from Joiner rotation.`));
           break;
+        }
 
-        case 'unbl':
+        case 'unbl': {
           const unblId = args[1];
           if (!unblId) return message.reply({ components: [cv2Error('Provide a Category or Channel ID to un-blacklist.')], flags: 32768 });
           guildConfig.blacklistedCategories = guildConfig.blacklistedCategories.filter(id => id !== unblId);
           storage.write('vcjoiner.json', vcData);
           container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} ID \`${unblId}\` has been **removed** from Joiner blacklist.`));
           break;
+        }
 
-        case 'join':
+        case 'join': {
           const chId = args[1]?.replace(/[<#>]/g, '');
           if (!chId) return message.reply({ components: [cv2Error('Provide a Voice Channel ID to join.')], flags: 32768 });
           const channel = message.guild.channels.cache.get(chId);
@@ -83,6 +83,7 @@ module.exports = {
           await joinSpecificVC(channel);
           container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Joined specific channel: **${channel.name}**`));
           break;
+        }
 
         default:
           return sendUsage(message, module.exports);

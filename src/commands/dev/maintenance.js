@@ -10,9 +10,7 @@ module.exports = {
   usage: 'maintenance',
   cooldown: 0,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const configData = storage.read('config.json');

@@ -6,9 +6,7 @@ module.exports = {
   execute: async (client, oldState, newState) => {
     const guildId = newState.guild?.id || oldState.guild?.id;
     if (!guildId) return;
-
-    // --- Voice Roles (Premium Only) ---
-    if (storage.isPremium(guildId)) {
+{
       const voiceData = storage.read('voiceroles.json');
       const roles = voiceData[guildId] || [];
 

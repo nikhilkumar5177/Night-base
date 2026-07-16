@@ -9,9 +9,7 @@ module.exports = {
   usage: 'vcinfo [#channel]',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[0]) || message.member.voice.channel;
@@ -32,7 +30,7 @@ module.exports = {
           `${EMOJI_DOT} **ID:** \`${channel.id}\`\n` +
           `${EMOJI_DOT} **Bitrate:** \`${channel.bitrate / 1000}kbps\`\n` +
           `${EMOJI_DOT} **Limit:** \`${channel.userLimit === 0 ? 'No Limit' : channel.userLimit}\`\n` +
-          `${EMOJI_DOT} **Status:** ${isHidden ? '\`Hidden\`' : '\`Visible\`'} \u2502 ${isLocked ? '\`Locked\`' : '\`Unlocked\`'}\n` +
+          `${EMOJI_DOT} **Status:** ${isHidden ? '`Hidden`' : '`Visible`'} \u2502 ${isLocked ? '`Locked`' : '`Unlocked`'}\n` +
           `${EMOJI_DOT} **Members:** \`${channel.members.size}\` \u2022 **Category:** ${channel.parent ? channel.parent.name : 'None'}`
         ))
         .addSeparatorComponents(new SeparatorBuilder())

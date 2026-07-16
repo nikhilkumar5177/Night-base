@@ -12,9 +12,7 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName('restart')
     .setDescription('Restart the bot process'),
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     const user = message.author || message.user;
     const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];

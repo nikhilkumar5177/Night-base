@@ -8,9 +8,7 @@ module.exports = {
   usage: 'vcdisconnect',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
 
     try {

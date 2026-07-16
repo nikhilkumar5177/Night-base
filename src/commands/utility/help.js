@@ -16,7 +16,7 @@ const CATEGORY_META = {
   utility: { label: 'Utility', desc: 'General purpose commands' },
   config: { label: 'Config', desc: 'Bot configuration' },
   security: { label: 'Security', desc: 'Anti-nuke & protection' },
-  staff: { label: 'Staff', desc: 'Staff role management' },
+
   blacklist: { label: 'Blacklist', desc: 'Blacklist management' },
   roles: { label: 'Roles', desc: 'Role automation' },
   vouch: { label: 'Vouch', desc: 'Reputation system' },
@@ -38,9 +38,7 @@ module.exports = {
     .setName('help')
     .setDescription('Interactive help dashboard')
     .addStringOption(opt => opt.setName('command').setDescription('The command to get help for').setRequired(false)),
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     const isInteraction = !message.author;
     const user = isInteraction ? message.user : message.author;
@@ -68,7 +66,7 @@ module.exports = {
       categories.additional_info = [
         { name: 'durations_guide', description: 'Learn how to use time strings (e.g., 30d, 3mo)', category: 'additional_info', isGuide: true },
         { name: 'alias_guide', description: 'Learn about the fast role-giving system', category: 'additional_info', isGuide: true },
-        { name: 'staff_guide', description: 'Learn how the staff permission system works', category: 'additional_info', isGuide: true },
+
         { name: 'automod_guide', description: 'Learn how to configure advanced protection', category: 'additional_info', isGuide: true }
       ];
 
@@ -153,7 +151,7 @@ module.exports = {
       const buildCategoryContainer = (catKey) => {
         const cmds = categories[catKey];
         const meta = CATEGORY_META[catKey] || { label: catKey };
-        const cmdList = cmds.map(c => `${EMOJI_DOT}\`${c.name}\`${c.premiumOnly ? ` ${EMOJI_PREMIUM}` : ''}`).join('\n');
+        const cmdList = cmds.map(c => `${EMOJI_DOT}\`${c.name}\``).join('\n');
 
         const container = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${meta.label}`))
@@ -175,7 +173,7 @@ module.exports = {
           for (let i = 0; i < catCmds.length; i += 3) {
             const row = catCmds.slice(i, i + 3).map(name => {
               const cmd = client.commands.get(name);
-              return `\`${name}\`${cmd?.premiumOnly ? EMOJI_PREMIUM : ''}`;
+              return `\`${name}\``;
             }).join(' \u2022 ');
             block.push(`${EMOJI_DOT} ${row}`);
           }
@@ -243,7 +241,7 @@ module.exports = {
 
 function buildCommandContainer(client, command) {
   if (command.isGuide) return buildGuideContainer(command.name);
-  const perms = command.staffOnly ? 'Staff Only' : command.userPermissions?.join(', ') || 'Everyone';
+  const perms = command.userPermissions?.join(', ') || 'Everyone';
   const trigger = command.slash ? '/' : client.config.prefix;
 
   let extraDoc = '';
@@ -251,12 +249,6 @@ function buildCommandContainer(client, command) {
     extraDoc = `\n\n**AutoMod Guide:**\n${EMOJI_DOT} AutoMod allows you to automatically delete messages that contain banned words, links, or excessive spam.\n${EMOJI_DOT} **Auto Escalation:** Configure the bot to automatically warn, mute, or ban users who trigger AutoMod multiple times. Use the dashboard to set rules like \`3:warn, 5:mute:1h\`.\n${EMOJI_DOT} **Webhook Security:** Zero-tolerance detection for phishing and mass mentions.`;
   } else if (command.name === 'aliasrole' || command.name === 'addalias' || command.name === 'aliases' || command.category === 'roles') {
     extraDoc = `\n\n**Alias Guide:**\n${EMOJI_DOT} Aliases are used for fast role giving.\n${EMOJI_DOT} Only members with \`Manage Roles\` permissions (or Staff) can give or use them.\n${EMOJI_DOT} **Usage:** \`?aliasrole addalias <primary> <newAlias>\` — Links a quick word (newAlias) to a role name (primary), so typing the quick word instantly gives the role.`;
-  } else if (command.name === 'staff' || command.category === 'staff') {
-    extraDoc = `\n\n**Staff System Guide:**\n${EMOJI_DOT} The staff system allows you to define which roles are considered "Staff".\n${EMOJI_DOT} Users with these roles can bypass certain restrictions and use moderation commands without needing raw Discord permissions.`;
-  }
-
-  if (command.premiumOnly) {
-    extraDoc += `\n\n**Premium Feature:**\n${EMOJI_DOT} This command requires the server to have an active Premium subscription.`;
   }
 
   return new ContainerBuilder()
@@ -293,15 +285,9 @@ function buildGuideContainer(guideName) {
     title = 'Alias System';
     content = `Aliases are designed for **Fast Role Management**.\n\n` +
       `${EMOJI_DOT} **Purpose:** Link a short "trigger word" to a specific role. When you type that word, the bot instantly gives you (or a mentioned user) that role.\n` +
-      `${EMOJI_DOT} **Permissions:** Only users with \`Manage Roles\` or configured Staff roles can create or use aliases.\n` +
-      `${EMOJI_DOT} **Premium Feature:** This system requires an active Premium subscription.\n\n` +
+      `${EMOJI_DOT} **Permissions:** Only users with \`Manage Roles\` or configured Staff roles can create or use aliases.\n\n` +
       `**Example:** If \`voter\` is aliased to the "Member" role, typing \`voter\` will instantly assign it.`;
-  } else if (guideName === 'staff_guide') {
-    title = 'Staff System';
-    content = `The Staff System allows you to delegate bot management without giving raw Discord permissions.\n\n` +
-      `${EMOJI_DOT} **Staff Roles:** You can define specific roles as "Staff". These users can then use moderation and configuration commands.\n` +
-      `${EMOJI_DOT} **Bypass:** Staff members bypass standard permission checks for bot commands.\n` +
-      `${EMOJI_DOT} **Premium Feature:** Configuring custom staff roles requires a Premium subscription. The Server Owner always has staff access regardless of premium.`;
+
   } else if (guideName === 'automod_guide') {
     title = 'AutoMod System';
     content = `Wild Wolf provides industrial-grade protection through its AutoMod modules.\n\n` +
@@ -309,8 +295,7 @@ function buildGuideContainer(guideName) {
       `${EMOJI_DOT} **Spam:** Detects message floods and duplicate text.\n` +
       `${EMOJI_DOT} **Links:** Blocks invites, phishing, and unauthorized URLs.\n` +
       `${EMOJI_DOT} **Security:** Anti-Webhook spam and mass-mention protection.\n` +
-      `${EMOJI_DOT} **Escalations:** Automatically punish repeat offenders (e.g., 3 warns = 1h mute).\n\n` +
-      `**Premium Feature:** The advanced AutoMod dashboard is a Premium feature.`;
+      `${EMOJI_DOT} **Escalations:** Automatically punish repeat offenders (e.g., 3 warns = 1h mute).\n\n`;
   }
 
   return new ContainerBuilder()

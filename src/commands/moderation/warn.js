@@ -12,9 +12,7 @@ module.exports = {
   example: 'warn @User being toxic\nwarn 123456789 spamming',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {

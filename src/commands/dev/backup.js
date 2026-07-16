@@ -9,9 +9,7 @@ module.exports = {
   usage: 'backup',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const success = await sendBackup(client);

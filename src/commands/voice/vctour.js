@@ -13,9 +13,7 @@ module.exports = {
   usage: 'vctour [@user] | vctour stop',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       // Handle stop command

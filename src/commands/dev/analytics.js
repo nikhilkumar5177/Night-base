@@ -10,9 +10,7 @@ module.exports = {
   usage: 'analytics [command]',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const analytics = storage.read('analytics.json');

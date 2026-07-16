@@ -13,9 +13,7 @@ module.exports = {
     .setName('banner')
     .setDescription('View user banner')
     .addUserOption(opt => opt.setName('user').setDescription('The user to view banner of').setRequired(false)),
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       let user = !message.author

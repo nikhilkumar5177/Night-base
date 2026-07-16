@@ -9,7 +9,6 @@ module.exports = {
   execute: async (client, channel) => {
     const config = await getConfig(channel.guild.id);
     const storage = require('../utils/storageManager');
-    if (!storage.isPremium(channel.guild.id)) return;
     
     const security = config.modules.security;
     if (!config.enabled || !security.enabled || !security.antiNuke) return;

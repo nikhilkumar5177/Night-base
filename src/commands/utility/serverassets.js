@@ -9,9 +9,7 @@ module.exports = {
   usage: 'serverassets',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const g = message.guild;

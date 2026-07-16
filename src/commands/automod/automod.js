@@ -16,9 +16,7 @@ module.exports = {
     .setName('automod')
     .setDescription('Configure Wild Wolf AutoModeration system')
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: true,
   cooldown: 5,
   enabled: true,
 

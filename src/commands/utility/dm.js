@@ -9,9 +9,7 @@ module.exports = {
   usage: 'dm <user> <message>',
   cooldown: 10,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ModerateMembers')) {

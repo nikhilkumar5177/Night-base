@@ -9,9 +9,7 @@ module.exports = {
   usage: 'roleinfo <role>',
   cooldown: 3,
   enabled: true,
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[0]) || message.guild.roles.cache.find(r => r.name.toLowerCase() === args.join(' ').toLowerCase());

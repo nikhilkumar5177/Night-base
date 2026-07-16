@@ -8,9 +8,7 @@ module.exports = {
   usage: 'translate (reply to a message)',
   cooldown: 3,
   enabled: true,
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       const ref = message.reference;

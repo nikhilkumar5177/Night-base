@@ -10,9 +10,7 @@ module.exports = {
   usage: 'vouchsetup <add|remove|list> [channel]',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageChannels')) {

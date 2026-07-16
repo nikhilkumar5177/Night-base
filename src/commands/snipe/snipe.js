@@ -9,9 +9,7 @@ module.exports = {
   usage: 'snipe [page]',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const snipes = client.snipeCache.get(message.channel.id);

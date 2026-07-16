@@ -10,9 +10,7 @@ module.exports = {
   usage: 'securitystatus',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message) => {
     try {
       const securityConfig = storage.read('security.json');

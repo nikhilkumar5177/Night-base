@@ -10,9 +10,7 @@ module.exports = {
   usage: 'warnlist [@user]',
   cooldown: 3,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const target = message.mentions.users.first() || client.users.cache.get(args[0]) || message.author;

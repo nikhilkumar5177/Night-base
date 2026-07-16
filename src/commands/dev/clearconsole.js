@@ -9,9 +9,7 @@ module.exports = {
   usage: 'clearconsole',
   cooldown: 0,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       console.clear();

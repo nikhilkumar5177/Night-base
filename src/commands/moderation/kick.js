@@ -9,7 +9,6 @@ module.exports = {
   usage: 'kick <user> [reason]',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   userPermissions: ['KickMembers'],
   execute: async (client, message, args) => {
     try {

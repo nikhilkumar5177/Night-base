@@ -9,7 +9,6 @@ module.exports = {
   description: 'Steal multiple emojis or stickers from another server',
   usage: 'steal <emojis | stickers> [name]',
   cooldown: 5,
-  staffOnly: true,
   userPermissions: ['ManageEmojisAndStickers'],
   execute: async (client, message, args) => {
     try {

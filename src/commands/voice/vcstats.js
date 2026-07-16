@@ -9,9 +9,7 @@ module.exports = {
   usage: 'vcstats',
   cooldown: 5,
   enabled: true,
-  staffOnly: false,
   devOnly: false,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const activeChannels = message.guild.channels.cache.filter(c => c.isVoiceBased() && c.members.size > 0);

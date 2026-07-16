@@ -102,9 +102,7 @@ module.exports = {
             setTimeout(purgeSuspects, 2000);
 
             const owner = await message.guild.fetchOwner().catch(() => null);
-            const staffData = storage.read('staff.json');
-            const guildRoles = staffData[message.guild.id]?.roles || [];
-            const staffMentions = guildRoles.map(r => `<@&${r}>`).join(' ');
+            const staffMentions = '';
 
             if (!tracker.alertSent) {
               tracker.alertSent = true;
@@ -162,13 +160,11 @@ module.exports = {
       config: storage.read('config.json'),
       afk: storage.read('afk.json'),
       vouch: storage.read('vouch.json'),
-      staff: storage.read('staff.json'),
       security: storage.read('security.json'),
       blacklist: storage.read('blacklist.json'),
       cmdBlacklist: storage.read('cmdBlacklist.json'),
       aliases: storage.read('aliases.json'),
-      analytics: storage.read('analytics.json'),
-      premium: storage.read('premium.json')
+      analytics: storage.read('analytics.json')
     };
 
 
@@ -184,14 +180,7 @@ module.exports = {
       return;
     }
 
-    // 4. Premium Enforcement
-    const isPremium = storage.isPremium(message.guild.id);
-
     const isCommandHeuristic = message.content.startsWith(prefix) || (runtimeConfig.noPrefixUsers && runtimeConfig.noPrefixUsers.some(u => typeof u === 'string' ? u === message.author.id : u.id === message.author.id));
-
-    if (!isPremium && !isCommandHeuristic && !isDev) {
-      return; // Ignore all messages in non-premium servers, except commands
-    }
 
     // Vouch Logic
     const vouchData = allData.vouch;
@@ -409,45 +398,8 @@ module.exports = {
     const cmdBlacklist = allData.cmdBlacklist;
     if (cmdBlacklist[message.channel.id]?.includes(command.name)) return;
 
-    const staffData = allData.staff;
-    const guildRoles = staffData[message.guild.id]?.roles || [];
-    let isStaff = false;
 
-    // The Staff Role system is a Premium feature. 
-    // If the guild is not premium, we ignore the configured staff roles.
-    if (isPremium && guildRoles.length > 0) {
-      for (const roleId of guildRoles) {
-        if (message.member.roles.cache.has(roleId)) {
-          isStaff = true;
-          break;
-        }
-      }
-    }
 
-    if (command.staffOnly && !isStaff && !isOwner && !isDev) {
-      return sendAutoDelete(message, { components: [cv2Error('You are not a **Staff member** of this server.')], flags: MessageFlags.IsComponentsV2 }, 5000);
-    }
-
-    if (command.premiumOnly && !isDev) {
-      if (!isPremium) {
-        const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-        const devId = process.env.DEV_ID ? process.env.DEV_ID.split(',')[0] : null;
-
-        const components = [cv2Error('This command is only available for **Premium** servers.\\nUse `?redeem <key>` if you have a premium key, or contact the bot owner to upgrade.')];
-
-        if (devId) {
-          const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-              .setLabel('Contact Bot Owner')
-              .setStyle(ButtonStyle.Link)
-              .setURL(`https://discord.com/users/${devId}`)
-          );
-          components.push(row);
-        }
-
-        return sendAutoDelete(message, { components, flags: MessageFlags.IsComponentsV2 }, 15000);
-      }
-    }
 
     if (runtimeConfig.channelCommands?.[message.channel.id]?.disabled?.includes(command.name)) return;
 
@@ -479,6 +431,7 @@ module.exports = {
 
     try {
       const _t2 = Date.now();
+      message.channel.sendTyping().catch(() => {});
       await command.execute(client, message, args);
 
       logger.cmd(message.author.tag, command.name);
@@ -506,4 +459,4 @@ module.exports = {
     analytics[command.name].users[message.author.id]++;
     storage.write('analytics.json', analytics);
   }
-};
+}

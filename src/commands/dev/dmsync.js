@@ -10,9 +10,7 @@ module.exports = {
   usage: 'dmsync',
   cooldown: 60,
   enabled: true,
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: false,
   execute: async (client, message, args) => {
     try {
       const loadContainer = new ContainerBuilder()

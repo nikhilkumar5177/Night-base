@@ -18,9 +18,7 @@ module.exports = {
         .setDescription('Sync current custom filters to Discord native AutoMod rules')
         .addStringOption(opt => opt.setName('guilds').setDescription('The guild to sync (Optional)').setRequired(false).setAutocomplete(true))
     ),
-  staffOnly: false,
   devOnly: true,
-  premiumOnly: true,
   execute: async (client, interaction) => {
     try {
       await interaction.deferReply({ ephemeral: true });

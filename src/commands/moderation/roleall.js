@@ -13,9 +13,7 @@ module.exports = {
   usage: 'roleall <@role>',
   cooldown: 30,
   enabled: true,
-  staffOnly: true,
   devOnly: false,
-  premiumOnly: true,
   execute: async (client, message, args) => {
     try {
       if (!message.member.permissions.has('ManageRoles')) {

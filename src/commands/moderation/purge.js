@@ -10,7 +10,6 @@ module.exports = {
   example: 'purge 50\npurge bots 20\npurge @User 10',
   cooldown: 5,
   enabled: true,
-  staffOnly: true,
   userPermissions: ['ManageMessages'],
   execute: async (client, message, args) => {
     try {

@@ -20,7 +20,9 @@
     "dotenv": "^17.4.2",
     "libsodium-wrappers": "^0.8.4",
     "opusscript": "^0.0.8",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

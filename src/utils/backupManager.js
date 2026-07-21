@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { ZipArchive } = require('archiver');
+const archiver = require('archiver');
 const { AttachmentBuilder, MessageFlags } = require('discord.js');
 const logger = require('./logger');
 const { EMOJI_SUCCESS } = require('./constants');
@@ -19,7 +19,9 @@ async function createBackupBuffer() {
 
   return new Promise((resolve, reject) => {
     const chunks = [];
-    const archive = new ZipArchive({ zlib: { level: 9 } });
+    const archive = (typeof archiver === 'function') 
+      ? archiver('zip', { zlib: { level: 9 } }) 
+      : new archiver.ZipArchive({ zlib: { level: 9 } });
 
     archive.on('error', (err) => {
       logger.error(`Archiver error: ${err.message}`);

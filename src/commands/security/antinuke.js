@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
         securityConfig.enabled = true;
         storage.write('security.json', securityConfig);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Anti-Nuke`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Anti-nuke enabled.** Security monitoring is now active.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -33,7 +33,7 @@ module.exports = {
         securityConfig.enabled = false;
         storage.write('security.json', securityConfig);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Anti-Nuke`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Anti-nuke disabled.** Security monitoring is off.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -46,7 +46,7 @@ module.exports = {
         securityConfig.nukeWindow = window;
         storage.write('security.json', securityConfig);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Config Updated`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Config Updated`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Anti-nuke config updated.**\n` +
@@ -57,7 +57,7 @@ module.exports = {
       }
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke Status`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Anti-Nuke Status`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Status:** ${securityConfig.enabled ? '\`● Enabled\`' : '\`○ Disabled\`'}\n` +

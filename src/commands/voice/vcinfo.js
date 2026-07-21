@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -23,14 +23,14 @@ module.exports = {
       const isHidden = !channel.permissionsFor(message.guild.roles.everyone).has('ViewChannel');
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Analytics`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} VC Analytics`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Name:** \`${channel.name}\`\n` +
           `${EMOJI_DOT} **ID:** \`${channel.id}\`\n` +
           `${EMOJI_DOT} **Bitrate:** \`${channel.bitrate / 1000}kbps\`\n` +
           `${EMOJI_DOT} **Limit:** \`${channel.userLimit === 0 ? 'No Limit' : channel.userLimit}\`\n` +
-          `${EMOJI_DOT} **Status:** ${isHidden ? '`Hidden`' : '`Visible`'} \u2502 ${isLocked ? '`Locked`' : '`Unlocked`'}\n` +
+          `${EMOJI_DOT} **Status:** ${isHidden ? '`Hidden`' : '`Visible`'} ${EMOJI_ARROW} ${isLocked ? '`Locked`' : '`Unlocked`'}\n` +
           `${EMOJI_DOT} **Members:** \`${channel.members.size}\` \u2022 **Category:** ${channel.parent ? channel.parent.name : 'None'}`
         ))
         .addSeparatorComponents(new SeparatorBuilder())

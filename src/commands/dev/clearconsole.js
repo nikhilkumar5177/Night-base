@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_OWNER, EMOJI_SUCCESS } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -20,7 +20,7 @@ module.exports = {
       message.channel.messages.cache.sweep(m => Date.now() - m.createdTimestamp > 3600000);
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Manager`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Manager`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_OWNER} ${EMOJI_SUCCESS} **System Cache & Console Cleared!**\n\n` +

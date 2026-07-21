@@ -1,7 +1,7 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, InteractionType, MessageFlags } = require('discord.js');
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
-const { LIMITS, EMOJI_OWNER, EMOJI_WARN, EMOJI_ERROR } = require('../utils/constants');
+const { LIMITS, EMOJI_OWNER, EMOJI_WARN, EMOJI_ERROR, EMOJI_ARROW } = require('../utils/constants');
 const { cv2Error, safeReply } = require('../utils/messageHelper');
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
       }
       if (runtimeConfig.maintenance && !isDev) {
         const maintContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Lockdown`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Lockdown`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} ${EMOJI_WARN} **Bot is currently under maintenance.**\nPlease try again later.`));
         return safeReply(interaction, { components: [maintContainer], ephemeral: true });
@@ -68,7 +68,7 @@ module.exports = {
           const errLogCh = client.channels.cache.get(errLogId);
           if (errLogCh) {
             const logContainer = new ContainerBuilder()
-              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Slash Error Log`))
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Slash Error Log`))
               .addSeparatorComponents(new SeparatorBuilder())
               .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_ERROR} **Slash Command Failed:** \`${command.name}\` \n\u25B8 **User:** ${interaction.user.tag}\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
             errLogCh.send({ components: [logContainer], flags: MessageFlags.IsComponentsV2 }).catch(() => { });

@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { EMOJI_DOT, EMOJI_WARN, EMOJI_OWNER, EMOJI_SUCCESS } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_WARN, EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
@@ -22,7 +22,7 @@ module.exports = {
         if (!data) return message.reply({ components: [cv2Error(`No analytics data for \`${cmdName}\`.`)], flags: MessageFlags.IsComponentsV2 });
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Analytics: ${cmdName}`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Analytics: ${cmdName}`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_DOT} **Command:** \`${prefix}${cmdName}\`\n` +
@@ -53,11 +53,11 @@ module.exports = {
       let page = 0;
       const buildContainer = () => {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Analytics Dashboard`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Analytics Dashboard`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_OWNER} **Developer Analytics Interface**\n` +
-            `${EMOJI_DOT} **Total Uses:** \`${totalUses.toLocaleString()}\` \u2502 **Tracked:** \`${entries.length}\`\n\n` +
+            `${EMOJI_DOT} **Total Uses:** \`${totalUses.toLocaleString()}\` ${EMOJI_ARROW} **Tracked:** \`${entries.length}\`\n\n` +
             pages[page]
           ));
         

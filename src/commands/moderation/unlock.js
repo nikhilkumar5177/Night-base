@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ChannelType, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_BYPASS, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_BYPASS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -51,7 +51,7 @@ module.exports = {
       }
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Channel Unlocked`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Channel Unlocked`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **${channelList.length} channel(s) unlocked.**\n` +

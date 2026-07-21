@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { resolveMember } = require('../../utils/resolver');
 const { cv2Error } = require('../../utils/messageHelper');
 
@@ -31,7 +31,7 @@ module.exports = {
       await target.voice.setChannel(moderatorChannel, `Pulled into VC by ${message.author.tag}`);
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Pull`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} VC Pull`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **User pulled into your channel.**\n` +

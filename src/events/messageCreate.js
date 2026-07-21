@@ -1,7 +1,7 @@
 const storage = require('../utils/storageManager');
 const logger = require('../utils/logger');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, PermissionsBitField } = require('discord.js');
-const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_LEGIT, EMOJI_DOT, SEP } = require('../utils/constants');
+const { LIMITS, EMOJI_ERROR, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_OWNER, EMOJI_CHECK, EMOJI_LEGIT, EMOJI_DOT, SEP, EMOJI_ARROW } = require('../utils/constants');
 
 const { sendAutoDelete, cv2Error, safeReply, safeSend, safeDelete } = require('../utils/messageHelper');
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
@@ -108,7 +108,7 @@ module.exports = {
               tracker.alertSent = true;
 
               const alertContainer = new ContainerBuilder()
-                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Security Alert`))
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(
                   `${EMOJI_ERROR} **${violationType} Neutralized**\nTargeted security threat neutralized in ${message.channel}. Malicious webhooks have been destroyed.`
@@ -126,7 +126,7 @@ module.exports = {
 
               // Public Notice in Current Channel
               const publicAlert = new ContainerBuilder()
-                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Neutralized`))
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Security Neutralized`))
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(
                   `${EMOJI_WARN} **Raiders? Fuckyou bitches. by NightBase**\nSecurity Status: \`● SECURED\``
@@ -208,7 +208,7 @@ module.exports = {
         const cleanContent = target ? message.content.replace(new RegExp(`<@!?${target.id}>`, 'g'), '').trim() : message.content;
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 New Vouch`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} New Vouch`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_DOT} **Vouched:** ${target || '`N/A`'}\n` +
@@ -254,7 +254,7 @@ module.exports = {
 
       if (mentionedAfk.length > 0) {
         const afkMentionContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AFK Notification`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} AFK Notification`))
           .addSeparatorComponents(new SeparatorBuilder());
 
         const afkList = mentionedAfk.map(({ user, data }) =>
@@ -277,7 +277,7 @@ module.exports = {
       client._mentionCooldowns.set(message.author.id, now);
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Info`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Info`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `\u25B8 My prefix for this server is \`${prefix}\`\n` +
@@ -442,7 +442,7 @@ module.exports = {
         const errLogCh = client.channels.cache.get(errLogId);
         if (errLogCh) {
           const logContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Error Log`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Error Log`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${message.author.tag} (${message.author.id})\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
           safeSend(errLogCh, { components: [logContainer] }).catch(() => { });

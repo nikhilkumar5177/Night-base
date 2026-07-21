@@ -154,7 +154,7 @@ module.exports = {
         const cmdList = cmds.map(c => `${EMOJI_DOT}\`${c.name}\``).join('\n');
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${meta.label}`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} ${meta.label}`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `**Commands [${cmds.length}]**\n${cmdList}`
@@ -189,7 +189,7 @@ module.exports = {
         const content = slice.join('\n\n').trim() || 'No commands found.';
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 All Commands (Page ${page + 1}/${totalPages})`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} All Commands (Page ${page + 1}/${totalPages})`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
 
@@ -252,7 +252,7 @@ function buildCommandContainer(client, command) {
   }
 
   return new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf │ ${command.name}`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} ${command.name}`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${command.description || 'No description'}\n\n` +
@@ -299,7 +299,7 @@ function buildGuideContainer(guideName) {
   }
 
   return new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${title}`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} ${title}`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
 }

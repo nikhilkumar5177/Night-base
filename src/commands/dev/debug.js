@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -26,11 +26,11 @@ module.exports = {
           `\u25B8 Heap Used: \`${(mem.heapUsed / 1024 / 1024).toFixed(2)} MB\`\n` +
           `\u25B8 RSS: \`${(mem.rss / 1024 / 1024).toFixed(2)} MB\`\n\n` +
           `**Registry:**\n` +
-          `\u25B8 Commands: \`${client.commands.size}\` \u2502 Aliases: \`${client.aliases.size}\`\n` +
-          `\u25B8 Total Uses: \`${totalUses}\` \u2502 Cooldowns: \`${client.cooldowns.size}\`\n\n` +
+          `\u25B8 Commands: \`${client.commands.size}\` ${EMOJI_ARROW} Aliases: \`${client.aliases.size}\`\n` +
+          `\u25B8 Total Uses: \`${totalUses}\` ${EMOJI_ARROW} Cooldowns: \`${client.cooldowns.size}\`\n\n` +
           `**Status:**\n` +
-          `\u25B8 Ping: \`${client.ws.ping}ms\` \u2502 Uptime: \`${(process.uptime() / 3600).toFixed(2)}h\`\n` +
-          `\u25B8 Snipe: \`${client.snipeCache.size} ch\` \u2502 Node: \`${process.version}\``
+          `\u25B8 Ping: \`${client.ws.ping}ms\` ${EMOJI_ARROW} Uptime: \`${(process.uptime() / 3600).toFixed(2)}h\`\n` +
+          `\u25B8 Snipe: \`${client.snipeCache.size} ch\` ${EMOJI_ARROW} Node: \`${process.version}\``
         ));
 
       message.reply({ components: [container], flags: 32768 }).catch(() => {});

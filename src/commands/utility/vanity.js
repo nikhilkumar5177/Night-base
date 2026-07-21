@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { EMOJI_DOT, EMOJI_WARN, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_WARN, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -15,7 +15,7 @@ module.exports = {
       const g = message.guild;
       if (!g.vanityURLCode) {
         const warnContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vanity URL`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vanity URL`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_WARN} **This server does not have a vanity URL.**\nVanity URLs require boost level 3.`
@@ -28,7 +28,7 @@ module.exports = {
       const vanityData = await g.fetchVanityData().catch(() => null);
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vanity URL`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vanity URL`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **URL:** \`discord.gg/${g.vanityURLCode}\`\n` +

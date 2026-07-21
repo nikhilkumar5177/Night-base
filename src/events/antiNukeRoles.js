@@ -1,6 +1,6 @@
 const { getConfig } = require('../automod/database');
 const { trackNukeAction } = require('../automod/modules/security');
-const { EMOJI_ERROR } = require('../utils/constants');
+const { EMOJI_ERROR, EMOJI_ARROW } = require('../utils/constants');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
@@ -27,7 +27,7 @@ module.exports = {
       } catch {}
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke Alert`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Anti-Nuke Alert`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_ERROR} **Rapid Role Deletion Detected**\n` +

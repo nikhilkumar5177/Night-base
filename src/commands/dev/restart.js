@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
     if (!devIds.includes(user.id)) return; // Silent ignore
 
     const container = new ContainerBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Reboot`))
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Reboot`))
       .addSeparatorComponents(new SeparatorBuilder())
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} **Kernel is restarting...**\n${EMOJI_DOT} **Status:** \`Process Exit Initiated\``))
       .addSeparatorComponents(new SeparatorBuilder())

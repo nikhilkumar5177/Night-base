@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_OWNER, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_OWNER, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
   name: 'afk',
@@ -23,7 +23,7 @@ module.exports = {
     storage.write('afk.json', afkData);
 
     const container = new ContainerBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AFK Status Set`))
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} AFK Status Set`))
       .addSeparatorComponents(new SeparatorBuilder())
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(
         `${EMOJI_SUCCESS} ${message.author}, I have set your AFK status.\n` +

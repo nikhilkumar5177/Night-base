@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, cv2Error, safeReply } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -24,14 +24,14 @@ module.exports = {
         const guildChannels = vouchData[message.guild.id].channels;
         if (guildChannels.length === 0) {
           const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channels`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channels`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No vouch channels configured for this server.`));
           return safeReply(message, { components: [container] });
         }
         const list = guildChannels.map((id, i) => `**${i + 1}.** <#${id}>`).join('\n');
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channels`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channels`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
         return safeReply(message, { components: [container] });
@@ -48,7 +48,7 @@ module.exports = {
         vouchData[message.guild.id].channels.push(channel.id);
         storage.write('vouch.json', vouchData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channel Added`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channel Added`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} ${channel} is now a vouch channel.`));
         return safeReply(message, { components: [container] });
@@ -58,7 +58,7 @@ module.exports = {
         vouchData[message.guild.id].channels = vouchData[message.guild.id].channels.filter(id => id !== channel.id);
         storage.write('vouch.json', vouchData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Vouch Channel Removed`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channel Removed`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Vouch channel removed.`));
         return safeReply(message, { components: [container] });

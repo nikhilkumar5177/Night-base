@@ -2,7 +2,7 @@ const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, 
 const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
   name: 'warn',
@@ -75,7 +75,7 @@ module.exports = {
       const severity = totalWarns >= 10 ? 'CRITICAL' : totalWarns >= 5 ? 'HIGH' : totalWarns >= 3 ? 'MODERATE' : 'LOW';
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Warning Issued`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Warning Issued`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addSectionComponents(new SectionBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(

@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_OWNER, EMOJI_SUCCESS } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -22,11 +22,11 @@ module.exports = {
       await guild.leave();
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Action`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Action`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_OWNER} ${EMOJI_SUCCESS} **Successfully left the server.**\n\n` +
-          `**Name:** \`${guildName}\` \u2502 **ID:** \`${guildId}\``
+          `**Name:** \`${guildName}\` ${EMOJI_ARROW} **ID:** \`${guildId}\``
         ));
 
       await message.reply({ components: [container], flags: 32768 }).catch(() => {});

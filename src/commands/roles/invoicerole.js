@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -25,7 +25,7 @@ module.exports = {
         const roles = voiceData[guildId];
         if (roles.length === 0) {
           const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf │ Voice Roles`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Voice Roles`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No in-voice roles configured for this server.`));
           return message.reply({ components: [container], flags: 32768 });
@@ -35,7 +35,7 @@ module.exports = {
           return role ? `${role}` : `\`${roleId}\` (deleted)`;
         }).join('\n');
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf │ Voice Roles`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Voice Roles`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
         return message.reply({ components: [container], flags: 32768 });
@@ -56,7 +56,7 @@ module.exports = {
         voiceData[guildId].push(role.id);
         storage.write('voiceroles.json', voiceData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf │ Voice Role Set`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Voice Role Set`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **${role.name}** will be given when joining voice.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -78,7 +78,7 @@ module.exports = {
         voiceData[guildId].splice(index, 1);
         storage.write('voiceroles.json', voiceData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf │ Voice Role Removed`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Voice Role Removed`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Voice role removed.`));
         return message.reply({ components: [container], flags: 32768 });

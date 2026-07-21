@@ -1,7 +1,7 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { joinRandomVC, leaveVC, joinSpecificVC } = require('../../utils/vcJoiner');
-const { EMOJI_SUCCESS } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, sendUsage } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -34,7 +34,7 @@ module.exports = {
 
     const guildConfig = vcData[message.guild.id];
     const container = new ContainerBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Joiner Manager`))
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} VC Joiner Manager`))
       .addSeparatorComponents(new SeparatorBuilder());
 
     try {

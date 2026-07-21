@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { resolveMember } = require('../../utils/resolver');
 const { cv2Error } = require('../../utils/messageHelper');
 
@@ -59,7 +59,7 @@ module.exports = {
       }
 
       const startContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Tour`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} VC Tour`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_LOADING} **Starting 2-minute VC tour loop...**\n` +
@@ -87,7 +87,7 @@ module.exports = {
         if (channelIndex === 0) {
           const remaining = Math.round((duration - (Date.now() - startTime)) / 1000);
           const updateContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Tour`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} VC Tour`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
               `${EMOJI_LOADING} **Touring...** Time remaining: **${remaining}s**`
@@ -102,7 +102,7 @@ module.exports = {
       global.activeVCTours.delete(message.guild.id);
 
       const endContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Tour Finished`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Tour Finished`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **The VC tour loop has concluded.**`));
 

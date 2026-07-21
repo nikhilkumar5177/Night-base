@@ -2,7 +2,7 @@ const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } =
 const path = require('path');
 const fs = require('fs');
 const { deployCommands } = require('../../utils/deployer');
-const { EMOJI_OWNER, EMOJI_SUCCESS } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -72,11 +72,11 @@ module.exports = {
         }
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Reload`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Reload`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_OWNER} **System reloaded successfully.**\n\n` +
-            `\u25B8 Commands: \`${count}\` \u2502 Events: \`${client.eventNames().length}\`${slashMsg}`
+            `\u25B8 Commands: \`${count}\` ${EMOJI_ARROW} Events: \`${client.eventNames().length}\`${slashMsg}`
           ));
 
         return message.reply({ components: [container], flags: 32768 }).catch(() => {});
@@ -93,7 +93,7 @@ module.exports = {
       client.commands.set(reloaded.name, reloaded);
 
       const reloadContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Reloaded`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Command Reloaded`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`\`${reloaded.name}\` has been successfully reloaded.`));
 

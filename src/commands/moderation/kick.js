@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { sendUsage, sendAutoDelete, cv2Error, safeDelete } = require('../../utils/messageHelper');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
   name: 'kick',
@@ -46,7 +46,7 @@ module.exports = {
       }
 
       const buildConfirmContainer = () => new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Kick Confirmation`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Kick Confirmation`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_WARN} **Kick ${validTargets.length} user(s)?**\n\n` +
@@ -81,11 +81,11 @@ module.exports = {
           }
 
           const successContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Action Executed`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Action Executed`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
               `${EMOJI_SUCCESS} **Mass kick completed.**\n\n` +
-              `Success: \`${successCount}\` \u2502 Failed: \`${failCount}\`\n` +
+              `Success: \`${successCount}\` ${EMOJI_ARROW} Failed: \`${failCount}\`\n` +
               `Reason: ${reason}`
             ))
             .addSeparatorComponents(new SeparatorBuilder())

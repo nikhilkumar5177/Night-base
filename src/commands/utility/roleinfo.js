@@ -20,17 +20,17 @@ module.exports = {
 
       const buildMainContainer = () => {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Role Details`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Role Details`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_DOT} **Name:** ${role}\n` +
-            `${EMOJI_DOT} **ID:** \`${role.id}\` \u2502 **Color:** \`${role.hexColor}\`\n` +
+            `${EMOJI_DOT} **ID:** \`${role.id}\` ${EMOJI_ARROW} **Color:** \`${role.hexColor}\`\n` +
             `${EMOJI_DOT} **Created:** <t:${Math.floor(role.createdTimestamp / 1000)}:R>`
           ))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_ARROW} **Position:** \`${role.position}\` \u2502 **Members:** \`${role.members.size}\`\n` +
-            `${EMOJI_ARROW} **Hoisted:** ${role.hoist ? 'Yes' : 'No'} \u2502 **Mentionable:** ${role.mentionable ? 'Yes' : 'No'}\n` +
+            `${EMOJI_ARROW} **Position:** \`${role.position}\` ${EMOJI_ARROW} **Members:** \`${role.members.size}\`\n` +
+            `${EMOJI_ARROW} **Hoisted:** ${role.hoist ? 'Yes' : 'No'} ${EMOJI_ARROW} **Mentionable:** ${role.mentionable ? 'Yes' : 'No'}\n` +
             `${EMOJI_ARROW} **Managed:** ${role.managed ? 'Yes' : 'No'}`
           ))
           .addSeparatorComponents(new SeparatorBuilder())

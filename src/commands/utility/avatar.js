@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -28,7 +28,7 @@ module.exports = {
 
       const buildContainer = (url, label) => {
         return new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${label}`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} ${label}`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_DOT} **User:** ${user.username}\n` +

@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ContainerBuilder, TextDisplayB
 const { getConfig } = require('../../automod/database');
 const { syncNativeRules } = require('../../automod/utils/nativeSync');
 const { cv2Error } = require('../../utils/messageHelper');
-const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, SEP } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, SEP, EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
   name: 'automodrule',
@@ -43,7 +43,7 @@ module.exports = {
         }
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Global AutoMod Sync`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Global AutoMod Sync`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Global synchronization complete!**\n\n` +
@@ -65,7 +65,7 @@ module.exports = {
 
       if (result.success) {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Native AutoMod Sync`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Native AutoMod Sync`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Successfully synchronized filters!**\n\n` +
@@ -74,7 +74,7 @@ module.exports = {
         return interaction.editReply({ components: [container], flags: MessageFlags.IsComponentsV2 });
       } else {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Sync Failed`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Sync Failed`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_ERROR} **Failed to sync rules:**\n\`${result.error}\`\n\n` +

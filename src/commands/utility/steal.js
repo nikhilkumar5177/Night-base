@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, PermissionsBitField } = require('discord.js');
 const axios = require('axios');
-const { EMOJI_SUCCESS, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -88,7 +88,7 @@ module.exports = {
       }
 
       const finalContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Steal Results`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Steal Results`))
         .addSeparatorComponents(new SeparatorBuilder());
 
       let desc = '';

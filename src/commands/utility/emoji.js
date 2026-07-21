@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -12,16 +12,21 @@ module.exports = {
   devOnly: false,
   execute: async (client, message, args) => {
     try {
-      if (!args.length) return message.reply({ components: [cv2Error('Please provide at least one custom emoji.')], flags: 32768 });
+      let repliedMsg = null;
+      if (message.reference) {
+        repliedMsg = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
+      }
 
-      const inputStr = args.join(' ');
+      const inputStr = args.join(' ') + (repliedMsg ? ' ' + (repliedMsg.content || '') : '');
+      if (!inputStr.trim()) return message.reply({ components: [cv2Error('Please provide at least one custom emoji.')], flags: 32768 });
+
       const emojiRegex = /<(a?):([a-zA-Z0-9_]+):(\d+)>/g;
       const matches = [...inputStr.matchAll(emojiRegex)];
 
       if (matches.length === 0) return message.reply({ components: [cv2Error('No custom emojis found. Make sure they are server custom emojis.')], flags: 32768 });
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Emoji Info`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Emoji Info`))
         .addSeparatorComponents(new SeparatorBuilder());
 
       if (matches.length === 1) {
@@ -34,7 +39,7 @@ module.exports = {
 
         container.addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **Emoji successfully parsed!**\n\n` +
-          `**Name:** \`${name}\` \u2502 **ID:** \`${id}\` \u2502 **Animated:** ${isAnimated ? 'Yes' : 'No'}\n` +
+          `**Name:** \`${name}\` ${EMOJI_ARROW} **ID:** \`${id}\` ${EMOJI_ARROW} **Animated:** ${isAnimated ? 'Yes' : 'No'}\n` +
           `**Pattern Code:**\n\`\`\`${pattern}\`\`\`\n` +
           `**URL:** [Download Link](${url})`
         ));

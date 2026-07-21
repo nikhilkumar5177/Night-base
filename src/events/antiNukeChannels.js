@@ -1,6 +1,6 @@
 const { getConfig } = require('../automod/database');
 const { trackNukeAction } = require('../automod/modules/security');
-const { EMOJI_ERROR } = require('../utils/constants');
+const { EMOJI_ERROR, EMOJI_ARROW } = require('../utils/constants');
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 
 module.exports = {
@@ -27,12 +27,12 @@ module.exports = {
       } catch {}
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Anti-Nuke Alert`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Anti-Nuke Alert`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_ERROR} **Rapid Channel Deletion Detected**\n` +
           `Multiple channels deleted in rapid succession. Lockdown initiated.\n\n` +
-          `**Last Deleted:** \`#${channel.name}\` \u2502 **ID:** \`${channel.id}\`\n` +
+          `**Last Deleted:** \`#${channel.name}\` ${EMOJI_ARROW} **ID:** \`${channel.id}\`\n` +
           `**Threshold:** \`${security.nukeThreshold}\` in \`${security.nukeWindow / 1000}s\`\n` +
           `**Suspect:** ${executor ? `${executor.tag} (\`${executor.id}\`)` : 'Unknown'}`
         ));

@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 const { cv2Error } = require('../../utils/messageHelper');
 
@@ -21,7 +21,7 @@ module.exports = {
 
       if (isAll) {
         const confirmContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Clear All Snipes`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Clear All Snipes`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Clear snipe cache for ALL channels?**\nThis will remove \`${client.snipeCache.size}\` channel caches.`));
 
@@ -38,7 +38,7 @@ module.exports = {
             client.snipeCache.clear();
             storage.write('snipe.json', {});
             const doneContainer = new ContainerBuilder()
-              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Snipe Cache`))
+              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Snipe Cache`))
               .addSeparatorComponents(new SeparatorBuilder())
               .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **All snipe caches cleared.**`));
             await i.update({ components: [doneContainer] });
@@ -65,7 +65,7 @@ module.exports = {
       storage.write('snipe.json', snipeData);
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Snipe Cache Cleared`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Snipe Cache Cleared`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **Cleared \`${count}\` sniped messages from this channel.**`));
       message.reply({ components: [container], flags: 32768 }).catch(() => {});

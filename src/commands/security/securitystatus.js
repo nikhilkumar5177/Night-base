@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_INFO, EMOJI_WARN, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_INFO, EMOJI_WARN, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -18,7 +18,7 @@ module.exports = {
       
       if (logs.length === 0) {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Logs`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Security Logs`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No security events recorded.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -35,7 +35,7 @@ module.exports = {
 
       const buildContainer = () => {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Logs`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Security Logs`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(pages[page]));
 

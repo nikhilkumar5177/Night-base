@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
@@ -34,7 +34,7 @@ module.exports = {
         config.enabled = !config.enabled;
         storage.write('autorole.json', autoroleData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Auto-Role System`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role System`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${config.enabled ? EMOJI_SUCCESS : EMOJI_ERROR} **Auto-role system ${config.enabled ? 'enabled' : 'disabled'}.**\n` +
@@ -72,7 +72,7 @@ module.exports = {
 
         const buildContainer = () => {
           const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Auto-Role Dashboard`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Dashboard`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
               `${EMOJI_DOT} **Status:** ${config.enabled !== false ? '\`● Enabled\`' : '\`○ Disabled\`'}\n` +
@@ -102,7 +102,7 @@ module.exports = {
         });
         coll.on('end', () => {
           const finalContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Auto-Role Dashboard`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Dashboard`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
               `${EMOJI_DOT} **Status:** ${config.enabled !== false ? '\`● Enabled\`' : '\`○ Disabled\`'}`
@@ -145,7 +145,7 @@ module.exports = {
         storage.write('autorole.json', autoroleData);
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Auto-Role Added`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Added`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Role added to ${type} autorole list.**\n` +
@@ -167,7 +167,7 @@ module.exports = {
         storage.write('autorole.json', autoroleData);
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Auto-Role Removed`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Removed`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Role removed from ${type} autorole list.**\n` +

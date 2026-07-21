@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_ERROR, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_ERROR, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -38,7 +38,7 @@ module.exports = {
         game.collector.stop('cancelled');
         
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Game Ended`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Game Ended`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} The game has been ended by ${user}.`))
           .addSeparatorComponents(new SeparatorBuilder())

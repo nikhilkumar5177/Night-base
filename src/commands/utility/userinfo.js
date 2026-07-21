@@ -73,7 +73,7 @@ module.exports = {
 
       const buildProfileContainer = () => {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 User Profile`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} User Profile`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_DOT} **User:** ${u.tag} ${tags.length ? tags.join(' ') : ''}\n` +
@@ -120,7 +120,7 @@ module.exports = {
         if (i.customId === 'ui_avatar') {
           const avUrl = u.displayAvatarURL({ dynamic: true, size: 1024 });
           const avContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Avatar`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Avatar`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
               `${EMOJI_DOT} **User:** ${u.username}\n` +
@@ -145,7 +145,7 @@ module.exports = {
             return i.reply({ content: `${EMOJI_WARN} This user has no banner.`, ephemeral: true }).catch(() => {});
           }
           const bnContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Banner`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Banner`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
               `${EMOJI_DOT} **User:** ${u.username}\n` +

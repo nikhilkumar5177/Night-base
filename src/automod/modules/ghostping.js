@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_WARN, EMOJI_ARROW } = require('../../utils/constants');
 
 /**
  * Handle ghost ping detection (messageDelete).
@@ -15,7 +15,7 @@ async function handleGhostPing(client, message, config) {
   if (mentions.size === 0) return;
 
   const container = new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Security Alert`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Security Alert`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${EMOJI_WARN} **Ghost Ping Detected**\n\n` +

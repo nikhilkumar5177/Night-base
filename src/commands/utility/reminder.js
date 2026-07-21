@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_INFO, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_INFO, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, cv2Error, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -49,7 +49,7 @@ module.exports = {
       }, Math.min(duration, 2147483647));
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder Set`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Reminder Set`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} I will remind you in **${amount}${unit}**.\n\n**Message:** ${reminderMsg}`

@@ -39,7 +39,7 @@ async function sendAutoDelete(channelOrMessage, options, ms = LIMITS.AUTO_DELETE
  */
 function cv2Error(text) {
     return new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Error`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Error`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_ERROR} ${text}`))
         .addSeparatorComponents(new SeparatorBuilder())
@@ -54,7 +54,7 @@ function cv2Error(text) {
 async function sendUsage(message, command) {
     const prefix = message.client.config.prefix;
     const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Wrong Syntax`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Wrong Syntax`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `**You used this command the wrong way.**\nRead the correct format below.\n\n` +
@@ -68,7 +68,7 @@ async function sendUsage(message, command) {
     
     if (info.length) {
         container.addSeparatorComponents(new SeparatorBuilder());
-        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(info.join(' \u2502 ')));
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(info.join(' ${EMOJI_ARROW} ')));
     }
 
     container.addSeparatorComponents(new SeparatorBuilder());
@@ -168,7 +168,7 @@ function sanitizeContent(text) {
  */
 function cv2Expire() {
     return new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Session Expired`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Session Expired`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`This interaction has expired due to inactivity.\nPlease use the command again to continue.`))
         .addSeparatorComponents(new SeparatorBuilder())
@@ -233,7 +233,7 @@ async function triggerReminder(client, reminder) {
 
         if (channel) {
             const container = new ContainerBuilder()
-                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Reminder`))
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Reminder`))
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **Reminder:**\n${reminder.message}`))
                 .addSeparatorComponents(new SeparatorBuilder())

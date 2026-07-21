@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { EMOJI_WARN, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_WARN, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -15,7 +15,7 @@ module.exports = {
       const snipes = client.snipeCache.get(message.channel.id);
       if (!snipes || snipes.length === 0) {
         const warnContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Snipe`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Snipe`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} No recently deleted messages in this channel.`));
         return message.reply({ components: [warnContainer], flags: 32768 });
@@ -26,7 +26,7 @@ module.exports = {
       for (let i = 0; i < snipes.length; i += perPage) {
         const chunk = snipes.slice(i, i + perPage);
         pages.push(chunk.map((s, idx) => {
-          let text = `**\`#${i + idx + 1}\`** \u2502 ${s.authorTag}\n${EMOJI_DOT} ${s.content || '*No text content*'}\n${EMOJI_DOT} Deleted: <t:${Math.floor(s.timestamp / 1000)}:R>`;
+          let text = `**\`#${i + idx + 1}\`** ${EMOJI_ARROW} ${s.authorTag}\n${EMOJI_DOT} ${s.content || '*No text content*'}\n${EMOJI_DOT} Deleted: <t:${Math.floor(s.timestamp / 1000)}:R>`;
           if (s.attachments?.length > 0) text += `\n${EMOJI_DOT} Attachments: \`${s.attachments.length}\``;
           return text;
         }).join('\n\n'));
@@ -37,7 +37,7 @@ module.exports = {
 
       const buildContainer = () => {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Message Sniper`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Message Sniper`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(pages[page]));
 

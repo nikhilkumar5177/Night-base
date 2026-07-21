@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, ActivityType } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER, EMOJI_WARN, EMOJI_SUCCESS } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -26,7 +26,7 @@ module.exports = {
         });
         
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Manager`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Manager`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_OWNER} **Maintenance Mode: ENABLED**\n\n` +
@@ -43,7 +43,7 @@ module.exports = {
         });
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Manager`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Manager`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_OWNER} **Maintenance Mode: DISABLED**\n\n` +

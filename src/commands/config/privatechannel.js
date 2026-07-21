@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
@@ -26,7 +26,7 @@ module.exports = {
         const channels = Object.entries(pcData[guildId]);
         if (channels.length === 0) {
           const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Private Channels`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Private Channels`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_DOT} No private channels configured.`));
           return message.reply({ components: [container], flags: 32768 });
@@ -36,7 +36,7 @@ module.exports = {
           return `\`${i + 1}.\` ${ch || `\`${chId}\``} \u2014 \`${(data.users || []).length}\` users, \`${(data.roles || []).length}\` roles`;
         }).join('\n');
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Private Channels`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Private Channels`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
         return message.reply({ components: [container], flags: 32768 }).catch(() => {});
@@ -65,7 +65,7 @@ module.exports = {
         storage.write('privateChannels.json', pcData);
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Private Channel Created`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Private Channel Created`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_SUCCESS} **Private channel created.**\n` +
@@ -83,7 +83,7 @@ module.exports = {
         }
 
         const confirmContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Delete Confirmation`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Delete Confirmation`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Are you sure you want to delete ${channel}?**\nThis action cannot be undone.`));
 
@@ -134,7 +134,7 @@ module.exports = {
         storage.write('privateChannels.json', pcData);
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Access Granted`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Access Granted`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **${target} can now access ${channel}.**`));
         return message.reply({ components: [container], flags: 32768 }).catch(() => {});
@@ -155,7 +155,7 @@ module.exports = {
         }
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Access Revoked`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Access Revoked`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **${target} can no longer access ${channel}.**`));
         return message.reply({ components: [container], flags: 32768 }).catch(() => {});

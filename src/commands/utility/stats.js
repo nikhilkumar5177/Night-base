@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 const { cv2Error } = require('../../utils/messageHelper');
 
@@ -29,7 +29,7 @@ module.exports = {
       }).join('\n');
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Analytics Dashboard`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Analytics Dashboard`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_DOT} **Total Commands Used:** \`${totalUses}\`\n` +

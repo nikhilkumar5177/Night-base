@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const { COLORS, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS, EMOJI_ACTIVE, EMOJI_INACTIVE, FOOTER_TEXT } = require('../../utils/constants');
+const { COLORS, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS, EMOJI_ACTIVE, EMOJI_INACTIVE, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 
 /**
  * Create the main AutoMod dashboard.
@@ -8,7 +8,7 @@ const { COLORS, EMOJI_SETTINGS, EMOJI_DOT, EMOJI_LIST, EMOJI_CHECK, EMOJI_CROSS,
  */
 function createDashboard(config) {
   const container = new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Dashboard`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} AutoMod Dashboard`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `Welcome to the **Wild Wolf** advanced automoderation system. \n Configure protection rules to keep your server safe.`
@@ -67,8 +67,8 @@ function getModuleStatus(config) {
   const format = (key, name) => `${modules[key].enabled ? EMOJI_CHECK : EMOJI_CROSS} **${name}**`;
 
   return [
-    `${format('spam', 'Spam')} \u2502 ${format('links', 'Links')}`,
-    `${format('raid', 'Raid')} \u2502 ${format('content', 'Content')}`,
+    `${format('spam', 'Spam')} ${EMOJI_ARROW} ${format('links', 'Links')}`,
+    `${format('raid', 'Raid')} ${EMOJI_ARROW} ${format('content', 'Content')}`,
     `${format('security', 'Security')}`
   ].join('\n');
 }

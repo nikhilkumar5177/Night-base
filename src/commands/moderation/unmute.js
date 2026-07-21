@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { resolveMember } = require('../../utils/resolver');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
@@ -37,7 +37,7 @@ module.exports = {
       await new Promise(r => setTimeout(r, 400));
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Timeout Removed`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Timeout Removed`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addSectionComponents(new SectionBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(

@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -30,7 +30,7 @@ module.exports = {
         configData.disabledCommands = configData.disabledCommands.filter(c => c !== cmdName);
         storage.write('config.json', configData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Enabled`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Command Enabled`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${cmdName}\` is now enabled.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -38,7 +38,7 @@ module.exports = {
       configData.disabledCommands.push(cmdName);
       storage.write('config.json', configData);
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Disabled`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Command Disabled`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} \`${cmdName}\` is now disabled globally.`));
       message.reply({ components: [container], flags: 32768 });

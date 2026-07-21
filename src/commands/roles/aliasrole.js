@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 /**
@@ -45,7 +45,7 @@ module.exports = {
         const entries = Object.entries(guildAliases);
         if (entries.length === 0) {
           const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Roles`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Roles`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No alias roles configured for this server.`));
           return message.reply({ components: [container], flags: 32768 });
@@ -56,7 +56,7 @@ module.exports = {
           return `**${name}** \u2192 ${role ? role : `\`${cfg.roleId}\``}\n${EMOJI_DOT} Aliases: \`${aliases}\`${cfg.requiredRole ? `\n${EMOJI_DOT} Required: <@&${cfg.requiredRole}>` : ''}`;
         }).join('\n\n');
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Roles`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Roles`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
         return message.reply({ components: [container], flags: 32768 });
@@ -74,7 +74,7 @@ module.exports = {
         guildAliases[alias] = { roleId: role.id, requiredRole: args[3] || null, aliases: [], timestamp: Date.now() };
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Role Added`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Role Added`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Typing \`${alias}\` will now toggle **${role.name}**.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -88,7 +88,7 @@ module.exports = {
         delete guildAliases[alias];
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Removed`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Removed`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Alias removed.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -103,7 +103,7 @@ module.exports = {
         guildAliases[primary].aliases.push(newAlias);
         storage.write('aliases.json', aliasData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Alias Added`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Added`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${newAlias}\` now also triggers the role.`));
         return message.reply({ components: [container], flags: 32768 });

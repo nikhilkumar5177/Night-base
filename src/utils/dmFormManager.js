@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, ChannelType } = require('discord.js');
 const storage = require('./storageManager');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_INFO, FOOTER_TEXT } = require('./constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_INFO, FOOTER_TEXT, EMOJI_ARROW } = require('./constants');
 const { safeSend } = require('./messageHelper');
 
 /**
@@ -34,7 +34,7 @@ async function handleIncomingDM(client, message) {
 
     // Format the "Form" log
     const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 ${origin}`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} ${origin}`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${colorEmoji} **${isBot ? 'Bot' : (isSystem ? 'Discord' : 'From')}:** ${message.author.tag || 'System'} (\`${message.author.id}\`)\n` +
@@ -115,7 +115,7 @@ async function handleStaffReply(client, message) {
 
         // Confirm in thread
         const confirmContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Response Sent`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Response Sent`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
                 `${EMOJI_SUCCESS} **Staff Response Forwarded**\n` +

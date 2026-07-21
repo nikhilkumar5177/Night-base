@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, PermissionsBitField, MessageFlags } = require('discord.js');
-const { EMOJI_ERROR, EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_ERROR, EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -20,7 +20,7 @@ module.exports = {
       }
 
       const loadContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Dedupe Emojis`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Dedupe Emojis`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Scanning server for duplicate emojis...**`));
       const sentMsg = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
@@ -49,14 +49,14 @@ module.exports = {
 
       if (emojisToDelete.length === 0) {
         const cleanContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Dedupe Emojis`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Dedupe Emojis`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **No duplicate emojis found!** All ${uniqueCount} emojis are unique.`));
         return sentMsg.edit({ components: [cleanContainer] });
       }
 
       const confirmContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Dedupe Emojis`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Dedupe Emojis`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Found ${emojisToDelete.length} duplicate emoji(s)!**\n\nAre you sure you want to permanently delete them?`));
 
@@ -83,7 +83,7 @@ module.exports = {
         } else if (i.customId === 'confirm_dedupe') {
           collector.stop('confirmed');
           const progressContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Dedupe Emojis`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Dedupe Emojis`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Deleting ${emojisToDelete.length} emoji(s)...**`));
           await i.update({ components: [progressContainer] });
@@ -102,7 +102,7 @@ module.exports = {
           }
 
           const resultContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Dedupe Results`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Dedupe Results`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(
               `${EMOJI_SUCCESS} **Deleted ${deleted} duplicate emoji(s).**` +

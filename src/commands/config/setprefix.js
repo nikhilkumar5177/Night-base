@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_OWNER, EMOJI_INFO, EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_INFO, EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -30,7 +30,7 @@ module.exports = {
       fs.writeFileSync(path.join(__dirname, '..', '..', '..', 'config.json'), JSON.stringify(client.config, null, 2));
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Prefix Updated`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Prefix Updated`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **New prefix:** \`${newPrefix}\``));
       message.reply({ components: [container], flags: 32768 });

@@ -1,5 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { cv2Error } = require('../../utils/messageHelper');
+const { EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
   name: 'guildlist',
@@ -28,11 +29,11 @@ module.exports = {
         const slice = guilds.slice(start, end);
 
         const list = slice.map((g, i) => {
-          return `\`${start + i + 1}.\` **${g.name}**\n\u25B8 ID: \`${g.id}\` \u2502 Members: \`${g.members}\` \u2502 Owner: <@${g.owner}>`;
+          return `\`${start + i + 1}.\` **${g.name}**\n\u25B8 ID: \`${g.id}\` ${EMOJI_ARROW} Members: \`${g.members}\` ${EMOJI_ARROW} Owner: <@${g.owner}>`;
         }).join('\n\n');
 
         return new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Guild Directory`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Guild Directory`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(list || 'No guilds found.'));
       };

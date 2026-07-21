@@ -31,7 +31,7 @@ module.exports = {
 
       const buildMainContainer = () => {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Server Dashboard`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Server Dashboard`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `**${g.name}**\n` +
@@ -42,17 +42,17 @@ module.exports = {
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_ARROW} **Members [${g.memberCount}]**\n` +
-            `Humans: ${humans} \u2502 Bots: ${bots}\n` +
-            `Online: ${online} \u2502 Idle: ${idle} \u2502 DND: ${dnd} \u2502 Offline: ${offline}`
+            `Humans: ${humans} ${EMOJI_ARROW} Bots: ${bots}\n` +
+            `Online: ${online} ${EMOJI_ARROW} Idle: ${idle} ${EMOJI_ARROW} DND: ${dnd} ${EMOJI_ARROW} Offline: ${offline}`
           ))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_ARROW} **Channels [${g.channels.cache.size}]**\n` +
-            `Text: ${tCh} \u2502 Voice: ${vCh} \u2502 Category: ${catCh}`
+            `Text: ${tCh} ${EMOJI_ARROW} Voice: ${vCh} ${EMOJI_ARROW} Category: ${catCh}`
           ))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `Roles: ${g.roles.cache.size} \u2502 Emojis: ${g.emojis.cache.size}\n` +
+            `Roles: ${g.roles.cache.size} ${EMOJI_ARROW} Emojis: ${g.emojis.cache.size}\n` +
             `Boosts: ${g.premiumSubscriptionCount || 0} (${boostTier})\n` +
             `Verification: ${vLevel}`
           ))

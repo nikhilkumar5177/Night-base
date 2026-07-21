@@ -9,7 +9,7 @@ const {
   MessageFlags
 } = require('discord.js');
 const { exec } = require('child_process');
-const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 const storage = require('../../utils/storageManager');
 
@@ -35,7 +35,7 @@ module.exports = {
     const targetLabel = commitId ? `Commit: \`${commitId}\`` : 'Latest Origin';
 
     const loadContainer = new ContainerBuilder()
-      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Hotpatch`))
+      .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Hotpatch`))
       .addSeparatorComponents(new SeparatorBuilder())
       .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} ${EMOJI_LOADING} **Synchronizing with repository...**\n${EMOJI_DOT} **Target:** ${targetLabel}`));
 
@@ -58,7 +58,7 @@ module.exports = {
       }
 
       const successContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Patch Deployment Successful`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Patch Deployment Successful`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **System core has been synchronized.**\n\n` +
@@ -87,7 +87,7 @@ module.exports = {
 
       collector.on('collect', async i => {
         const restartContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 System Reboot`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} System Reboot`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} **Kernel is restarting...**`));
 

@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
+const { LIMITS, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, sendAutoDelete, cv2Error, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -61,11 +61,11 @@ module.exports = {
       const deleted = await message.channel.bulkDelete(deletable, true);
 
       const successContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Purge Complete`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Purge Complete`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **Messages purged successfully.**\n\n` +
-          `Deleted: \`${deleted.size}\` \u2502 Filter: \`${filterLabel}\``
+          `Deleted: \`${deleted.size}\` ${EMOJI_ARROW} Filter: \`${filterLabel}\``
         ))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));

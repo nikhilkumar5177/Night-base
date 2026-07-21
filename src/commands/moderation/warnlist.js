@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
 const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
 
@@ -20,7 +20,7 @@ module.exports = {
 
       if (userWarns.length === 0) {
         const cleanContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Warn History`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Warn History`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} **${target.tag}** has no warnings.`));
         return message.reply({ components: [cleanContainer], flags: 32768 });
@@ -32,7 +32,7 @@ module.exports = {
         const chunk = userWarns.slice(i, i + perPage);
         const desc = chunk.map((w, idx) => {
           const mod = client.users.cache.get(w.moderator);
-          return `**\`#${i + idx + 1}\`** \u2502 Case: \`${w.caseId}\`\n${EMOJI_DOT} **Reason:** ${w.reason}\n${EMOJI_DOT} **By:** ${mod ? mod.tag : w.moderator}\n${EMOJI_DOT} **Date:** <t:${Math.floor(w.timestamp / 1000)}:R>`;
+          return `**\`#${i + idx + 1}\`** ${EMOJI_ARROW} Case: \`${w.caseId}\`\n${EMOJI_DOT} **Reason:** ${w.reason}\n${EMOJI_DOT} **By:** ${mod ? mod.tag : w.moderator}\n${EMOJI_DOT} **Date:** <t:${Math.floor(w.timestamp / 1000)}:R>`;
         }).join('\n\n');
         pages.push(desc);
       }
@@ -43,7 +43,7 @@ module.exports = {
 
       const buildContainer = () => {
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Warn History`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Warn History`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addSectionComponents(new SectionBuilder()
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(

@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js');
-const { EMOJI_COMMAND, EMOJI_DOT, FOOTER_TEXT, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_INFO, EMOJI_UPVOTE, EMOJI_DOWNVOTE, EMOJI_CONGRATS } = require('../../utils/constants');
+const { EMOJI_COMMAND, EMOJI_DOT, FOOTER_TEXT, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_INFO, EMOJI_UPVOTE, EMOJI_DOWNVOTE, EMOJI_CONGRATS, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -70,7 +70,7 @@ module.exports = {
       let winner = null;
 
       const startContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Guess the Number`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Guess the Number`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_COMMAND} **Game Started!**\nI have picked a number between **${min} and ${max}**.\n\n` +
@@ -157,7 +157,7 @@ module.exports = {
         }
 
         const endContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Game Results`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Game Results`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(finalContent))
           .addSeparatorComponents(new SeparatorBuilder())

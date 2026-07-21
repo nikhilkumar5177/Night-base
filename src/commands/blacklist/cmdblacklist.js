@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_ERROR, EMOJI_OWNER, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_ERROR, EMOJI_OWNER, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -22,14 +22,14 @@ module.exports = {
         const entries = Object.entries(cblData).filter(([chId]) => message.guild.channels.cache.has(chId));
         if (entries.length === 0) {
           const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Blacklist`))
+            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Command Blacklist`))
             .addSeparatorComponents(new SeparatorBuilder())
             .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_OWNER} No channel command blacklists for this server.`));
           return message.reply({ components: [container], flags: 32768 });
         }
         const list = entries.map(([chId, cmds]) => `<#${chId}>: ${cmds.join(', ')}`).join('\n');
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Blacklists`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Command Blacklists`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
         return message.reply({ components: [container], flags: 32768 });
@@ -48,7 +48,7 @@ module.exports = {
         cblData[channel.id].push(cmdName);
         storage.write('cmdBlacklist.json', cblData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Blocked`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Command Blocked`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${cmdName}\` blocked in ${channel}.`));
         return message.reply({ components: [container], flags: 32768 });
@@ -63,7 +63,7 @@ module.exports = {
         if (cblData[channel.id].length === 0) delete cblData[channel.id];
         storage.write('cmdBlacklist.json', cblData);
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Command Unblocked`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Command Unblocked`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${cmdName}\` unblocked in ${channel}.`));
         return message.reply({ components: [container], flags: 32768 });

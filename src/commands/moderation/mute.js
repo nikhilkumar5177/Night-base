@@ -2,7 +2,7 @@ const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, 
 const { resolveMember } = require('../../utils/resolver');
 const storage = require('../../utils/storageManager');
 const { sendUsage, sendAutoDelete, cv2Error } = require('../../utils/messageHelper');
-const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_LOADING, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
   name: 'mute',
@@ -76,7 +76,7 @@ module.exports = {
       await new Promise(r => setTimeout(r, 400));
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Timeout Applied`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Timeout Applied`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addSectionComponents(new SectionBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(

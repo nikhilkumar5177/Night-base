@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_OWNER } = require('../../utils/constants');
+const { EMOJI_OWNER, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -32,7 +32,7 @@ module.exports = {
       message.reply({ components: [container], flags: 32768 }).catch(() => {});
     } catch (error) {
       const errContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Eval Error`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Eval Error`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`\`\`\`js\n${error.message}\n\`\`\``));
       message.reply({ components: [errContainer], flags: 32768 }).catch(() => {});

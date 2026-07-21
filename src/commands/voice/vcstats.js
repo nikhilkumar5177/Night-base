@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
+const { EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
 
 module.exports = {
@@ -18,7 +18,7 @@ module.exports = {
       const list = activeChannels.map(c => `${EMOJI_DOT} **${c.name}** \u2022 \`${c.members.size}\` members`).join('\n') || 'No active voice channels.';
 
       const container = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 VC Stats`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} VC Stats`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(list))
         .addSeparatorComponents(new SeparatorBuilder())

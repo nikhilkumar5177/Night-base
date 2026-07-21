@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
-const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT } = require('../../utils/constants');
+const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { resolveRole } = require('../../utils/resolver');
 const { sendUsage, cv2Error } = require('../../utils/messageHelper');
 
@@ -41,7 +41,7 @@ module.exports = {
       }
 
       let progressContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Role Assignment`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Role Assignment`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Adding ${role} to ${total} members...**\n\`${'░'.repeat(20)}\` 0%\n\`0/${total}\` processed`));
 
@@ -68,7 +68,7 @@ module.exports = {
         const currentSpeed = (processed / (durationSoFar / 1000)).toFixed(1);
 
         const updateContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Role Assignment`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Role Assignment`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_LOADING} **Adding ${role}...**\n\`${bar}\` ${pct}%\n\`${processed}/${total}\` \u2022 \`${success}\` added \u2022 \`${failed}\` failed\n` +
@@ -86,7 +86,7 @@ module.exports = {
       const speed = ((success + failed) / (duration / 1000)).toFixed(1);
 
       const doneContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 Role Assignment Complete`))
+        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Role Assignment Complete`))
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_SUCCESS} **Role assignment finished.**\n` +

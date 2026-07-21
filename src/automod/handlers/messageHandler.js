@@ -5,7 +5,7 @@ const { checkSpam } = require('../modules/spam');
 const { checkLinks } = require('../modules/links');
 const { checkContent } = require('../modules/content');
 const { checkSecurity } = require('../modules/security');
-const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN } = require('../../utils/constants');
+const { EMOJI_DOT, EMOJI_ERROR, EMOJI_WARN, EMOJI_ARROW } = require('../../utils/constants');
 
 const warningCooldowns = new Map();
 
@@ -73,7 +73,7 @@ async function executeActions(client, message, violation, moduleConfig) {
           .replace(/{violation}/g, violation);
 
         const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Violation`))
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} AutoMod Violation`))
           .addSeparatorComponents(new SeparatorBuilder())
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(
             `${EMOJI_WARN} **Violation Detected**\n\n` +
@@ -99,7 +99,7 @@ async function executeActions(client, message, violation, moduleConfig) {
       // DM stays Embed (V2 not supported in DMs)
       const dmEmbed = new EmbedBuilder()
         .setColor('#ff1744')
-        .setAuthor({ name: `AutoMod Alert \u2502 ${message.guild.name}`, iconURL: message.guild.iconURL() })
+        .setAuthor({ name: `AutoMod Alert ${EMOJI_ARROW} ${message.guild.name}`, iconURL: message.guild.iconURL() })
         .setTitle(`${EMOJI_WARN} You have been flagged by AutoMod`)
         .setDescription(
           `Your recent activity in **${message.guild.name}** triggered the security system.\n\n` +
@@ -129,7 +129,7 @@ async function logToChannel(client, message, data) {
   if (!channel) return;
 
   const logContainer = new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf \u2502 AutoMod Log`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} AutoMod Log`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${EMOJI_DOT} **User:** ${message.author} (\`${message.author.id}\`)\n` +

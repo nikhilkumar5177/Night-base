@@ -266,7 +266,7 @@ module.exports = {
       }
     }
 
-    const mentionRegex = new RegExp(`^<@!?${client.user.id}>$`);
+    const mentionRegex = new RegExp(`<@!?${client.user.id}>`);
     if (mentionRegex.test(message.content)) {
       if (!client._mentionCooldowns) client._mentionCooldowns = new Map();
       const now = Date.now();

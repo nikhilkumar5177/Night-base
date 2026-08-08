@@ -11,5 +11,9 @@ logs/
 
 # Ignore the storage folder entirely
 storage/
-*.code-workspace
 
+# Ignore Workspace and IDE files
+*.code-workspace
+Night-base.code-workspace
+.vscode/
+.idea/

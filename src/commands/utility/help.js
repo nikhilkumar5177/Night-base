@@ -248,7 +248,7 @@ function buildCommandContainer(client, command) {
   if (command.name === 'automod') {
     extraDoc = `\n\n**AutoMod Guide:**\n${EMOJI_DOT} AutoMod allows you to automatically delete messages that contain banned words, links, or excessive spam.\n${EMOJI_DOT} **Auto Escalation:** Configure the bot to automatically warn, mute, or ban users who trigger AutoMod multiple times. Use the dashboard to set rules like \`3:warn, 5:mute:1h\`.\n${EMOJI_DOT} **Webhook Security:** Zero-tolerance detection for phishing and mass mentions.`;
   } else if (command.name === 'aliasrole' || command.name === 'addalias' || command.name === 'aliases' || command.category === 'roles') {
-    extraDoc = `\n\n**Alias Guide:**\n${EMOJI_DOT} Aliases are used for fast role giving.\n${EMOJI_DOT} Only members with \`Manage Roles\` permissions (or Staff) can give or use them.\n${EMOJI_DOT} **Usage:** \`?aliasrole addalias <primary> <newAlias>\` — Links a quick word (newAlias) to a role name (primary), so typing the quick word instantly gives the role.`;
+    extraDoc = `\n\n**Alias Guide:**\n${EMOJI_DOT} Aliases are used for fast role giving.\n${EMOJI_DOT} Only members with \`Manage Roles\` permissions (or Staff) can give or use them.\n${EMOJI_DOT} **Usage:** \`${trigger}aliasrole\` — Opens the interactive dashboard where you can easily link quick words to roles using dropdowns.`;
   }
 
   return new ContainerBuilder()

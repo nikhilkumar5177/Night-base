@@ -1,20 +1,15 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, RoleSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
-const { sendUsage, cv2Error } = require('../../utils/messageHelper');
+const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
 
-/**
- * Auto-migrate root-level aliases to guild-scoped structure.
- * Moves any root-level alias whose roleId exists in this guild under aliasData[guildId].
- */
 function getGuildAliases(aliasData, guild) {
   const guildId = guild.id;
   if (!aliasData[guildId]) aliasData[guildId] = {};
 
-  // Auto-migrate root-level legacy entries
   for (const [key, cfg] of Object.entries(aliasData)) {
     if (key === guildId || typeof cfg !== 'object' || cfg === null || Array.isArray(cfg)) continue;
-    if (!cfg.roleId) continue; // Skip guild containers (they have nested alias objects, not roleId)
+    if (!cfg.roleId) continue;
     if (guild.roles.cache.has(cfg.roleId)) {
       aliasData[guildId][key] = cfg;
       delete aliasData[key];
@@ -24,94 +19,133 @@ function getGuildAliases(aliasData, guild) {
   return aliasData[guildId];
 }
 
+function buildDashboard(guild, guildAliases) {
+  const entries = Object.entries(guildAliases);
+  
+  let listStr = '';
+  if (entries.length === 0) {
+    listStr = `${EMOJI_INFO} *No alias roles configured for this server.*`;
+  } else {
+    listStr = entries.map(([name, cfg]) => {
+      const role = guild.roles.cache.get(cfg.roleId);
+      const aliases = cfg.aliases && cfg.aliases.length > 0 ? cfg.aliases.join(', ') : 'none';
+      return `**${name}** \u2192 ${role ? role : `\`${cfg.roleId}\``}\n${EMOJI_DOT} Aliases: \`${aliases}\`${cfg.requiredRole ? `\n${EMOJI_DOT} Required: <@&${cfg.requiredRole}>` : ''}`;
+    }).join('\n\n');
+  }
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Roles`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(listStr));
+
+  const row = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('al_delete').setLabel('Delete Alias').setStyle(ButtonStyle.Danger)
+  );
+  const row2 = new ActionRowBuilder().addComponents(
+    new RoleSelectMenuBuilder().setCustomId('al_create_role').setPlaceholder('Select Role to Create Alias')
+  );
+
+  container.addActionRowComponents(row, row2);
+  return container;
+}
+
 module.exports = {
   name: 'aliasrole',
   aliases: ['ar', 'setalias'],
-  description: 'Configure alias-based role assignment',
-  usage: 'aliasrole <add|remove|list> <alias> [roleId] [requiredRoleId]',
+  description: 'Configure alias-based role assignment via interactive dashboard',
+  usage: 'aliasrole',
   cooldown: 3,
   enabled: true,
   devOnly: false,
-  execute: async (client, message, args) => {
+  execute: async (client, target, args) => {
     try {
-      if (!message.member.permissions.has('ManageRoles')) {
-        return message.reply({ components: [cv2Error('You need **ManageRoles** permission.')], flags: 32768 });
+      const member = target.member;
+      const guild = target.guild;
+
+      if (!member.permissions.has('ManageRoles')) {
+        return safeReply(target, { components: [cv2Error('You need **ManageRoles** permission.')], ephemeral: true });
       }
-      const action = args[0]?.toLowerCase();
+
       const aliasData = storage.read('aliases.json');
-      const guildAliases = getGuildAliases(aliasData, message.guild);
+      const guildAliases = getGuildAliases(aliasData, guild);
 
-      if (action === 'list') {
-        const entries = Object.entries(guildAliases);
-        if (entries.length === 0) {
-          const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Roles`))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No alias roles configured for this server.`));
-          return message.reply({ components: [container], flags: 32768 });
+      const isInteraction = !!target.customId || !!target.isCommand;
+
+      if (isInteraction && target.isMessageComponent && target.isMessageComponent()) {
+        const customId = target.customId;
+        
+        if (target.isRoleSelectMenu && target.isRoleSelectMenu() && customId === 'al_create_role') {
+          const roleId = target.values[0];
+          const modal = new ModalBuilder().setCustomId(`al_modal_create_${roleId}`).setTitle('Create Alias Role');
+          const triggerInput = new TextInputBuilder().setCustomId('trigger').setLabel('Primary Trigger Word').setStyle(TextInputStyle.Short).setRequired(true);
+          const requiredRoleIdInput = new TextInputBuilder().setCustomId('requiredRoleId').setLabel('Required Role ID (Optional)').setStyle(TextInputStyle.Short).setRequired(false);
+          const extraTriggersInput = new TextInputBuilder().setCustomId('extraTriggers').setLabel('Extra Triggers (comma separated) (Optional)').setStyle(TextInputStyle.Short).setRequired(false);
+          
+          modal.addComponents(
+            new ActionRowBuilder().addComponents(triggerInput),
+            new ActionRowBuilder().addComponents(requiredRoleIdInput),
+            new ActionRowBuilder().addComponents(extraTriggersInput)
+          );
+          return target.showModal(modal);
         }
-        const list = entries.map(([name, cfg]) => {
-          const role = message.guild.roles.cache.get(cfg.roleId);
-          const aliases = cfg.aliases && cfg.aliases.length > 0 ? cfg.aliases.join(', ') : 'none';
-          return `**${name}** \u2192 ${role ? role : `\`${cfg.roleId}\``}\n${EMOJI_DOT} Aliases: \`${aliases}\`${cfg.requiredRole ? `\n${EMOJI_DOT} Required: <@&${cfg.requiredRole}>` : ''}`;
-        }).join('\n\n');
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Roles`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
-        return message.reply({ components: [container], flags: 32768 });
-      }
 
-      if (action === 'add') {
-        const alias = args[1]?.toLowerCase();
-        const roleId = args[2];
-        if (!alias || !roleId) return sendUsage(message, module.exports);
-
-        const { resolveRole } = require('../../utils/resolver');
-        const role = resolveRole(message.guild, roleId);
-        if (!role) return message.reply({ components: [cv2Error('Role not found.')], flags: 32768 });
-
-        guildAliases[alias] = { roleId: role.id, requiredRole: args[3] || null, aliases: [], timestamp: Date.now() };
-        storage.write('aliases.json', aliasData);
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Role Added`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Typing \`${alias}\` will now toggle **${role.name}**.`));
-        return message.reply({ components: [container], flags: 32768 });
-      }
-
-      if (action === 'remove') {
-        const alias = args[1]?.toLowerCase();
-        if (!alias || !guildAliases[alias]) {
-          return message.reply({ components: [cv2Error('That alias does not exist.')], flags: 32768 });
+        if (customId === 'al_delete') {
+          const modal = new ModalBuilder().setCustomId('al_modal_delete').setTitle('Delete Alias');
+          const triggerInput = new TextInputBuilder().setCustomId('trigger').setLabel('Primary Trigger Word to delete').setStyle(TextInputStyle.Short).setRequired(true);
+          modal.addComponents(new ActionRowBuilder().addComponents(triggerInput));
+          return target.showModal(modal);
         }
-        delete guildAliases[alias];
-        storage.write('aliases.json', aliasData);
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Removed`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Alias removed.`));
-        return message.reply({ components: [container], flags: 32768 });
       }
 
-      if (action === 'addalias') {
-        const primary = args[1]?.toLowerCase();
-        const newAlias = args[2]?.toLowerCase();
-        if (!primary || !newAlias || !guildAliases[primary]) return sendUsage(message, module.exports);
+      if (isInteraction && target.isModalSubmit && target.isModalSubmit()) {
+        const customId = target.customId;
 
-        if (!guildAliases[primary].aliases) guildAliases[primary].aliases = [];
-        guildAliases[primary].aliases.push(newAlias);
-        storage.write('aliases.json', aliasData);
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Alias Added`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} \`${newAlias}\` now also triggers the role.`));
-        return message.reply({ components: [container], flags: 32768 });
+        if (customId.startsWith('al_modal_create_')) {
+          const roleId = customId.split('_')[3];
+          const trigger = target.fields.getTextInputValue('trigger').trim().toLowerCase();
+          const requiredRoleId = target.fields.getTextInputValue('requiredRoleId').trim() || null;
+          const extraTriggers = target.fields.getTextInputValue('extraTriggers').trim().toLowerCase();
+
+          const role = guild.roles.cache.get(roleId);
+          if (!role) return safeReply(target, { components: [cv2Error('Role ID to toggle not found on this server.')], ephemeral: true });
+
+          if (requiredRoleId && !guild.roles.cache.has(requiredRoleId)) {
+            return safeReply(target, { components: [cv2Error('Required Role ID not found on this server.')], ephemeral: true });
+          }
+
+          let aliasesArray = [];
+          if (extraTriggers) {
+            aliasesArray = extraTriggers.split(',').map(s => s.trim()).filter(s => s.length > 0);
+          }
+
+          guildAliases[trigger] = { roleId: role.id, requiredRole: requiredRoleId, aliases: aliasesArray, timestamp: Date.now() };
+          storage.write('aliases.json', aliasData);
+          return safeUpdate(target, { components: [buildDashboard(guild, guildAliases)] });
+        }
+
+        if (customId === 'al_modal_delete') {
+          const trigger = target.fields.getTextInputValue('trigger').trim().toLowerCase();
+          
+          if (!guildAliases[trigger]) {
+            return safeReply(target, { components: [cv2Error(`Alias \`${trigger}\` does not exist.`)], ephemeral: true });
+          }
+
+          delete guildAliases[trigger];
+          storage.write('aliases.json', aliasData);
+          return safeUpdate(target, { components: [buildDashboard(guild, guildAliases)] });
+        }
       }
 
-      return sendUsage(message, module.exports);
+      // Initial Command Invocation
+      if (!isInteraction || (isInteraction && target.isCommand && target.isCommand())) {
+        const container = buildDashboard(guild, guildAliases);
+        if (target.reply) {
+          return safeReply(target, { components: [container] }).catch(() => {});
+        }
+      }
+
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => { });
+      safeReply(target, { components: [cv2Error(error.message)], ephemeral: true }).catch(() => { });
     }
   }
 };

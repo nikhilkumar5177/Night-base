@@ -1,157 +1,143 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, UserSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const storage = require('../../utils/storageManager');
-const { EMOJI_OWNER, EMOJI_INFO, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
-const { sendUsage, cv2Error } = require('../../utils/messageHelper');
+const { EMOJI_INFO, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
+const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
+
+function buildDashboard(client, configData) {
+  const users = configData.noPrefixUsers || [];
+  
+  let listStr = '';
+  if (users.length === 0) {
+    listStr = `${EMOJI_INFO} *No users have no-prefix access.*`;
+  } else {
+    const now = Date.now();
+    listStr = users.map((entry, i) => {
+      const isLegacy = typeof entry === 'string';
+      const id = isLegacy ? entry : entry.id;
+      const user = client.users.cache.get(id);
+      const name = user ? user.tag : id;
+      
+      if (isLegacy) return `**${i + 1}.** ${name} \u2014 \`Permanent\` (legacy)`;
+
+      const addedBy = client.users.cache.get(entry.addedBy);
+      const addedByTag = addedBy ? addedBy.tag : entry.addedBy;
+
+      if (entry.permanent) {
+        return `**${i + 1}.** ${name} \u2014 \`Permanent\`\n└ Added by: ${addedByTag} \u2014 <t:${Math.floor(entry.addedAt / 1000)}:R>`;
+      }
+
+      const remaining = entry.expiresAt - now;
+      if (remaining <= 0) return `**${i + 1}.** ${name} \u2014 \`EXPIRED\``;
+
+      return `**${i + 1}.** ${name} \u2014 Expires: <t:${Math.floor(entry.expiresAt / 1000)}:R>\n└ Added by: ${addedByTag}`;
+    }).join('\n\n');
+  }
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} No-Prefix Dashboard`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(listStr));
+
+  const row1 = new ActionRowBuilder().addComponents(
+    new UserSelectMenuBuilder().setCustomId('np_add_user').setPlaceholder('Search User to Grant Access')
+  );
+  const row2 = new ActionRowBuilder().addComponents(
+    new UserSelectMenuBuilder().setCustomId('np_remove_user').setPlaceholder('Search User to Revoke Access')
+  );
+  
+  container.addActionRowComponents(row1, row2);
+  return container;
+}
 
 module.exports = {
   name: 'noprefix',
   aliases: ['np', 'nopre'],
-  description: 'Grant or revoke no-prefix access for users',
-  usage: 'noprefix <add|remove|list> <@user> [duration]',
+  description: 'Manage no-prefix access via dashboard',
+  usage: 'noprefix',
   cooldown: 3,
   enabled: true,
   devOnly: true,
-  execute: async (client, message, args) => {
+  execute: async (client, target, args) => {
     try {
-      if (message.author.id !== message.guild.ownerId && message.author.id !== process.env.DEV_ID) {
-        return message.reply({ components: [cv2Error('Only the server owner can manage no-prefix access.')], flags: 32768 });
+      const authorId = target.author ? target.author.id : target.user.id;
+      const guild = target.guild;
+
+      if (authorId !== guild.ownerId && !client.devIds.has(authorId)) {
+        return safeReply(target, { components: [cv2Error('Only the server owner or devs can manage no-prefix access.')], ephemeral: true });
       }
 
-      const action = args[0]?.toLowerCase();
       const configData = storage.read('config.json');
       if (!configData.noPrefixUsers) configData.noPrefixUsers = [];
 
-      if (action === 'list') {
-        if (configData.noPrefixUsers.length === 0) {
-          const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} **No users have no-prefix access.**`));
-          return message.reply({ components: [container], flags: 32768 });
+      const isInteraction = !!target.customId || !!target.isCommand;
+
+      if (isInteraction && target.isUserSelectMenu && target.isUserSelectMenu()) {
+        const customId = target.customId;
+
+        if (customId === 'np_add_user') {
+          const userId = target.values[0];
+          const modal = new ModalBuilder().setCustomId(`np_modadd_${userId}`).setTitle('Grant No-Prefix Access');
+          const durationInput = new TextInputBuilder().setCustomId('duration').setLabel('Duration (e.g. 30m, 12h, 7d, permanent)').setStyle(TextInputStyle.Short).setRequired(false).setPlaceholder('Leave blank for permanent');
+          modal.addComponents(new ActionRowBuilder().addComponents(durationInput));
+          return target.showModal(modal);
         }
 
-        const now = Date.now();
-        const list = configData.noPrefixUsers.map((entry, i) => {
-          if (typeof entry === 'string') {
-            const user = client.users.cache.get(entry);
-            return `**${i + 1}.** ${user ? user.tag : entry} \u2014 \`Permanent\` (legacy)`;
-          }
-          const user = client.users.cache.get(entry.id);
-          const name = user ? user.tag : entry.id;
-          const addedBy = client.users.cache.get(entry.addedBy);
-          const addedByTag = addedBy ? addedBy.tag : entry.addedBy;
+        if (customId === 'np_remove_user') {
+          const inputId = target.values[0];
+          const exists = configData.noPrefixUsers.find(u => (typeof u === 'string' ? u : u.id) === inputId);
+          if (!exists) return safeReply(target, { components: [cv2Error(`User <@${inputId}> does not have access.`)], ephemeral: true });
 
-          if (entry.permanent) {
-            return `**${i + 1}.** ${name} \u2014 \`Permanent\`\nAdded by: ${addedByTag} \u2014 <t:${Math.floor(entry.addedAt / 1000)}:R>`;
-          }
-
-          const remaining = entry.expiresAt - now;
-          if (remaining <= 0) return `**${i + 1}.** ${name} \u2014 \`EXPIRED\``;
-
-          const months = Math.floor(remaining / 2592000000);
-          const days = Math.floor((remaining % 2592000000) / 86400000);
-          const hours = Math.floor((remaining % 86400000) / 3600000);
-          const mins = Math.floor((remaining % 3600000) / 60000);
-          let timeStr = '';
-          if (months > 0) timeStr += `${months}mo `;
-          if (days > 0) timeStr += `${days}d `;
-          if (hours > 0) timeStr += `${hours}h `;
-          if (mins > 0) timeStr += `${mins}m`;
-          if (!timeStr) timeStr = '<1m';
-
-          return `**${i + 1}.** ${name} \u2014 \`${timeStr.trim()}\` remaining\nAdded by: ${addedByTag} \u2014 Expires: <t:${Math.floor(entry.expiresAt / 1000)}:R>`;
-        }).join('\n\n');
-
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} No-Prefix Users`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
-        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
-      }
-
-      const target = message.mentions.users.first() || client.users.cache.get(args[1]);
-      if (!target) {
-        return sendUsage(message, module.exports);
-      }
-
-      if (action === 'add') {
-        const existing = configData.noPrefixUsers.find(u => {
-          if (typeof u === 'string') return u === target.id;
-          return u.id === target.id;
-        });
-        if (existing) {
-          configData.noPrefixUsers = configData.noPrefixUsers.filter(u => {
-            if (typeof u === 'string') return u !== target.id;
-            return u.id !== target.id;
-          });
+          configData.noPrefixUsers = configData.noPrefixUsers.filter(u => (typeof u === 'string' ? u : u.id) !== inputId);
+          storage.write('config.json', configData);
+          return safeUpdate(target, { components: [buildDashboard(client, configData)] });
         }
-
-        const durationStr = args[2]?.toLowerCase();
-        let entry;
-
-        if (!durationStr) {
-          entry = { id: target.id, permanent: true, addedBy: message.author.id, addedAt: Date.now() };
-        } else {
-          const match = durationStr.match(/^(\d+)(mo|m|h|d)$/);
-          if (!match) {
-            return message.reply({ components: [cv2Error('Use format: `30m`, `12h`, `7d`, `2mo`')], flags: 32768 });
-          }
-          const amount = parseInt(match[1]);
-          const unit = match[2];
-          const multipliers = { m: 60000, h: 3600000, d: 86400000, mo: 2592000000 };
-          const duration = amount * multipliers[unit];
-          if (duration > 365 * 86400000) {
-            return message.reply({ components: [cv2Error('Maximum duration is 365 days.')], flags: 32768 });
-          }
-          entry = { id: target.id, permanent: false, expiresAt: Date.now() + duration, addedBy: message.author.id, addedAt: Date.now() };
-        }
-
-        configData.noPrefixUsers.push(entry);
-        storage.write('config.json', configData);
-
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} No-Prefix Granted`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_SUCCESS} **No-prefix access granted.**\n` +
-            `${EMOJI_DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
-            `${EMOJI_DOT} **Type:** ${entry.permanent ? '\`Permanent\`' : '\`Timed\`'}\n` +
-            `${EMOJI_DOT} **Duration:** ${entry.permanent ? '\`Forever\`' : `\`${durationStr}\``}\n` +
-            `${EMOJI_DOT} **By:** ${message.author.tag}` +
-            (entry.permanent ? '' : `\n${EMOJI_DOT} **Expires:** <t:${Math.floor(entry.expiresAt / 1000)}:R>`)
-          ));
-        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
       }
 
-      if (action === 'remove') {
-        const exists = configData.noPrefixUsers.find(u => {
-          if (typeof u === 'string') return u === target.id;
-          return u.id === target.id;
-        });
-        if (!exists) {
-          const warnContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${target.tag}** does not have no-prefix access.`));
-          return message.reply({ components: [warnContainer], flags: 32768 });
+      if (isInteraction && target.isModalSubmit && target.isModalSubmit()) {
+        const customId = target.customId;
+
+        if (customId.startsWith('np_modadd_')) {
+          const inputId = customId.split('_')[2];
+          let durationStr = target.fields.getTextInputValue('duration')?.trim().toLowerCase();
+          if (durationStr === 'permanent' || durationStr === 'perm' || durationStr === '0') durationStr = '';
+
+          const existing = configData.noPrefixUsers.find(u => (typeof u === 'string' ? u : u.id) === inputId);
+          if (existing) {
+            configData.noPrefixUsers = configData.noPrefixUsers.filter(u => (typeof u === 'string' ? u : u.id) !== inputId);
+          }
+
+          let entry;
+          if (!durationStr) {
+            entry = { id: inputId, permanent: true, addedBy: authorId, addedAt: Date.now() };
+          } else {
+            const match = durationStr.match(/^(\d+)(mo|m|h|d)$/);
+            if (!match) return safeReply(target, { components: [cv2Error('Invalid duration format. Use: `30m`, `12h`, `7d`, `2mo`')], ephemeral: true });
+            
+            const amount = parseInt(match[1]);
+            const unit = match[2];
+            const multipliers = { m: 60000, h: 3600000, d: 86400000, mo: 2592000000 };
+            const duration = amount * multipliers[unit];
+            if (duration > 365 * 86400000) return safeReply(target, { components: [cv2Error('Maximum duration is 365 days.')], ephemeral: true });
+            
+            entry = { id: inputId, permanent: false, expiresAt: Date.now() + duration, addedBy: authorId, addedAt: Date.now() };
+          }
+
+          configData.noPrefixUsers.push(entry);
+          storage.write('config.json', configData);
+          return safeUpdate(target, { components: [buildDashboard(client, configData)] });
         }
-
-        configData.noPrefixUsers = configData.noPrefixUsers.filter(u => {
-          if (typeof u === 'string') return u !== target.id;
-          return u.id !== target.id;
-        });
-        storage.write('config.json', configData);
-
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} No-Prefix Revoked`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_SUCCESS} **No-prefix access revoked.**\n` +
-            `${EMOJI_DOT} **User:** ${target.tag} (\`${target.id}\`)\n` +
-            `${EMOJI_DOT} **By:** ${message.author.tag}`
-          ));
-        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
       }
 
-      return sendUsage(message, module.exports);
+      // Initial Command Invocation
+      if (!isInteraction || (isInteraction && target.isCommand && target.isCommand())) {
+        const container = buildDashboard(client, configData);
+        if (target.reply) {
+          return safeReply(target, { components: [container] }).catch(() => {});
+        }
+      }
+
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      safeReply(target, { components: [cv2Error(error.message)], ephemeral: true }).catch(() => {});
     }
   }
 };

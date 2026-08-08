@@ -1,184 +1,151 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, RoleSelectMenuBuilder } = require('discord.js');
 const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_WARN, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-const { sendUsage, cv2Error } = require('../../utils/messageHelper');
+const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
 
 const MAX_ROLES = 10;
+
+function buildDashboard(guild, config) {
+  const botHighest = guild.members.me.roles.highest.position;
+  
+  const mapRoles = (ids, label) => {
+    if (!ids || ids.length === 0) return `${EMOJI_DOT} *No ${label} roles configured.*`;
+    const valid = [];
+    for (const id of ids) {
+      const role = guild.roles.cache.get(id);
+      if (!role) continue;
+      const assignable = role.position < botHighest && !role.managed;
+      valid.push(`${role} ${assignable ? '' : '\`\u26A0 Can\'t assign\`'}`);
+    }
+    return valid.length > 0 ? valid.map((r, i) => `\`${i + 1}.\` ${r}`).join('\n') : `${EMOJI_DOT} *No valid ${label} roles.*`;
+  };
+
+  const humanList = mapRoles(config.humanRoles, 'human');
+  const botList = mapRoles(config.botRoles, 'bot');
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Dashboard`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_DOT} **Status:** ${config.enabled !== false ? '\`● Enabled\`' : '\`○ Disabled\`'}\n` +
+      `${EMOJI_DOT} **Guild:** ${guild.name}`
+    ))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `**Human Roles [${(config.humanRoles || []).filter(id => guild.roles.cache.has(id)).length}/${MAX_ROLES}]**\n${humanList}\n\n` +
+      `**Bot Roles [${(config.botRoles || []).filter(id => guild.roles.cache.has(id)).length}/${MAX_ROLES}]**\n${botList}`
+    ));
+
+  const row1 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('ar_toggle').setLabel(config.enabled !== false ? 'Disable System' : 'Enable System').setStyle(config.enabled !== false ? ButtonStyle.Danger : ButtonStyle.Success)
+  );
+
+  const humanMenu = new RoleSelectMenuBuilder().setCustomId('ar_add_human').setPlaceholder('Search Role to Add for Humans');
+  const botMenu = new RoleSelectMenuBuilder().setCustomId('ar_add_bot').setPlaceholder('Search Role to Add for Bots');
+
+  const row2 = new ActionRowBuilder().addComponents(humanMenu);
+  const row3 = new ActionRowBuilder().addComponents(botMenu);
+
+  const removeRow = new ActionRowBuilder();
+  if (config.humanRoles?.length || config.botRoles?.length) {
+    const removeMenu = new StringSelectMenuBuilder()
+      .setCustomId('ar_remove')
+      .setPlaceholder('Remove a configured role');
+    
+    (config.humanRoles || []).forEach(id => {
+      const role = guild.roles.cache.get(id);
+      if (role) removeMenu.addOptions({ label: `[Human] ${role.name}`, value: `human_${id}` });
+    });
+    (config.botRoles || []).forEach(id => {
+      const role = guild.roles.cache.get(id);
+      if (role) removeMenu.addOptions({ label: `[Bot] ${role.name}`, value: `bot_${id}` });
+    });
+    if (removeMenu.options.length > 0) removeRow.addComponents(removeMenu);
+  }
+
+  if (removeRow.components.length > 0) {
+    container.addActionRowComponents(row1, row2, row3, removeRow);
+  } else {
+    container.addActionRowComponents(row1, row2, row3);
+  }
+
+  return container;
+}
 
 module.exports = {
   name: 'autorole',
   aliases: ['ar-setup', 'joinrole'],
-  description: 'Configure auto-role assignment for humans and bots on join',
-  usage: 'autorole <add|remove|list|toggle> <human|bot> [role]',
+  description: 'Configure auto-role assignment via interactive dashboard',
+  usage: 'autorole',
   cooldown: 3,
   enabled: true,
   devOnly: false,
-  execute: async (client, message, args) => {
+  execute: async (client, target, args) => {
     try {
-      if (!message.member.permissions.has('ManageRoles')) {
-        return message.reply({ components: [cv2Error('You need **ManageRoles** permission.')], flags: 32768 });
+      const member = target.member;
+      const guild = target.guild;
+
+      if (!member.permissions.has('ManageRoles')) {
+        return safeReply(target, { components: [cv2Error('You need **ManageRoles** permission.')], ephemeral: true });
       }
-      if (!message.guild.members.me.permissions.has('ManageRoles')) {
-        return message.reply({ components: [cv2Error('I need **ManageRoles** permission.')], flags: 32768 });
+      if (!guild.members.me.permissions.has('ManageRoles')) {
+        return safeReply(target, { components: [cv2Error('I need **ManageRoles** permission.')], ephemeral: true });
       }
 
       const autoroleData = storage.read('autorole.json');
-      const guildId = message.guild.id;
+      const guildId = guild.id;
       if (!autoroleData[guildId]) {
         autoroleData[guildId] = { enabled: true, humanRoles: [], botRoles: [] };
       }
-      const config = autoroleData[guildId];
-      const action = args[0]?.toLowerCase();
+      let config = autoroleData[guildId];
 
-      if (action === 'toggle') {
-        config.enabled = !config.enabled;
-        storage.write('autorole.json', autoroleData);
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role System`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${config.enabled ? EMOJI_SUCCESS : EMOJI_ERROR} **Auto-role system ${config.enabled ? 'enabled' : 'disabled'}.**\n` +
-            `New members will ${config.enabled ? 'receive' : 'no longer receive'} roles automatically.`
-          ));
-        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
-      }
+      const isInteraction = !!target.customId || !!target.isCommand;
 
-      if (action === 'list') {
-        const botHighest = message.guild.members.me.roles.highest.position;
-        let cleaned = false;
+      // Handle Component Interactions
+      if (isInteraction && target.isMessageComponent && target.isMessageComponent()) {
+        const customId = target.customId;
 
-        const mapRoles = (ids, label) => {
-          if (!ids || ids.length === 0) return `${EMOJI_DOT} *No ${label} roles configured.*`;
-          const valid = [];
-          const invalid = [];
-          for (const id of ids) {
-            const role = message.guild.roles.cache.get(id);
-            if (!role) { invalid.push(id); continue; }
-            const assignable = role.position < botHighest && !role.managed;
-            valid.push(`${role} ${assignable ? '' : '\`\u26A0 Can\'t assign\`'}`);
-          }
-          if (invalid.length > 0) cleaned = true;
-          return valid.length > 0 ? valid.map((r, i) => `\`${i + 1}.\` ${r}`).join('\n') : `${EMOJI_DOT} *No valid ${label} roles.*`;
-        };
-
-        const humanList = mapRoles(config.humanRoles, 'human');
-        const botList = mapRoles(config.botRoles, 'bot');
-
-        if (cleaned) {
-          config.humanRoles = (config.humanRoles || []).filter(id => message.guild.roles.cache.has(id));
-          config.botRoles = (config.botRoles || []).filter(id => message.guild.roles.cache.has(id));
+        if (customId === 'ar_toggle') {
+          config.enabled = !config.enabled;
           storage.write('autorole.json', autoroleData);
+          return safeUpdate(target, { components: [buildDashboard(guild, config)] });
         }
 
-        const buildContainer = () => {
-          const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Dashboard`))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-              `${EMOJI_DOT} **Status:** ${config.enabled !== false ? '\`● Enabled\`' : '\`○ Disabled\`'}\n` +
-              `${EMOJI_DOT} **Guild:** ${message.guild.name}`
-            ))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-              `**Human Roles [${(config.humanRoles || []).filter(id => message.guild.roles.cache.has(id)).length}/${MAX_ROLES}]**\n${humanList}\n\n` +
-              `**Bot Roles [${(config.botRoles || []).filter(id => message.guild.roles.cache.has(id)).length}/${MAX_ROLES}]**\n${botList}`
-            ));
+        if (customId === 'ar_add_human' || customId === 'ar_add_bot') {
+          const type = customId.split('_')[2];
+          const key = type === 'human' ? 'humanRoles' : 'botRoles';
+          const roleId = target.values[0];
+          if (roleId === 'none') return target.deferUpdate();
+          const role = guild.roles.cache.get(roleId);
 
-          const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('ar_toggle').setLabel(config.enabled !== false ? 'Disable' : 'Enable').setStyle(config.enabled !== false ? ButtonStyle.Danger : ButtonStyle.Success)
-          );
-          container.addActionRowComponents(row);
-          return container;
-        };
+          if (!role) return safeReply(target, { components: [cv2Error('Role not found.')], ephemeral: true });
+          if (role.managed) return safeReply(target, { components: [cv2Error('That role is managed by an integration and cannot be auto-assigned.')], ephemeral: true });
+          if (role.position >= guild.members.me.roles.highest.position) return safeReply(target, { components: [cv2Error('That role is above or equal to my highest role.')], ephemeral: true });
+          if (config[key].includes(role.id)) return safeReply(target, { components: [cv2Error('Role is already in the list.')], ephemeral: true });
+          if (config[key].length >= MAX_ROLES) return safeReply(target, { components: [cv2Error(`Maximum of \`${MAX_ROLES}\` ${type} autoroles reached.`)], ephemeral: true });
 
-        const sent = await message.reply({ components: [buildContainer()], flags: 32768 }).catch(() => {});
-        const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === message.author.id, time: 60000 });
-        coll.on('collect', async i => {
-          if (i.customId === 'ar_toggle') {
-            config.enabled = !config.enabled;
-            storage.write('autorole.json', autoroleData);
-            await i.update({ components: [buildContainer()] });
-          }
-        });
-        coll.on('end', () => {
-          const finalContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Dashboard`))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-              `${EMOJI_DOT} **Status:** ${config.enabled !== false ? '\`● Enabled\`' : '\`○ Disabled\`'}`
-            ));
-          sent.edit({ components: [finalContainer] }).catch(() => {});
-        });
-        return;
+          config[key].push(role.id);
+          storage.write('autorole.json', autoroleData);
+          return safeUpdate(target, { components: [buildDashboard(guild, config)] });
+        }
+
+        if (customId === 'ar_remove') {
+          const selection = target.values[0];
+          const [type, roleId] = selection.split('_');
+          const key = type === 'human' ? 'humanRoles' : 'botRoles';
+
+          config[key] = config[key].filter(id => id !== roleId);
+          storage.write('autorole.json', autoroleData);
+          return safeUpdate(target, { components: [buildDashboard(guild, config)] });
+        }
       }
 
-      const type = args[1]?.toLowerCase();
-      if (!action || !['add', 'remove'].includes(action) || !type || !['human', 'bot'].includes(type)) {
-        return sendUsage(message, module.exports);
-      }
+      // Initial Command Invocation
+      const container = buildDashboard(guild, config);
+      return safeReply(target, { components: [container] }).catch(() => {});
 
-      const role = message.mentions.roles.first() || message.guild.roles.cache.get(args[2]);
-      if (!role) {
-        return message.reply({ components: [cv2Error(`Please mention a valid role or provide a role ID.\n\nUsage: \`${client.config.prefix}autorole ${action} ${type} @Role\``)], flags: 32768 });
-      }
-
-      const key = type === 'human' ? 'humanRoles' : 'botRoles';
-      if (!config[key]) config[key] = [];
-
-      if (action === 'add') {
-        if (role.managed) {
-          return message.reply({ components: [cv2Error('That role is managed by an integration and cannot be auto-assigned.')], flags: 32768 });
-        }
-        if (role.position >= message.guild.members.me.roles.highest.position) {
-          return message.reply({ components: [cv2Error('That role is above or equal to my highest role.')], flags: 32768 });
-        }
-        if (config[key].includes(role.id)) {
-          const warnContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${role} is already in the ${type} autorole list.**`));
-          return message.reply({ components: [warnContainer], flags: 32768 });
-        }
-        if (config[key].length >= MAX_ROLES) {
-          return message.reply({ components: [cv2Error(`Maximum of \`${MAX_ROLES}\` ${type} autoroles reached.`)], flags: 32768 });
-        }
-
-        config[key].push(role.id);
-        storage.write('autorole.json', autoroleData);
-
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Added`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_SUCCESS} **Role added to ${type} autorole list.**\n` +
-            `${EMOJI_DOT} **Role:** ${role}\n` +
-            `${EMOJI_DOT} **Type:** \`${type.charAt(0).toUpperCase() + type.slice(1)}\`\n` +
-            `${EMOJI_DOT} **Total:** \`${config[key].length}/${MAX_ROLES}\``
-          ));
-        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
-      }
-
-      if (action === 'remove') {
-        if (!config[key].includes(role.id)) {
-          const warnContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${role} is not in the ${type} autorole list.**`));
-          return message.reply({ components: [warnContainer], flags: 32768 });
-        }
-
-        config[key] = config[key].filter(id => id !== role.id);
-        storage.write('autorole.json', autoroleData);
-
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Auto-Role Removed`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-            `${EMOJI_SUCCESS} **Role removed from ${type} autorole list.**\n` +
-            `${EMOJI_DOT} **Role:** ${role}\n` +
-            `${EMOJI_DOT} **Type:** \`${type.charAt(0).toUpperCase() + type.slice(1)}\`\n` +
-            `${EMOJI_DOT} **Remaining:** \`${config[key].length}/${MAX_ROLES}\``
-          ));
-        return message.reply({ components: [container], flags: 32768 }).catch(() => {});
-      }
     } catch (error) {
-      message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
+      safeReply(target, { components: [cv2Error(error.message)], ephemeral: true }).catch(() => {});
     }
   }
 };

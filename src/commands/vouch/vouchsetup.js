@@ -1,72 +1,109 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, MessageFlags } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ChannelSelectMenuBuilder, StringSelectMenuBuilder, ChannelType } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
-const { sendUsage, cv2Error, safeReply } = require('../../utils/messageHelper');
+const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
+
+function buildDashboard(guild, vouchData) {
+  const guildId = guild.id;
+  const channels = vouchData[guildId]?.channels || [];
+  
+  let listStr = '';
+  if (channels.length === 0) {
+    listStr = `${EMOJI_INFO} *No vouch channels configured.*`;
+  } else {
+    listStr = channels.map((id, i) => {
+      const ch = guild.channels.cache.get(id);
+      return `**${i + 1}.** ${ch ? ch.toString() : `\`${id}\``}`;
+    }).join('\n');
+  }
+
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Setup`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(listStr));
+
+  const addRow = new ActionRowBuilder().addComponents(
+    new ChannelSelectMenuBuilder()
+      .setCustomId('vs_add')
+      .setPlaceholder('Add a Vouch Channel')
+      .addChannelTypes(ChannelType.GuildText)
+  );
+  
+  const rows = [addRow];
+
+  if (channels.length > 0) {
+    const removeMenu = new StringSelectMenuBuilder()
+      .setCustomId('vs_remove')
+      .setPlaceholder('Remove a Vouch Channel');
+      
+    channels.forEach(id => {
+      const ch = guild.channels.cache.get(id);
+      if (ch) removeMenu.addOptions({ label: `#${ch.name}`, value: id });
+    });
+    
+    if (removeMenu.options.length > 0) {
+      rows.push(new ActionRowBuilder().addComponents(removeMenu));
+    }
+  }
+
+  container.addActionRowComponents(...rows);
+  return container;
+}
 
 module.exports = {
   name: 'vouchsetup',
   aliases: ['vouchchannel', 'vouchset'],
-  description: 'Configure vouch channels',
-  usage: 'vouchsetup <add|remove|list> [channel]',
+  description: 'Configure vouch channels via interactive dashboard',
+  usage: 'vouchsetup',
   cooldown: 3,
   enabled: true,
   devOnly: false,
-  execute: async (client, message, args) => {
+  execute: async (client, target, args) => {
     try {
-      if (!message.member.permissions.has('ManageChannels')) {
-        return safeReply(message, { components: [cv2Error('You need **ManageChannels** permission.')] });
+      const member = target.member;
+      const guild = target.guild;
+
+      if (!member.permissions.has('ManageChannels')) {
+        return safeReply(target, { components: [cv2Error('You need **ManageChannels** permission.')], ephemeral: true });
       }
-      const action = args[0]?.toLowerCase();
+
       const vouchData = storage.read('vouch.json');
-      if (!vouchData[message.guild.id]) vouchData[message.guild.id] = { channels: [] };
+      const guildId = guild.id;
+      if (!vouchData[guildId]) vouchData[guildId] = { channels: [] };
 
-      if (action === 'list') {
-        const guildChannels = vouchData[message.guild.id].channels;
-        if (guildChannels.length === 0) {
-          const container = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channels`))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_INFO} No vouch channels configured for this server.`));
-          return safeReply(message, { components: [container] });
+      const isInteraction = !!target.customId || !!target.isCommand;
+
+      if (isInteraction && target.isMessageComponent && target.isMessageComponent()) {
+        const customId = target.customId;
+
+        if (customId === 'vs_add') {
+          const channelId = target.values[0];
+          if (vouchData[guildId].channels.includes(channelId)) {
+            return safeReply(target, { components: [cv2Error('Channel is already a vouch channel.')], ephemeral: true });
+          }
+          vouchData[guildId].channels.push(channelId);
+          storage.write('vouch.json', vouchData);
+          return safeUpdate(target, { components: [buildDashboard(guild, vouchData)] });
         }
-        const list = guildChannels.map((id, i) => `**${i + 1}.** <#${id}>`).join('\n');
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channels`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(list));
-        return safeReply(message, { components: [container] });
-      }
 
-      const channel = message.mentions.channels.first() || message.guild.channels.cache.get(args[1]) || message.channel;
-
-      if (action === 'add') {
-        if (vouchData[message.guild.id].channels.includes(channel.id)) {
-          const warnContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **${channel}** is already a vouch channel.`));
-          return safeReply(message, { components: [warnContainer] });
+        if (customId === 'vs_remove') {
+          const channelId = target.values[0];
+          vouchData[guildId].channels = vouchData[guildId].channels.filter(id => id !== channelId);
+          storage.write('vouch.json', vouchData);
+          return safeUpdate(target, { components: [buildDashboard(guild, vouchData)] });
         }
-        vouchData[message.guild.id].channels.push(channel.id);
-        storage.write('vouch.json', vouchData);
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channel Added`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} ${channel} is now a vouch channel.`));
-        return safeReply(message, { components: [container] });
       }
 
-      if (action === 'remove') {
-        vouchData[message.guild.id].channels = vouchData[message.guild.id].channels.filter(id => id !== channel.id);
-        storage.write('vouch.json', vouchData);
-        const container = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Vouch Channel Removed`))
-          .addSeparatorComponents(new SeparatorBuilder())
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Vouch channel removed.`));
-        return safeReply(message, { components: [container] });
+      // Initial Command Invocation
+      if (!isInteraction || (isInteraction && target.isCommand && target.isCommand())) {
+        const container = buildDashboard(guild, vouchData);
+        if (target.reply) {
+          return safeReply(target, { components: [container] }).catch(() => {});
+        }
       }
 
-      return sendUsage(message, module.exports);
     } catch (error) {
-      safeReply(message, { components: [cv2Error(error.message)] }).catch(() => { });
+      safeReply(target, { components: [cv2Error(error.message)], ephemeral: true }).catch(() => { });
     }
   }
 };

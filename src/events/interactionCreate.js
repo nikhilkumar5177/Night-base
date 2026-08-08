@@ -99,15 +99,25 @@ module.exports = {
         const filtered = choices.filter(c => c.name.toLowerCase().includes(focusedValue)).slice(0, 25);
         await interaction.respond(filtered).catch(() => { });
       }
-    } else if (interaction.type === InteractionType.MessageComponent) {
-      if (interaction.customId.startsWith('automod_')) {
-        const command = client.commands.get('automod');
-        if (command) return command.execute(client, interaction);
-      }
-    } else if (interaction.type === InteractionType.ModalSubmit) {
-      if (interaction.customId.startsWith('automod_modal_')) {
-        const command = client.commands.get('automod');
-        if (command) return command.execute(client, interaction);
+    } else if (interaction.type === InteractionType.MessageComponent || interaction.type === InteractionType.ModalSubmit) {
+      const routeMap = {
+        'automod_': 'automod',
+        'ar_': 'autorole',
+        'np_': 'noprefix',
+        'pc_': 'privatechannel',
+        'vs_': 'vouchsetup',
+        'an_': 'antinuke',
+        'cb_': 'cmdblacklist',
+        'al_': 'aliasrole',
+        'vj_': 'vcjoiner'
+      };
+
+      for (const [prefix, cmdName] of Object.entries(routeMap)) {
+        if (interaction.customId.startsWith(prefix)) {
+          const command = client.commands.get(cmdName);
+          if (command) return command.execute(client, interaction);
+          break;
+        }
       }
     }
   }

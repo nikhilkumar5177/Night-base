@@ -13,8 +13,7 @@ module.exports = {
       if (!command) return;
 
       const runtimeConfig = storage.read('config.json');
-      const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
-      const isDev = devIds.includes(interaction.user.id);
+      const isDev = client.devIds.has(interaction.user.id);
 
       if (runtimeConfig.disabledCommands?.includes(command.name)) {
         return safeReply(interaction, { components: [cv2Error('This command is currently disabled.')], ephemeral: true }).catch(() => { });
@@ -27,14 +26,12 @@ module.exports = {
         return safeReply(interaction, { components: [maintContainer], ephemeral: true });
       }
 
-      const blacklistData = storage.read('blacklist.json');
-      if (blacklistData.users?.includes(interaction.user.id)) return;
-
-
-
       if (command.devOnly && !isDev) {
         return safeReply(interaction, { components: [cv2Error(`${EMOJI_OWNER} This is an **Owner Command**.`)], ephemeral: true });
       }
+
+      const blacklistData = storage.read('blacklist.json');
+      if (blacklistData.users?.includes(interaction.user.id)) return;
 
       const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
       if (cooldownAmount > 0) {

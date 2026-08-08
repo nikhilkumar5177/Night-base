@@ -7,8 +7,8 @@ const { sendAutoDelete, cv2Error, safeReply, safeSend, safeDelete } = require('.
 const { handleAutoMod } = require('../automod/handlers/messageHandler');
 const resolver = require('../utils/resolver');
 
-let lastAliasData = null;
-let aliasTriggerMap = new Map(); // guildId -> Map of triggers
+let _aliasCacheRef = null;
+let _aliasCacheByGuild = new Map(); // guildId -> triggerMap (memoized per aliasData reference)
 
 const LINK_REGEX = /https?:\/\/[^\s]+/gi;
 const INVITE_REGEX = /(discord\.(gg|io|me|li|com\/invite|app\.com\/invite)|\.gg\/|discord\.com\/vanity)\/[a-zA-Z0-9_-]+/gi;
@@ -16,25 +16,30 @@ const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discor
 
 function getGuildTriggerMap(aliasData, guild) {
   const guildId = guild.id;
-  const guildAliases = aliasData[guildId] || {};
 
-  // Also check root-level legacy entries whose roleId exists in this guild
+  // If aliasData reference changed (a write happened), invalidate the cache
+  if (aliasData !== _aliasCacheRef) {
+    _aliasCacheRef = aliasData;
+    _aliasCacheByGuild.clear();
+  }
+
+  if (_aliasCacheByGuild.has(guildId)) return _aliasCacheByGuild.get(guildId);
+
+  const guildAliases = aliasData[guildId] || {};
   const merged = { ...guildAliases };
   for (const [key, cfg] of Object.entries(aliasData)) {
     if (key === guildId || typeof cfg !== 'object' || cfg === null || Array.isArray(cfg)) continue;
     if (!cfg.roleId) continue;
-    if (guild.roles.cache.has(cfg.roleId) && !merged[key]) {
-      merged[key] = cfg;
-    }
+    if (guild.roles.cache.has(cfg.roleId) && !merged[key]) merged[key] = cfg;
   }
 
   const triggerMap = new Map();
   for (const [aliasKey, config] of Object.entries(merged)) {
     const triggers = [aliasKey, ...(config.aliases || [])];
-    for (const t of triggers) {
-      triggerMap.set(t.toLowerCase(), { ...config, key: aliasKey });
-    }
+    for (const t of triggers) triggerMap.set(t.toLowerCase(), { ...config, key: aliasKey });
   }
+
+  _aliasCacheByGuild.set(guildId, triggerMap);
   return triggerMap;
 }
 
@@ -146,7 +151,6 @@ module.exports = {
       return;
     }
 
-    const _t0 = Date.now();
     // 1. Critical Early Exits (0ms processing for irrelevant messages)
     if (message.author.bot && !message.webhookId) return;
     if (!message.guild) {
@@ -170,7 +174,7 @@ module.exports = {
 
     const runtimeConfig = allData.config;
     const prefix = runtimeConfig.prefix || client.config.prefix;
-    const isDev = (process.env.DEV_ID || '').split(',').includes(message.author.id);
+    const isDev = client.devIds.has(message.author.id);
     const isOwner = message.author.id === message.guild.ownerId;
 
     // 3. Handle Staff Replies in Forms Channel
@@ -219,13 +223,12 @@ module.exports = {
         const sent = await safeSend(message.channel, { components: [container] }).catch(() => { });
         await safeDelete(message);
         if (sent) await sent.react(EMOJI_LEGIT).catch(() => { });
-        console.log(`[Vouch] Logged vouch by ${message.author.tag} in ${message.channel.name}`);
+        logger.info(`[Vouch] Logged vouch by ${message.author.tag} in ${message.channel.name}`);
       } catch (e) { console.error('[Vouch Error]', e); }
       return;
     }
 
     // Run AutoMod
-    const _t1 = Date.now();
     await handleAutoMod(client, message);
 
 
@@ -266,8 +269,8 @@ module.exports = {
       }
     }
 
-    const mentionRegex = new RegExp(`<@!?${client.user.id}>`);
-    if (mentionRegex.test(message.content)) {
+    if (!client._mentionRegex) client._mentionRegex = new RegExp(`<@!?${client.user.id}>`);
+    if (client._mentionRegex.test(message.content)) {
       if (!client._mentionCooldowns) client._mentionCooldowns = new Map();
       const now = Date.now();
       const cooldown = 60000;
@@ -430,7 +433,6 @@ module.exports = {
     }
 
     try {
-      const _t2 = Date.now();
       await command.execute(client, message, args);
 
       logger.cmd(message.author.tag, command.name);

@@ -5,7 +5,7 @@ if (major < 16 || (major === 16 && minor < 11)) {
 }
 
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, Partials, EmbedBuilder, Message } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js');
 const config = require('./config.json');
 const commandHandler = require('./src/handlers/commandHandler');
 const eventHandler = require('./src/handlers/eventHandler');
@@ -31,6 +31,7 @@ client.config = config;
 client.cooldowns = new Map();
 client.snipeCache = new Map();
 client.activeGames = new Map();
+client.devIds = new Set((process.env.DEV_ID || '').split(',').map(s => s.trim()).filter(Boolean));
 
 storage.init();
 storage.startPeriodicFlush(120000);

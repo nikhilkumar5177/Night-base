@@ -1,9 +1,35 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, UserSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, UserSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { EMOJI_INFO, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
 
 function buildDashboard(client, configData) {
+  const users = configData.noPrefixUsers || [];
+  
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} No-Prefix Dashboard`))
+    .addSeparatorComponents(new SeparatorBuilder())
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(
+      `${EMOJI_DOT} **Total Users with Access:** \`${users.length}\`\n` +
+      `${EMOJI_DOT} *Use the menus below to manage access, or click the button to view the list.*`
+    ));
+
+  const btnRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('np_view_list').setLabel('View Access List').setStyle(ButtonStyle.Primary).setDisabled(users.length === 0)
+  );
+
+  const row1 = new ActionRowBuilder().addComponents(
+    new UserSelectMenuBuilder().setCustomId('np_add_user').setPlaceholder('Search User to Grant Access')
+  );
+  const row2 = new ActionRowBuilder().addComponents(
+    new UserSelectMenuBuilder().setCustomId('np_remove_user').setPlaceholder('Search User to Revoke Access')
+  );
+  
+  container.addActionRowComponents(btnRow, row1, row2);
+  return container;
+}
+
+function buildListDashboard(client, configData) {
   const users = configData.noPrefixUsers || [];
   
   let listStr = '';
@@ -34,18 +60,15 @@ function buildDashboard(client, configData) {
   }
 
   const container = new ContainerBuilder()
-    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} No-Prefix Dashboard`))
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} No-Prefix Access List`))
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(listStr));
 
-  const row1 = new ActionRowBuilder().addComponents(
-    new UserSelectMenuBuilder().setCustomId('np_add_user').setPlaceholder('Search User to Grant Access')
+  const btnRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId('np_back_main').setLabel('Back to Main').setStyle(ButtonStyle.Secondary)
   );
-  const row2 = new ActionRowBuilder().addComponents(
-    new UserSelectMenuBuilder().setCustomId('np_remove_user').setPlaceholder('Search User to Revoke Access')
-  );
-  
-  container.addActionRowComponents(row1, row2);
+
+  container.addActionRowComponents(btnRow);
   return container;
 }
 
@@ -71,6 +94,18 @@ module.exports = {
       if (!configData.noPrefixUsers) configData.noPrefixUsers = [];
 
       const isInteraction = !!target.customId || !!target.isCommand;
+
+      if (isInteraction && target.isMessageComponent && target.isMessageComponent()) {
+        const customId = target.customId;
+
+        if (customId === 'np_view_list') {
+          return safeUpdate(target, { components: [buildListDashboard(client, configData)] });
+        }
+
+        if (customId === 'np_back_main') {
+          return safeUpdate(target, { components: [buildDashboard(client, configData)] });
+        }
+      }
 
       if (isInteraction && target.isUserSelectMenu && target.isUserSelectMenu()) {
         const customId = target.customId;

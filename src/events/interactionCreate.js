@@ -13,7 +13,7 @@ module.exports = {
       if (!command) return;
 
       const runtimeConfig = storage.read('config.json');
-      const isDev = client.devIds.has(interaction.user.id);
+      const isDev = client.devIds ? client.devIds.has(interaction.user.id) : (process.env.DEV_ID || '').split(',').includes(interaction.user.id);
 
       if (runtimeConfig.disabledCommands?.includes(command.name)) {
         return safeReply(interaction, { components: [cv2Error('This command is currently disabled.')], ephemeral: true }).catch(() => { });

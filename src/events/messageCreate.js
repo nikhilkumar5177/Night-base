@@ -174,7 +174,7 @@ module.exports = {
 
     const runtimeConfig = allData.config;
     const prefix = runtimeConfig.prefix || client.config.prefix;
-    const isDev = client.devIds.has(message.author.id);
+    const isDev = client.devIds ? client.devIds.has(message.author.id) : (process.env.DEV_ID || '').split(',').includes(message.author.id);
     const isOwner = message.author.id === message.guild.ownerId;
 
     // 3. Handle Staff Replies in Forms Channel

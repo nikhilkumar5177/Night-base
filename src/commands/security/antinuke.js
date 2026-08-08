@@ -36,7 +36,8 @@ module.exports = {
       const authorId = target.author ? target.author.id : target.user.id;
       const guild = target.guild;
 
-      if (authorId !== guild.ownerId && !client.devIds.has(authorId)) {
+      const isDev = client.devIds ? client.devIds.has(authorId) : (process.env.DEV_ID || '').split(',').includes(authorId);
+      if (authorId !== guild.ownerId && !isDev) {
         return safeReply(target, { components: [cv2Error('Only the server owner or devs can configure anti-nuke.')], ephemeral: true });
       }
       

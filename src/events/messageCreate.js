@@ -431,7 +431,6 @@ module.exports = {
 
     try {
       const _t2 = Date.now();
-      message.channel.sendTyping().catch(() => {});
       await command.execute(client, message, args);
 
       logger.cmd(message.author.tag, command.name);

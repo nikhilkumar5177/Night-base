@@ -1,5 +1,3 @@
-const { getConfig } = require('../automod/database');
-const { syncNativeRules } = require('../automod/utils/nativeSync');
 const logger = require('../utils/logger');
 
 module.exports = {
@@ -7,11 +5,11 @@ module.exports = {
   once: false,
   execute: async (client, guild) => {
     try {
-      const config = await getConfig(guild.id);
-      await syncNativeRules(guild, config, true);
-      logger.info(`AutoMod Rule Sync: Initialized for joined guild ${guild.name} (${guild.id})`);
+      logger.info(`Bot joined guild: ${guild.name} (${guild.id})`);
+      // Removed native AutoMod rule creation on join per user request.
+      // AutoMod rules are now only created when explicitly set up via the automodrule command.
     } catch (error) {
-      logger.error(`Failed to sync AutoMod rules on join for ${guild.id}: ${error.message}`);
+      logger.error(`Error processing join for ${guild.id}: ${error.message}`);
     }
   }
 };

@@ -18,8 +18,6 @@
     "axios": "^1.15.2",
     "discord.js": "^14.26.3",
     "dotenv": "^17.4.2",
-    "libsodium-wrappers": "^0.8.4",
-    "opusscript": "^0.0.8",
     "sharp": "^0.34.5"
   },
   "devDependencies": {

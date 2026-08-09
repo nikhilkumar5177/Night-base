@@ -85,7 +85,7 @@ module.exports = {
 
         container.addActionRowComponents(new ActionRowBuilder().addComponents(catMenu));
 
-        if (state.view === 'category' && categories[state.category]) {
+        if ((state.view === 'category' || state.view === 'command') && state.category && categories[state.category]) {
           const cmdMenu = new StringSelectMenuBuilder()
             .setCustomId('help_cmd')
             .setPlaceholder('Select a Command for Details')
@@ -107,9 +107,7 @@ module.exports = {
           );
         }
 
-        if (state.view === 'command' && state.historyView) {
-          buttonRow.addComponents(new ButtonBuilder().setCustomId('help_back').setLabel('Back').setStyle(ButtonStyle.Secondary));
-        }
+
 
         buttonRow.addComponents(new ButtonBuilder().setLabel('Support').setStyle(ButtonStyle.Link).setURL(client.config.supportServer));
         container.addActionRowComponents(buttonRow);

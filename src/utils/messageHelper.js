@@ -63,8 +63,8 @@ async function sendUsage(message, command) {
         ));
 
     const info = [];
-    if (command.aliases?.length) info.push(`Aliases: \`${command.aliases.join(', ')}\n\``);
-    if (command.cooldown) info.push(`Cooldown: \`${command.cooldown}s\``);
+    if (command.aliases?.length) info.push(`Aliases: \`${command.aliases.join(', ')}\``);
+    if (command.cooldown) info.push(`\nCooldown: \`${command.cooldown}s\``);
     
     if (info.length) {
         container.addSeparatorComponents(new SeparatorBuilder());

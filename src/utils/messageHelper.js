@@ -68,7 +68,7 @@ async function sendUsage(message, command) {
     
     if (info.length) {
         container.addSeparatorComponents(new SeparatorBuilder());
-        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(info.join(' ${EMOJI_ARROW} ')));
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent(info.join(` ${EMOJI_ARROW} `)));
     }
 
     container.addSeparatorComponents(new SeparatorBuilder());

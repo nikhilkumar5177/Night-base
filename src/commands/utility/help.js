@@ -167,12 +167,11 @@ module.exports = {
         const blocks = [];
         Object.keys(categories).forEach(cat => {
           const catLabel = (CATEGORY_META[cat]?.label || cat).toUpperCase();
-          const catCmds = categories[cat].map(c => `\`${c.name}\``);
+          const catCmds = categories[cat].map(c => c.name);
           
           let block = [`${EMOJI_ARROW} **${catLabel}**`];
           for (let i = 0; i < catCmds.length; i += 3) {
             const row = catCmds.slice(i, i + 3).map(name => {
-              const cmd = client.commands.get(name);
               return `\`${name}\``;
             }).join(' \u2022 ');
             block.push(`${EMOJI_DOT} ${row}`);
@@ -242,12 +241,14 @@ module.exports = {
 function buildCommandContainer(client, command) {
   if (command.isGuide) return buildGuideContainer(command.name);
   const perms = command.userPermissions?.join(', ') || 'Everyone';
-  const trigger = command.slash ? '/' : client.config.prefix;
+  const config = storage.read('config.json');
+  const prefix = config.prefix || client.config.prefix;
+  const trigger = command.slash ? '/' : prefix;
 
   let extraDoc = '';
   if (command.name === 'automod') {
     extraDoc = `\n\n**AutoMod Guide:**\n${EMOJI_DOT} AutoMod allows you to automatically delete messages that contain banned words, links, or excessive spam.\n${EMOJI_DOT} **Auto Escalation:** Configure the bot to automatically warn, mute, or ban users who trigger AutoMod multiple times. Use the dashboard to set rules like \`3:warn, 5:mute:1h\`.\n${EMOJI_DOT} **Webhook Security:** Zero-tolerance detection for phishing and mass mentions.`;
-  } else if (command.name === 'aliasrole' || command.name === 'addalias' || command.name === 'aliases' || command.category === 'roles') {
+  } else if (command.name === 'aliasrole' || command.name === 'addalias' || command.name === 'aliases') {
     extraDoc = `\n\n**Alias Guide:**\n${EMOJI_DOT} Aliases are used for fast role giving.\n${EMOJI_DOT} Only members with \`Manage Roles\` permissions (or Staff) can give or use them.\n${EMOJI_DOT} **Usage:** \`${trigger}aliasrole\` — Opens the interactive dashboard where you can easily link quick words to roles using dropdowns.`;
   }
 

@@ -5,7 +5,7 @@ if (major < 18) {
 }
 
 require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Partials, Options } = require('discord.js');
 const config = require('./config.json');
 const commandHandler = require('./src/handlers/commandHandler');
 const eventHandler = require('./src/handlers/eventHandler');
@@ -22,7 +22,27 @@ const client = new Client({
     GatewayIntentBits.AutoModerationExecution
   ],
   partials: [Partials.Message, Partials.Channel, Partials.Reaction],
-  allowedMentions: { parse: [] }
+  allowedMentions: { parse: [] },
+  sweepers: {
+    ...Options.DefaultSweeperSettings,
+    messages: {
+      interval: 1800,
+      lifetime: 900
+    }
+  },
+  makeCache: Options.cacheWithLimits({
+    ...Options.DefaultMakeCacheSettings,
+    MessageManager: 50,
+    PresenceManager: 0,
+    ReactionManager: 0,
+    ThreadMemberManager: 0,
+    GuildScheduledEventManager: 0,
+    StageInstanceManager: 0
+  }),
+  rest: {
+    timeout: 15000,
+    retries: 2
+  }
 });
 
 client.commands = new Collection();

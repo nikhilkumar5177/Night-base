@@ -51,11 +51,15 @@ module.exports = {
       try {
         await command.execute(client, interaction, []);
         logger.cmd(interaction.user.tag, `[Slash] ${command.name}`);
-        const analytics = storage.read('analytics.json');
-        if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0 };
-        analytics[command.name].uses = (analytics[command.name].uses || 0) + 1;
-        analytics[command.name].lastUsed = Date.now();
-        storage.write('analytics.json', analytics);
+        setImmediate(() => {
+          try {
+            const analytics = storage.read('analytics.json');
+            if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0 };
+            analytics[command.name].uses = (analytics[command.name].uses || 0) + 1;
+            analytics[command.name].lastUsed = Date.now();
+            storage.write('analytics.json', analytics);
+          } catch {}
+        });
       } catch (error) {
         logger.error(`Slash Command ${command.name} failed: ${error.message}`);
         const errLogId = client.config.errorLogChannelId;

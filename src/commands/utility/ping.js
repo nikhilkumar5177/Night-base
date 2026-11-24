@@ -22,13 +22,7 @@ module.exports = {
       storage.read('config.json');
       const dbLatency = Date.now() - dbStart;
 
-      const loadContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Calculating diagnostics...**`));
-
-      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => { });
-      if (!sent) return;
-
-      const apiLatency = client.ws.ping;
+      const apiLatency = Math.round(client.ws.ping);
 
       const hrStart = process.hrtime();
       await new Promise(r => setImmediate(r));
@@ -47,7 +41,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-      await sent.edit({ components: [container] }).catch(() => { });
+      await message.reply({ components: [container], flags: 32768 }).catch(() => { });
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => { });
     }

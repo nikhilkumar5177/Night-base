@@ -47,6 +47,7 @@ module.exports = {
   name: 'messageCreate',
   once: false,
   execute: async (client, message) => {
+    // Webhook Security Handling
     if (message.webhookId && message.guild) {
       const { getConfig } = require('../automod/database');
       const automodConfig = await getConfig(message.guild.id);
@@ -91,52 +92,32 @@ module.exports = {
           try {
             await message.delete().catch(() => { });
 
-            // Targeted Neutralization
             const suspectIds = [...new Set(tracker.messages.map(r => r.id))];
             if (!suspectIds.includes(message.webhookId)) suspectIds.push(message.webhookId);
 
             const purgeSuspects = async () => {
               const chanWebhooks = await message.channel.fetchWebhooks().catch(() => null);
               if (chanWebhooks) {
-                const toDelete = chanWebhooks.filter(wh => suspectIds.includes(wh.id));
-                await Promise.all(toDelete.map(wh => wh.delete(`Security: ${violationType}`).catch(() => { })));
+                for (const wh of chanWebhooks.values()) {
+                  if (suspectIds.includes(wh.id)) {
+                    await wh.delete('Anti-Webhook Auto-Neutralization: Malicious Activity Detected').catch(() => { });
+                  }
+                }
               }
             };
-
-            await purgeSuspects();
-            setTimeout(purgeSuspects, 2000);
-
-            const owner = await message.guild.fetchOwner().catch(() => null);
-            const staffMentions = '';
+            purgeSuspects().catch(() => { });
 
             if (!tracker.alertSent) {
               tracker.alertSent = true;
-
-              const alertContainer = new ContainerBuilder()
-                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Security Alert`))
-                .addSeparatorComponents(new SeparatorBuilder())
-                .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-                  `${EMOJI_ERROR} **${violationType} Neutralized**\nTargeted security threat neutralized in ${message.channel}. Malicious webhooks have been destroyed.`
-                ));
-
-              const logCh = message.guild.channels.cache.get(automodConfig.logChannel) ||
-                message.guild.channels.cache.find(c => c.name.includes('security') || c.name.includes('log')) ||
-                message.channel;
-
-              safeSend(logCh, {
-                content: `${owner || ''} ${staffMentions}`,
-                components: [alertContainer],
-                allowedMentions: { parse: ['users', 'roles'] }
-              }).catch(() => { });
-
-              // Public Notice in Current Channel
               const publicAlert = new ContainerBuilder()
-                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Security Neutralized`))
+                .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Webhook Threat Neutralized`))
                 .addSeparatorComponents(new SeparatorBuilder())
                 .addTextDisplayComponents(new TextDisplayBuilder().setContent(
-                  `${EMOJI_WARN} **Raiders? Fuckyou bitches. by NightBase**\nSecurity Status: \`● SECURED\``
+                  `${EMOJI_ERROR} **Malicious Webhook Intercepted**\n\n` +
+                  `${EMOJI_DOT} **Violation:** \`${violationType}\`\n` +
+                  `${EMOJI_DOT} **Action:** Target messages purged & Webhook deleted.\n` +
+                  `${EMOJI_DOT} **Channel:** <#${message.channel.id}>`
                 ));
-
               await message.channel.send({ components: [publicAlert], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
             }
           } catch (e) { }
@@ -159,48 +140,150 @@ module.exports = {
       return;
     }
 
-    // 2. Consolidate Storage Access (Read once per message)
-    const allData = {
-      config: storage.read('config.json'),
-      afk: storage.read('afk.json'),
-      vouch: storage.read('vouch.json'),
-      security: storage.read('security.json'),
-      blacklist: storage.read('blacklist.json'),
-      cmdBlacklist: storage.read('cmdBlacklist.json'),
-      aliases: storage.read('aliases.json'),
-      analytics: storage.read('analytics.json')
-    };
-
-
-    const runtimeConfig = allData.config;
+    const runtimeConfig = storage.read('config.json');
     const prefix = runtimeConfig.guildPrefixes?.[message.guild.id] || runtimeConfig.prefix || client.config.prefix;
     const isDev = client.devIds ? client.devIds.has(message.author.id) : (process.env.DEV_ID || '').split(',').includes(message.author.id);
     const isOwner = message.author.id === message.guild.ownerId;
 
-    // 3. Handle Staff Replies in Forms Channel
-    if (message.channel.isThread() && message.channel.parentId === runtimeConfig.dmLogChannelId) {
+    // Handle Staff Replies in Forms Channel
+    if (runtimeConfig.dmLogChannelId && message.channel.isThread() && message.channel.parentId === runtimeConfig.dmLogChannelId) {
       const { handleStaffReply } = require('../utils/dmFormManager');
       await handleStaffReply(client, message);
       return;
     }
 
-    const isCommandHeuristic = message.content.startsWith(prefix) || (runtimeConfig.noPrefixUsers && runtimeConfig.noPrefixUsers.some(u => typeof u === 'string' ? u === message.author.id : u.id === message.author.id));
+    // 2. ULTRA-FAST COMMAND DISPATCH PATH (< 1ms execution)
+    let isCommand = false;
+    let content = message.content;
+    let isNoPrefixUser = false;
 
-    // Vouch Logic
-    const vouchData = allData.vouch;
+    if (content.startsWith(prefix)) {
+      content = content.slice(prefix.length);
+      isCommand = true;
+    } else if (runtimeConfig.noPrefixUsers && Array.isArray(runtimeConfig.noPrefixUsers)) {
+      const entry = runtimeConfig.noPrefixUsers.find(u => {
+        if (typeof u === 'string') return u === message.author.id;
+        return u.id === message.author.id;
+      });
+      if (entry) {
+        if (typeof entry === 'string' || entry.permanent) {
+          isNoPrefixUser = true;
+        } else if (entry.expiresAt) {
+          if (Date.now() < entry.expiresAt) {
+            isNoPrefixUser = true;
+          } else {
+            runtimeConfig.noPrefixUsers = runtimeConfig.noPrefixUsers.filter(u => {
+              if (typeof u === 'string') return u !== message.author.id;
+              return u.id !== message.author.id;
+            });
+            storage.write('config.json', runtimeConfig);
+          }
+        }
+      }
+      if (isNoPrefixUser) isCommand = true;
+    }
+
+    if (isCommand) {
+      const args = content.trim().split(/ +/);
+      const commandName = args.shift()?.toLowerCase();
+
+      if (commandName) {
+        // Special alias for automod prompt
+        if (commandName === 'automod') {
+          return safeReply(message, { content: 'use `/automod` to setup automod on server', flags: 0 }).catch(() => {});
+        }
+
+        const command = client.commands.get(commandName) || client.commands.get(client.aliases.get(commandName));
+        if (command) {
+          // Verify if channel is a vouch channel (commands prohibited in vouch channels)
+          const vouchData = storage.read('vouch.json');
+          const guildVouchChannels = vouchData[message.guild.id]?.channels || [];
+          if (guildVouchChannels.includes(message.channel.id)) {
+            const alertMsg = await message.channel.send({
+              content: `${message.author}`,
+              components: [cv2Error('Commands are not allowed in this channel. Please use slowmode to manage spam.')]
+            }).catch(() => { });
+            await safeDelete(message);
+            if (alertMsg) setTimeout(() => safeDelete(alertMsg), 5000);
+            return;
+          }
+
+          if (runtimeConfig.maintenance && !isDev) return;
+          if (runtimeConfig.disabledCommands?.includes(command.name)) return;
+          if (command.enabled === false) return;
+          if (command.devOnly && !isDev) return;
+
+          const blacklistData = storage.read('blacklist.json');
+          if (blacklistData.users?.includes(message.author.id)) return;
+
+          const cmdBlacklist = storage.read('cmdBlacklist.json');
+          if (cmdBlacklist[message.channel.id]?.includes(command.name)) return;
+
+          if (runtimeConfig.channelCommands?.[message.channel.id]?.disabled?.includes(command.name)) return;
+
+          if (command.userPermissions && !isDev) {
+            const missing = command.userPermissions.filter(p => !message.member.permissions.has(p));
+            if (missing.length > 0) {
+              return sendAutoDelete(message, { components: [cv2Error(`You need the following permission(s): \`${missing.join(', ')}\``)], flags: MessageFlags.IsComponentsV2 }, 5000);
+            }
+          }
+
+          const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
+          if (cooldownAmount > 0 && !isDev && !isOwner) {
+            const key = `${message.author.id}-${command.name}`;
+            const now = Date.now();
+            if (client.cooldowns.has(key)) {
+              const expiresAt = client.cooldowns.get(key);
+              if (now < expiresAt) {
+                const remaining = ((expiresAt - now) / 1000).toFixed(1);
+                return sendAutoDelete(message, { components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`))], flags: MessageFlags.IsComponentsV2 }, 5000);
+              }
+            }
+            client.cooldowns.set(key, now + cooldownAmount);
+            setTimeout(() => client.cooldowns.delete(key), cooldownAmount);
+          }
+
+          try {
+            await command.execute(client, message, args);
+            logger.cmd(message.author.tag, command.name);
+
+            // Async non-blocking analytics
+            setImmediate(() => {
+              try {
+                const analytics = storage.read('analytics.json');
+                if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0 };
+                analytics[command.name].uses = (analytics[command.name].uses || 0) + 1;
+                analytics[command.name].lastUsed = Date.now();
+                storage.write('analytics.json', analytics);
+              } catch {}
+            });
+          } catch (error) {
+            logger.error(`Command ${command.name} failed: ${error.message}`);
+            const errLogId = client.config.errorLogChannelId;
+            if (errLogId) {
+              const errLogCh = client.channels.cache.get(errLogId);
+              if (errLogCh) {
+                const logContainer = new ContainerBuilder()
+                  .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Error Log`))
+                  .addSeparatorComponents(new SeparatorBuilder())
+                  .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${message.author.tag} (${message.author.id})\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
+                safeSend(errLogCh, { components: [logContainer] }).catch(() => { });
+              }
+            }
+            await sendAutoDelete(message, { components: [cv2Error(`An error occurred: \`${error.message}\``)], flags: MessageFlags.IsComponentsV2 }, 5000).catch(() => { });
+          }
+          return; // Command completed in fast path!
+        }
+      }
+    }
+
+    // 3. NON-COMMAND CHAT PROCESSING PIPELINE
+
+    // Vouch Channel Messages
+    const vouchData = storage.read('vouch.json');
     const guildVouchChannels = vouchData[message.guild.id]?.channels || [];
     if (guildVouchChannels.includes(message.channel.id)) {
-      if (message.content.startsWith(prefix)) {
-        const alertMsg = await message.channel.send({
-          content: `${message.author}`,
-          components: [cv2Error('Commands are not allowed in this channel. Please use slowmode to manage spam.')]
-        }).catch(() => { });
-        await safeDelete(message);
-        if (alertMsg) setTimeout(() => safeDelete(alertMsg), 5000);
-        return;
-      }
       try {
-        const now = Date.now();
         if (message.content.match(/https?:\/\/[^\s]+/gi)) {
           const linkMsg = await message.channel.send({ content: `${message.author}`, components: [cv2Error('Links are not allowed in vouches.')] }).catch(() => { });
           await safeDelete(message);
@@ -228,12 +311,11 @@ module.exports = {
       return;
     }
 
-    // Run AutoMod
+    // Run AutoMod for Chat Messages
     await handleAutoMod(client, message);
 
-
-    // AFK Check (Auto-Remove)
-    const afkData = allData.afk;
+    // AFK Check (Auto-Remove on chat)
+    const afkData = storage.read('afk.json');
     const guildAfk = afkData[message.guild.id] || {};
     if (guildAfk[message.author.id]) {
       const { reason, timestamp } = guildAfk[message.author.id];
@@ -248,7 +330,6 @@ module.exports = {
     // AFK Mention Check
     if (message.mentions.users.size > 0) {
       const mentionedAfk = [];
-      const guildAfk = afkData[message.guild.id] || {};
       message.mentions.users.forEach(user => {
         if (guildAfk[user.id] && user.id !== message.author.id) {
           mentionedAfk.push({ user, data: guildAfk[user.id] });
@@ -269,6 +350,7 @@ module.exports = {
       }
     }
 
+    // Bot Mention Info
     if (!client._mentionRegex) client._mentionRegex = new RegExp(`<@!?${client.user.id}>`);
     if (client._mentionRegex.test(message.content)) {
       if (!client._mentionCooldowns) client._mentionCooldowns = new Map();
@@ -290,7 +372,7 @@ module.exports = {
       return safeReply(message, { components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => { });
     }
 
-
+    // VC Tour Stop Command
     if (message.content.toLowerCase() === 'stop') {
       if (!isDev) return;
       if (global.activeVCTours instanceof Set && global.activeVCTours.has(message.guild.id)) {
@@ -302,12 +384,13 @@ module.exports = {
 
     if (runtimeConfig.maintenance && !isDev) return;
 
+    // Alias Role Toggle (for chat messages triggering custom alias roles)
     if (runtimeConfig.aliasMode !== false) {
-      const aliasData = allData.aliases;
+      const aliasData = storage.read('aliases.json');
       const triggerMap = getGuildTriggerMap(aliasData, message.guild);
 
-      const content = message.content.toLowerCase().trim();
-      const parts = content.split(/\s+/);
+      const chatContent = message.content.toLowerCase().trim();
+      const parts = chatContent.split(/\s+/);
       const firstWord = parts[0];
 
       const aliasConfig = triggerMap.get(firstWord);
@@ -349,113 +432,5 @@ module.exports = {
         }
       }
     }
-
-    let isNoPrefixUser = false;
-    if (runtimeConfig.noPrefixUsers && Array.isArray(runtimeConfig.noPrefixUsers)) {
-      const entry = runtimeConfig.noPrefixUsers.find(u => {
-        if (typeof u === 'string') return u === message.author.id;
-        return u.id === message.author.id;
-      });
-      if (entry) {
-        if (typeof entry === 'string') { isNoPrefixUser = true; }
-        else if (entry.permanent) { isNoPrefixUser = true; }
-        else if (entry.expiresAt) {
-          if (Date.now() < entry.expiresAt) { isNoPrefixUser = true; }
-          else {
-            runtimeConfig.noPrefixUsers = runtimeConfig.noPrefixUsers.filter(u => {
-              if (typeof u === 'string') return u !== message.author.id;
-              return u.id !== message.author.id;
-            });
-            storage.write('config.json', runtimeConfig);
-          }
-        }
-      }
-    }
-    let usedPrefix = false;
-    let content = message.content;
-
-    if (message.content.startsWith(prefix)) {
-      usedPrefix = true;
-      content = message.content.slice(prefix.length);
-    } else if (!isNoPrefixUser) { return; }
-
-    const args = content.trim().split(/ +/);
-    const commandName = args.shift().toLowerCase();
-    if (!commandName) return;
-
-    if (commandName === 'automod') {
-      return safeReply(message, { content: 'use `/automod` to setup automod on server', flags: 0 }).catch(err => {
-        console.error('[DEBUG] Failed to reply to ?automod:', err);
-      });
-    }
-
-    const command = client.commands.get(commandName) || client.commands.get(client.aliases.get(commandName));
-    if (!command) return;
-
-    if (runtimeConfig.disabledCommands?.includes(command.name)) return;
-    if (command.enabled === false) return;
-
-    const blacklistData = allData.blacklist;
-    if (blacklistData.users?.includes(message.author.id)) return;
-
-    const cmdBlacklist = allData.cmdBlacklist;
-    if (cmdBlacklist[message.channel.id]?.includes(command.name)) return;
-
-
-
-
-    if (runtimeConfig.channelCommands?.[message.channel.id]?.disabled?.includes(command.name)) return;
-
-    if (command.userPermissions && !isDev) {
-      const missing = command.userPermissions.filter(p => !message.member.permissions.has(p));
-      if (missing.length > 0) {
-        return sendAutoDelete(message, { components: [cv2Error(`You need the following permission(s): \`${missing.join(', ')}\``)], flags: MessageFlags.IsComponentsV2 }, 5000);
-      }
-    }
-
-    if (command.devOnly && !isDev) return; // Silent ignore for dev commands as requested
-
-    const cooldownAmount = (command.cooldown !== undefined ? command.cooldown : (LIMITS.COOLDOWN_DEFAULT || 3)) * 1000;
-
-
-    if (cooldownAmount > 0 && !isDev && !isOwner) {
-      const key = `${message.author.id}-${command.name}`;
-      const now = Date.now();
-      if (client.cooldowns.has(key)) {
-        const expiresAt = client.cooldowns.get(key);
-        if (now < expiresAt) {
-          const remaining = ((expiresAt - now) / 1000).toFixed(1);
-          return sendAutoDelete(message, { components: [new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} Cooldown active. Wait **${remaining}s**.`))], flags: MessageFlags.IsComponentsV2 }, 5000);
-        }
-      }
-      client.cooldowns.set(key, now + cooldownAmount);
-      setTimeout(() => client.cooldowns.delete(key), cooldownAmount);
-    }
-
-    try {
-      await command.execute(client, message, args);
-
-      logger.cmd(message.author.tag, command.name);
-    } catch (error) {
-      logger.error(`Command ${command.name} failed: ${error.message}`);
-      const errLogId = client.config.errorLogChannelId;
-      if (errLogId) {
-        const errLogCh = client.channels.cache.get(errLogId);
-        if (errLogCh) {
-          const logContainer = new ContainerBuilder()
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Error Log`))
-            .addSeparatorComponents(new SeparatorBuilder())
-            .addTextDisplayComponents(new TextDisplayBuilder().setContent(`**Command Failed:** \`${command.name}\`\n\u25B8 **User:** ${message.author.tag} (${message.author.id})\n\u25B8 **Error:** \`\`\`\n${error.message}\n\`\`\``));
-          safeSend(errLogCh, { components: [logContainer] }).catch(() => { });
-        }
-      }
-      await sendAutoDelete(message, { components: [cv2Error(`An error occurred: \`${error.message}\``)], flags: MessageFlags.IsComponentsV2 }, 5000).catch(() => { });
-    }
-
-    const analytics = storage.read('analytics.json');
-    if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0 };
-    analytics[command.name].uses = (analytics[command.name].uses || 0) + 1;
-    analytics[command.name].lastUsed = Date.now();
-    storage.write('analytics.json', analytics);
   }
-}
+};

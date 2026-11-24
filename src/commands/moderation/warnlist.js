@@ -1,7 +1,7 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SectionBuilder, ThumbnailBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
+const { cv2Error, cv2Expire, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'warnlist',
@@ -80,7 +80,12 @@ module.exports = {
         if (i.customId === 'wl_last') page = pages.length - 1;
         await i.update({ components: [buildContainer()] });
       });
-      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
+      coll.on('end', (collected) => {
+        if (collected.size === 0) {
+          return safeDelete(sent);
+        }
+        sent.edit({ components: [cv2Expire()] }).catch(() => {});
+      });
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }

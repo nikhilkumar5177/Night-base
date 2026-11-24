@@ -1,7 +1,7 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { EMOJI_INFO, EMOJI_WARN, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
-const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
+const { cv2Error, cv2Expire, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'securitystatus',
@@ -61,7 +61,12 @@ module.exports = {
         await i.update({ components: [buildContainer()] });
       });
 
-      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
+      coll.on('end', (collected) => {
+        if (collected.size === 0) {
+          return safeDelete(sent);
+        }
+        sent.edit({ components: [cv2Expire()] }).catch(() => {});
+      });
 
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});

@@ -1,7 +1,7 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_ARROW } = require('../../utils/constants');
 const storage = require('../../utils/storageManager');
-const { cv2Error } = require('../../utils/messageHelper');
+const { cv2Error, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'snipeclear',
@@ -49,9 +49,7 @@ module.exports = {
         });
         coll.on('end', c => {
           if (c.size === 0) {
-            const timeoutContainer = new ContainerBuilder()
-              .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Timed out.**`));
-            sent.edit({ components: [timeoutContainer] }).catch(() => {});
+            safeDelete(sent);
           }
         });
         return;

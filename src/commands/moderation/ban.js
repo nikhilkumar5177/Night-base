@@ -115,8 +115,7 @@ module.exports = {
 
       coll.on('end', (collected) => {
         if (collected.size === 0) {
-          sent.edit({ components: [cv2Expire()] }).catch(() => {});
-          setTimeout(() => safeDelete(sent), 5000);
+          safeDelete(sent);
         }
       });
     } catch (error) {

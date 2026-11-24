@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, SlashCommandBuilder } = require('discord.js');
 const { EMOJI_DOT, EMOJI_ARROW, FOOTER_TEXT } = require('../../utils/constants');
-const { cv2Error, cv2Expire, safeReply, safeUpdate, sanitizeContent } = require('../../utils/messageHelper');
+const { cv2Error, cv2Expire, safeReply, safeUpdate, sanitizeContent, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'serverinfo',
@@ -91,7 +91,12 @@ module.exports = {
         }
       });
 
-      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
+      coll.on('end', (collected) => {
+        if (collected.size === 0) {
+          return safeDelete(sent);
+        }
+        sent.edit({ components: [cv2Expire()] }).catch(() => {});
+      });
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
     }

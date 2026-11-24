@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
 const { EMOJI_ARROW, EMOJI_DOT, FOOTER_TEXT } = require('../../utils/constants');
-const { sendUsage, cv2Error, cv2Expire } = require('../../utils/messageHelper');
+const { sendUsage, cv2Error, cv2Expire, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'roleinfo',
@@ -69,7 +69,12 @@ module.exports = {
         if (i.customId === 'ri_back') await i.update({ components: [buildMainContainer()] });
       });
 
-      coll.on('end', () => sent.edit({ components: [cv2Expire()] }).catch(() => {}));
+      coll.on('end', (collected) => {
+        if (collected.size === 0) {
+          return safeDelete(sent);
+        }
+        sent.edit({ components: [cv2Expire()] }).catch(() => {});
+      });
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
     }

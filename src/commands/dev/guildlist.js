@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { cv2Error } = require('../../utils/messageHelper');
+const { cv2Error, safeDelete } = require('../../utils/messageHelper');
 const { EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
@@ -57,7 +57,12 @@ module.exports = {
         await i.update({ components: [buildContainer(page), buildRow(page)] });
       });
 
-      collector.on('end', () => sent.edit({ components: [] }).catch(() => {}));
+      collector.on('end', (collected) => {
+        if (collected.size === 0) {
+          return safeDelete(sent);
+        }
+        sent.edit({ components: [] }).catch(() => {});
+      });
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 });
     }

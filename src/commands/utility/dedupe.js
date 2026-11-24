@@ -1,6 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, PermissionsBitField, MessageFlags } = require('discord.js');
 const { EMOJI_ERROR, EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
-const { cv2Error, cv2Expire } = require('../../utils/messageHelper');
+const { cv2Error, cv2Expire, safeDelete } = require('../../utils/messageHelper');
 
 module.exports = {
   name: 'dedupe',
@@ -113,6 +113,9 @@ module.exports = {
       });
 
       collector.on('end', (collected, reason) => {
+        if (collected.size === 0) {
+          return safeDelete(sentMsg);
+        }
         if (reason === 'time') {
           sentMsg.edit({ components: [cv2Expire()] }).catch(() => {});
         }

@@ -10,7 +10,7 @@ const {
 } = require('discord.js');
 const { exec } = require('child_process');
 const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
-const { cv2Error } = require('../../utils/messageHelper');
+const { cv2Error, safeDelete } = require('../../utils/messageHelper');
 const storage = require('../../utils/storageManager');
 
 module.exports = {
@@ -104,6 +104,12 @@ module.exports = {
           await storage.stopPeriodicFlush();
           process.exit(0);
         }, 1000);
+      });
+
+      collector.on('end', (collected) => {
+        if (collected.size === 0) {
+          safeDelete(msg);
+        }
       });
     });
   }

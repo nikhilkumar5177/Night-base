@@ -6,9 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "obfuscate": "node obfuscate.js",
-    "package": "node scripts/package.js",
-    "bundle": "node scripts/package.js"
+    "obfuscate": "node obfuscate.js"
   },
   "keywords": [],
   "author": "",

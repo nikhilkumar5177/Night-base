@@ -12,7 +12,6 @@ logs/
 # Ignore the storage folder entirely
 storage/
 dist/
-bot-deploy.zip
 
 # Ignore Workspace and IDE files
 *.code-workspace

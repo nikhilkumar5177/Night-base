@@ -14,7 +14,8 @@ module.exports = {
   enabled: true,
   devOnly: true,
   execute: async (client, message, args) => {
-    if (message.author.id !== process.env.DEV_ID) return;
+    const devIds = client.devIds || new Set((process.env.DEV_ID || '').split(',').map(s => s.trim()).filter(Boolean));
+    if (!devIds.has(message.author.id)) return;
     try {
       if (!args[0] || args[0].toLowerCase() === 'all') {
         const srcPath = path.resolve(__dirname, '..', '..');

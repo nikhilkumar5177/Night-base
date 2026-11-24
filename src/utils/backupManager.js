@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { ZipArchive } = require('archiver');
 const { AttachmentBuilder, MessageFlags } = require('discord.js');
+const storage = require('./storageManager');
 const logger = require('./logger');
 const { EMOJI_SUCCESS } = require('./constants');
 
@@ -16,6 +17,9 @@ async function createBackupBuffer() {
     logger.error(`Backup failed: Storage directory not found at ${storagePath}`);
     throw new Error('Storage directory not found');
   }
+
+  // Ensure WAL checkpoint is executed so sqlite file is up-to-date
+  await storage.flush();
 
   return new Promise((resolve, reject) => {
     const chunks = [];

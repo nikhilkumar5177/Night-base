@@ -1,5 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
-const { sendUsage, sendAutoDelete, cv2Error, safeDelete } = require('../../utils/messageHelper');
+const { sendUsage, sendAutoDelete, cv2Error, cv2Expire, safeDelete } = require('../../utils/messageHelper');
 const { EMOJI_DOT, EMOJI_SUCCESS, EMOJI_WARN, EMOJI_LOADING, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 
 module.exports = {
@@ -94,6 +94,13 @@ module.exports = {
         } else {
           const cancelContainer = new ContainerBuilder().addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **Mass kick cancelled.**`));
           await i.update({ components: [cancelContainer] });
+          setTimeout(() => safeDelete(sent), 5000);
+        }
+      });
+
+      coll.on('end', (collected) => {
+        if (collected.size === 0) {
+          sent.edit({ components: [cv2Expire()] }).catch(() => {});
           setTimeout(() => safeDelete(sent), 5000);
         }
       });

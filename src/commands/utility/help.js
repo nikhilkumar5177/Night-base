@@ -56,7 +56,8 @@ module.exports = {
 
       const categories = {};
       client.commands.forEach(cmd => {
-        if (cmd.devOnly && user.id !== process.env.DEV_ID) return;
+        const isDev = client.devIds ? client.devIds.has(user.id) : (process.env.DEV_ID || '').split(',').map(s => s.trim()).includes(user.id);
+        if (cmd.devOnly && !isDev) return;
         const cat = cmd.category?.toLowerCase() || 'uncategorized';
         if (!categories[cat]) categories[cat] = [];
         categories[cat].push(cmd);

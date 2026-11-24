@@ -1,5 +1,6 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const storage = require('../../utils/storageManager');
+const { getConfig, saveConfig } = require('../../automod/database');
 const { EMOJI_SUCCESS, EMOJI_WARN, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
 
@@ -53,6 +54,13 @@ module.exports = {
         if (customId === 'an_toggle') {
           securityConfig.enabled = !securityConfig.enabled;
           storage.write('security.json', securityConfig);
+          if (guild) {
+            const autoModCfg = await getConfig(guild.id);
+            if (!autoModCfg.modules.security) autoModCfg.modules.security = {};
+            autoModCfg.modules.security.enabled = securityConfig.enabled;
+            autoModCfg.modules.security.antiNuke = securityConfig.enabled;
+            await saveConfig(guild.id, autoModCfg);
+          }
           return safeUpdate(target, { components: [buildDashboard(client, securityConfig)] });
         }
 
@@ -78,6 +86,13 @@ module.exports = {
           securityConfig.nukeThreshold = threshold;
           securityConfig.nukeWindow = window;
           storage.write('security.json', securityConfig);
+          if (guild) {
+            const autoModCfg = await getConfig(guild.id);
+            if (!autoModCfg.modules.security) autoModCfg.modules.security = {};
+            autoModCfg.modules.security.nukeThreshold = threshold;
+            autoModCfg.modules.security.nukeWindow = window;
+            await saveConfig(guild.id, autoModCfg);
+          }
           return safeUpdate(target, { components: [buildDashboard(client, securityConfig)] });
         }
       }

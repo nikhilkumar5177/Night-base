@@ -36,7 +36,6 @@ module.exports = {
         coll.on('collect', async i => {
           if (i.customId === 'sc_yes') {
             client.snipeCache.clear();
-            storage.write('snipe.json', {});
             const doneContainer = new ContainerBuilder()
               .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Snipe Cache`))
               .addSeparatorComponents(new SeparatorBuilder())
@@ -60,9 +59,6 @@ module.exports = {
 
       const count = client.snipeCache.get(message.channel.id)?.length || 0;
       client.snipeCache.delete(message.channel.id);
-      const snipeData = storage.read('snipe.json');
-      delete snipeData[message.channel.id];
-      storage.write('snipe.json', snipeData);
 
       const container = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Snipe Cache Cleared`))

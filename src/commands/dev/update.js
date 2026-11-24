@@ -31,7 +31,15 @@ module.exports = {
     const devIds = process.env.DEV_ID ? process.env.DEV_ID.split(',').map(id => id.trim()) : [];
     if (!devIds.includes(user.id)) return; // Silent ignore as requested
 
-    const commitId = isInteraction ? message.options.getString('commit') : args[0];
+    const commitId = (isInteraction ? message.options.getString('commit') : args[0])?.trim();
+    if (commitId && !/^[a-zA-Z0-9_./-]+$/.test(commitId)) {
+      return message.reply({
+        components: [cv2Error('Invalid commit ID or branch name format. Use only alphanumeric characters, dots, dashes, and slashes.')],
+        flags: MessageFlags.IsComponentsV2,
+        ephemeral: true
+      });
+    }
+
     const targetLabel = commitId ? `Commit: \`${commitId}\`` : 'Latest Origin';
 
     const loadContainer = new ContainerBuilder()

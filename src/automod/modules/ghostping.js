@@ -5,10 +5,14 @@ const { EMOJI_WARN, EMOJI_ARROW } = require('../../utils/constants');
  * Handle ghost ping detection (messageDelete).
  * @param {object} client 
  * @param {object} message 
- * @param {object} config 
+ * @param {object} config - automod config or content module config
+ * @param {object} [rootConfig] - optional root automod config
  */
-async function handleGhostPing(client, message, config) {
-  if (!config.enabled || !config.ghostPing) return;
+async function handleGhostPing(client, message, config, rootConfig) {
+  const contentConfig = config.modules ? config.modules.content : config;
+  const root = rootConfig || (config.modules ? config : null);
+  
+  if (!contentConfig?.enabled || !contentConfig?.ghostPing) return;
   if (!message.guild || !message.author || message.author.bot) return;
 
   const mentions = message.mentions.users.filter(u => u.id !== message.author.id);
@@ -24,8 +28,8 @@ async function handleGhostPing(client, message, config) {
       `**Content:** ${message.content || '*[Embed/Attachment only]*'}`
     ));
 
-  const logChannelId = config.logChannel;
-  const targetChannel = message.guild.channels.cache.get(logChannelId) || message.channel;
+  const logChannelId = root?.logChannel || contentConfig.logChannel;
+  const targetChannel = (logChannelId ? message.guild.channels.cache.get(logChannelId) : null) || message.channel;
 
   if (targetChannel) {
     await targetChannel.send({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});

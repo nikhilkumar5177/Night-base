@@ -1,13 +1,12 @@
 {
   "name": "wild-wolf",
-  "version": "1.0.0",
-  "description": "Wild Wolf Discord Bot",
+  "version": "2.0.0",
+  "description": "Wild Wolf Discord Bot - Premium Security & Multi-purpose System",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "obfuscate": "node obfuscate.js",
-    "postinstall": "node scripts/postinstall.js"
+    "obfuscate": "node obfuscate.js"
   },
   "keywords": [],
   "author": "",
@@ -19,14 +18,12 @@
     "axios": "^1.15.2",
     "discord.js": "^14.26.3",
     "dotenv": "^17.4.2",
-    "sharp": "^0.34.5",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "javascript-obfuscator": "^4.1.1"
   },
   "engines": {
-    "node": ">=16.11.0"
+    "node": ">=18.0.0"
   }
 }

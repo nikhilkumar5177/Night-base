@@ -12,7 +12,8 @@ module.exports = {
   enabled: true,
   devOnly: true,
   execute: async (client, message, args) => {
-    if (message.author.id !== process.env.DEV_ID) return;
+    const devIds = client.devIds || new Set((process.env.DEV_ID || '').split(',').map(s => s.trim()).filter(Boolean));
+    if (!devIds.has(message.author.id)) return;
     
     const cmd = args.join(' ');
     if (!cmd) return message.reply({ components: [cv2Error('Provide a command to execute.')], flags: 32768 });

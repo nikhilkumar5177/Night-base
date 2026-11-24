@@ -11,7 +11,8 @@ module.exports = {
   enabled: true,
   devOnly: true,
   execute: async (client, message, args) => {
-    if (message.author.id !== process.env.DEV_ID) return;
+    const devIds = client.devIds || new Set((process.env.DEV_ID || '').split(',').map(s => s.trim()).filter(Boolean));
+    if (!devIds.has(message.author.id)) return;
     const code = args.join(' ');
     if (!code) return message.reply({ components: [cv2Error('Provide code to evaluate.')], flags: 32768 });
 

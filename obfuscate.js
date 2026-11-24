@@ -66,7 +66,10 @@ const storageSrc = path.join(__dirname, 'storage');
 if (fs.existsSync(storageSrc)) {
   const files = fs.readdirSync(storageSrc);
   for (const file of files) {
-    fs.copyFileSync(path.join(storageSrc, file), path.join(storageDir, file));
+    const srcFile = path.join(storageSrc, file);
+    if (fs.statSync(srcFile).isFile()) {
+      fs.copyFileSync(srcFile, path.join(storageDir, file));
+    }
   }
 }
 

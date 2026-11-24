@@ -22,7 +22,7 @@ module.exports = {
     const isVouchChannel = guildVouchChannels.includes(message.channel.id);
 
     if (!isVouchChannel) {
-      await handleGhostPing(client, message, config.modules.content);
+      await handleGhostPing(client, message, config.modules.content, config);
     }
 
     if (message.author && message.author.bot) return;
@@ -46,9 +46,5 @@ module.exports = {
     if (snipes.length > LIMITS.SNIPE_PER_CHANNEL) {
       snipes.length = LIMITS.SNIPE_PER_CHANNEL;
     }
-
-    const snipeStorage = storage.read('snipe.json');
-    snipeStorage[channelId] = snipes;
-    storage.write('snipe.json', snipeStorage);
   }
 };

@@ -16,6 +16,7 @@ module.exports = {
   devOnly: true,
   execute: async (client, message, args) => {
     try {
+      const prefix = client.config.prefix || '?';
       // Handle stop command
       if (args[0]?.toLowerCase() === 'stop') {
         if (!global.activeVCTours.has(message.guild.id)) {
@@ -32,7 +33,7 @@ module.exports = {
       // Check if already running
       if (global.activeVCTours.has(message.guild.id)) {
         const warnContainer = new ContainerBuilder()
-          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **A VC tour is already running.** Use \`!vctour stop\` to end it.`));
+          .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **A VC tour is already running.** Use \`${prefix}vctour stop\` to end it.`));
         return message.reply({ components: [warnContainer], flags: 32768 });
       }
 
@@ -64,7 +65,7 @@ module.exports = {
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(
           `${EMOJI_LOADING} **Starting 2-minute VC tour loop...**\n` +
           `${EMOJI_DOT} **Target:** ${target.user.tag}\n` +
-          `${EMOJI_DOT} **Channels:** ${otherChannels.length}\n\nUse \`!vctour stop\` to end it early.`
+          `${EMOJI_DOT} **Channels:** ${otherChannels.length}\n\nUse \`${prefix}vctour stop\` to end it early.`
         ));
 
       const statusMsg = await message.reply({ components: [startContainer], flags: 32768 }).catch(() => {});
@@ -95,8 +96,8 @@ module.exports = {
           statusMsg.edit({ components: [updateContainer] }).catch(() => {});
         }
 
-        // Minimal delay to prevent instant API exhaustion while maintaining "non-stop" feel
-        await new Promise(r => setTimeout(r, 300)); 
+        // 2000ms delay to prevent Discord REST 429 rate limit exhaustion
+        await new Promise(r => setTimeout(r, 2000)); 
       }
 
       global.activeVCTours.delete(message.guild.id);

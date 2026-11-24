@@ -173,7 +173,7 @@ module.exports = {
 
 
     const runtimeConfig = allData.config;
-    const prefix = runtimeConfig.prefix || client.config.prefix;
+    const prefix = runtimeConfig.guildPrefixes?.[message.guild.id] || runtimeConfig.prefix || client.config.prefix;
     const isDev = client.devIds ? client.devIds.has(message.author.id) : (process.env.DEV_ID || '').split(',').includes(message.author.id);
     const isOwner = message.author.id === message.guild.ownerId;
 
@@ -452,12 +452,10 @@ module.exports = {
       await sendAutoDelete(message, { components: [cv2Error(`An error occurred: \`${error.message}\``)], flags: MessageFlags.IsComponentsV2 }, 5000).catch(() => { });
     }
 
-    const analytics = allData.analytics;
-    if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0, users: {} };
-    analytics[command.name].uses++;
+    const analytics = storage.read('analytics.json');
+    if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0 };
+    analytics[command.name].uses = (analytics[command.name].uses || 0) + 1;
     analytics[command.name].lastUsed = Date.now();
-    if (!analytics[command.name].users[message.author.id]) analytics[command.name].users[message.author.id] = 0;
-    analytics[command.name].users[message.author.id]++;
     storage.write('analytics.json', analytics);
   }
 }

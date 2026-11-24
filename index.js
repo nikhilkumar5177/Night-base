@@ -1,6 +1,6 @@
 const [major, minor] = process.versions.node.split('.').map(Number);
-if (major < 16 || (major === 16 && minor < 11)) {
-  console.error(`❌ Error: This bot requires Node.js 16.11.0 or higher. Current version: ${process.versions.node}`);
+if (major < 18) {
+  console.error(`❌ Error: This bot requires Node.js 18.0.0 or higher. Current version: ${process.versions.node}`);
   process.exit(1);
 }
 

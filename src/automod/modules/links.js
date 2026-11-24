@@ -92,8 +92,8 @@ async function checkLinks(message, config) {
         return 'Unauthorized Domain/Link';
     }
 
-    // 7. General Link Block
-    if (config.antiInvite || config.antiPhishing) {
+    // 7. General Link Block (only if blockAllLinks is explicitly enabled)
+    if (config.blockAllLinks) {
        return 'Forbidden Link';
     }
   }

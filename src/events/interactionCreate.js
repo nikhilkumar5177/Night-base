@@ -52,11 +52,9 @@ module.exports = {
         await command.execute(client, interaction, []);
         logger.cmd(interaction.user.tag, `[Slash] ${command.name}`);
         const analytics = storage.read('analytics.json');
-        if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0, users: {} };
-        analytics[command.name].uses++;
+        if (!analytics[command.name]) analytics[command.name] = { uses: 0, lastUsed: 0 };
+        analytics[command.name].uses = (analytics[command.name].uses || 0) + 1;
         analytics[command.name].lastUsed = Date.now();
-        if (!analytics[command.name].users[interaction.user.id]) analytics[command.name].users[interaction.user.id] = 0;
-        analytics[command.name].users[interaction.user.id]++;
         storage.write('analytics.json', analytics);
       } catch (error) {
         logger.error(`Slash Command ${command.name} failed: ${error.message}`);

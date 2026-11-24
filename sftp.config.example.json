@@ -1,0 +1,21 @@
+{
+  "name": "Production Bot Server",
+  "host": "your-server-ip-or-domain",
+  "protocol": "sftp",
+  "port": 22,
+  "username": "your-sftp-username",
+  "password": "your-sftp-password",
+  "remotePath": "/home/container",
+  "uploadOnSave": false,
+  "useTempFile": false,
+  "openSsh": false,
+  "ignore": [
+    "**/.git/**",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/.vscode/**",
+    "**/.DS_Store",
+    "**/storage/database.sqlite*",
+    "**/bot-deploy.zip"
+  ]
+}

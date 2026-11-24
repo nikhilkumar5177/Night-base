@@ -25,7 +25,7 @@ module.exports = {
 
       const validRoles = [];
       const invalidRoles = [];
-      const botHighest = member.guild.members.me.roles.highest.position;
+      const botHighest = member.guild.members.me?.roles?.highest?.position ?? 0;
 
       for (const roleId of roleIds) {
         const role = member.guild.roles.cache.get(roleId);

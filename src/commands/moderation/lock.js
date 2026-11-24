@@ -48,7 +48,7 @@ module.exports = {
 
       for (const channel of channelList) {
         await channel.permissionOverwrites.edit(message.guild.roles.everyone, { SendMessages: false }).catch(() => { });
-        await new Promise(r => setTimeout(r, 200));
+        if (channelList.length > 1) await new Promise(r => setTimeout(r, 150));
       }
 
       await safeDelete(load);

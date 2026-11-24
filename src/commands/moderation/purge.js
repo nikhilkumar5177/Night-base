@@ -50,12 +50,16 @@ module.exports = {
       }
 
       const twoWeeks = Date.now() - 14 * 24 * 60 * 60 * 1000;
-      const deletable = filtered.filter(m => m.createdTimestamp > twoWeeks && m.id !== progressMsg.id);
+      const deletable = filtered.filter(m => m.createdTimestamp > twoWeeks && m.id !== progressMsg?.id);
 
       if (deletable.size === 0) {
         const warnContainer = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No deletable messages found.**\nMessages older than 14 days cannot be bulk deleted.`));
-        return progressMsg.edit({ components: [warnContainer] });
+        if (progressMsg) {
+          await progressMsg.edit({ components: [warnContainer] }).catch(() => {});
+          setTimeout(() => safeDelete(progressMsg), 5000);
+        }
+        return;
       }
 
       const deleted = await message.channel.bulkDelete(deletable, true);

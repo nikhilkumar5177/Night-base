@@ -60,7 +60,7 @@ module.exports = {
         components.unshift(toggleRow);
       }
 
-      const sent = await message.reply({ components: [buildContainer(globalAv, 'Global Avatar'), ...components], flags: 32768 }).catch(() => {});
+      const sent = await message.reply({ components: [buildContainer(globalAv, 'Global Avatar'), ...components], flags: 32768, fetchReply: !message.author }).catch(() => {});
       if (!sent || !hasServerAv) return;
 
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (message.author?.id || message.user.id), time: 120000 });

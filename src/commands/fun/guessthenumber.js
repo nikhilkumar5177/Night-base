@@ -106,8 +106,7 @@ module.exports = {
         if (m.content.toLowerCase() === `${prefix}end`) {
           const isStarter = m.author.id === starter.id;
           const isOwner = m.guild?.ownerId === m.author.id;
-          const devIds = (process.env.DEV_ID || '').split(',');
-          const isDev = devIds.includes(m.author.id);
+          const isDev = client.devIds ? client.devIds.has(m.author.id) : (process.env.DEV_ID || '').split(',').map(s => s.trim()).includes(m.author.id);
 
           if (isStarter || isOwner || isDev) {
             collector.stop('cancelled');

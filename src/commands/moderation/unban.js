@@ -67,7 +67,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-      await statusMsg.edit({ components: [finalContainer] }).catch(() => {});
+      if (statusMsg) await statusMsg.edit({ components: [finalContainer] }).catch(() => {});
     } catch (error) {
       message.reply({ components: [cv2Error(error.message)], flags: 32768 }).catch(() => {});
     }

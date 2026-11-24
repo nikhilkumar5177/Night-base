@@ -15,7 +15,8 @@ module.exports = {
       if (!message.member.permissions.has('ModerateMembers')) {
         return message.reply({ components: [cv2Error('You need **ModerateMembers** permission.')], flags: 32768 });
       }
-      const target = message.mentions.users.first() || client.users.cache.get(args[0]);
+      const { resolveUser } = require('../../utils/resolver');
+      const target = await resolveUser(client, args[0]);
       if (!target) return sendUsage(message, module.exports);
 
       const content = args.slice(1).join(' ');

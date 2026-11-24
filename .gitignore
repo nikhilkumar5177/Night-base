@@ -11,6 +11,7 @@ logs/
 
 # Ignore the storage folder entirely
 storage/
+dist/
 
 # Ignore Workspace and IDE files
 *.code-workspace

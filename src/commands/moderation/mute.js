@@ -68,12 +68,7 @@ module.exports = {
       durationMs = Math.min(durationMs, 28 * 24 * 60 * 60 * 1000);
       const reason = args.slice(reasonIndex).join(' ') || 'No reason provided';
 
-      const loadContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Applying timeout...**`));
-      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
-
       await target.timeout(durationMs, reason);
-      await new Promise(r => setTimeout(r, 400));
 
       const container = new ContainerBuilder()
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`Wild Wolf ${EMOJI_ARROW} Timeout Applied`))
@@ -95,7 +90,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-      await sent.edit({ components: [container] }).catch(() => {});
+      await message.reply({ components: [container], flags: 32768 }).catch(() => {});
 
       // DM notice — stays as plain content (V2 not supported in DMs)
       target.send({ content: `\u26A0\uFE0F **You have been timed out in ${message.guild.name}**\n\u2022 Duration: \`${durationLabel}\`\n\u2022 Reason: ${reason}\n\u2022 Expires: <t:${Math.floor((Date.now() + durationMs) / 1000)}:R>` }).catch(() => { });

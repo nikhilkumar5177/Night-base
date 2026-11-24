@@ -49,6 +49,13 @@ module.exports = {
         const role = resolveRole(message.guild, roleInput);
         if (!role) return message.reply({ components: [cv2Error('Role not found.')], flags: 32768 });
 
+        if (role.position >= message.guild.members.me.roles.highest.position) {
+          return message.reply({ components: [cv2Error(`I cannot manage **${role.name}** because it is equal to or higher than my highest role.`)], flags: 32768 });
+        }
+        if (role.managed) {
+          return message.reply({ components: [cv2Error(`**${role.name}** is managed by an integration or bot and cannot be assigned manually.`)], flags: 32768 });
+        }
+
         if (voiceData[guildId].includes(role.id)) {
           return message.reply({ components: [cv2Error('That role is already a voice role.')], flags: 32768 });
         }

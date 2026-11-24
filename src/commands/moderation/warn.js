@@ -56,10 +56,6 @@ module.exports = {
         }
       }
 
-      const loadContainer = new ContainerBuilder()
-        .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_LOADING} **Issuing warning...**`));
-      const sent = await message.reply({ components: [loadContainer], flags: 32768 }).catch(() => {});
-
       const reason = args.slice(1).join(' ') || 'No reason provided';
       const warns = storage.read('warns.json');
       if (!warns[targetUser.id]) warns[targetUser.id] = [];
@@ -67,8 +63,6 @@ module.exports = {
       warns[targetUser.id].push({ caseId, moderator: message.author.id, reason, guildId: message.guild.id, timestamp: Date.now() });
       if (warns[targetUser.id].length > 50) warns[targetUser.id] = warns[targetUser.id].slice(-50);
       storage.write('warns.json', warns);
-
-      await new Promise(r => setTimeout(r, 400));
 
       const totalWarns = warns[targetUser.id].length;
       const warnBar = totalWarns >= 10 ? '\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588' : '\u2588'.repeat(Math.min(totalWarns, 10)) + '\u2591'.repeat(Math.max(0, 10 - totalWarns));
@@ -94,7 +88,7 @@ module.exports = {
         .addSeparatorComponents(new SeparatorBuilder())
         .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${FOOTER_TEXT}`));
 
-      await sent.edit({ components: [container] }).catch(() => {});
+      await message.reply({ components: [container], flags: 32768 }).catch(() => {});
 
       // DM notice — plain content (V2 not supported in DMs)
       if (targetMember) {

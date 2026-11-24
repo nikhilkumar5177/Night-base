@@ -7,6 +7,7 @@ module.exports = {
   name: 'channelDelete',
   once: false,
   execute: async (client, channel) => {
+    if (!channel || !channel.guild) return;
     const config = await getConfig(channel.guild.id);
     const storage = require('../utils/storageManager');
     

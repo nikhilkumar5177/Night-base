@@ -204,7 +204,7 @@ module.exports = {
           injectComponents(container);
         }
 
-        return { components: [container], flags: MessageFlags.IsComponentsV2 };
+        return { components: [container], flags: MessageFlags.IsComponentsV2, fetchReply: !message.author };
       };
 
       const sent = await message.reply(render()).catch(() => null);

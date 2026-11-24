@@ -16,13 +16,15 @@ module.exports = {
 
         if (!oldState.channelId && newState.channelId) {
           try {
-            await newState.member.roles.add(role);
+            const member = newState.member || await newState.guild.members.fetch(newState.id).catch(() => null);
+            if (member) await member.roles.add(role);
           } catch {}
         }
 
         if (oldState.channelId && !newState.channelId) {
           try {
-            await oldState.member.roles.remove(role);
+            const member = oldState.member || await oldState.guild.members.fetch(oldState.id).catch(() => null);
+            if (member) await member.roles.remove(role);
           } catch {}
         }
       }

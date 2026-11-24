@@ -107,7 +107,7 @@ module.exports = {
         return container;
       };
 
-      const sent = await message.reply({ components: [buildProfileContainer()], flags: MessageFlags.IsComponentsV2 }).catch(() => {});
+      const sent = await message.reply({ components: [buildProfileContainer()], flags: MessageFlags.IsComponentsV2, fetchReply: !message.author }).catch(() => {});
       if (!sent) return;
 
       const coll = sent.createMessageComponentCollector({ filter: i => i.user.id === (message.author?.id || message.user.id), time: 120000 });

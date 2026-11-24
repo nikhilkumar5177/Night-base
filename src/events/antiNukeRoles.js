@@ -7,6 +7,7 @@ module.exports = {
   name: 'roleDelete',
   once: false,
   execute: async (client, role) => {
+    if (!role || !role.guild) return;
     const config = await getConfig(role.guild.id);
     const storage = require('../utils/storageManager');
 

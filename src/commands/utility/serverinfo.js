@@ -16,7 +16,7 @@ module.exports = {
   execute: async (client, message) => {
     try {
       const g = message.guild;
-      await g.members.fetch().catch(() => {});
+      if (g.memberCount <= 500) await g.members.fetch().catch(() => {});
       const online = g.members.cache.filter(m => m.presence?.status === 'online').size;
       const idle = g.members.cache.filter(m => m.presence?.status === 'idle').size;
       const dnd = g.members.cache.filter(m => m.presence?.status === 'dnd').size;

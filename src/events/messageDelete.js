@@ -39,7 +39,7 @@ module.exports = {
       authorId: message.author ? message.author.id : 'Unknown',
       authorTag: message.author ? message.author.tag : 'Unknown',
       content: message.content || '',
-      attachments: message.attachments.map(a => a.url),
+      attachments: message.attachments ? message.attachments.map(a => a.url) : [],
       timestamp: Date.now()
     });
 

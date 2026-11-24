@@ -31,8 +31,7 @@ module.exports = {
       const isStarter = user.id === game.starterId;
       const isOwner = message.guild?.ownerId === user.id;
       const isAdmin = message.member?.permissions?.has(PermissionFlagsBits.Administrator) || false;
-      const devIds = (process.env.DEV_ID || '').split(',');
-      const isDev = devIds.includes(user.id);
+      const isDev = client.devIds ? client.devIds.has(user.id) : (process.env.DEV_ID || '').split(',').map(s => s.trim()).includes(user.id);
 
       if (isStarter || isOwner || isAdmin || isDev) {
         game.collector.stop('cancelled');

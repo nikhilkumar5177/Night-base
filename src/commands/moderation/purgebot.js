@@ -28,7 +28,7 @@ module.exports = {
       await safeDelete(message);
 
       let fetched = await message.channel.messages.fetch({ limit: 100 });
-      let filtered = fetched.filter(m => m.author.bot && m.id !== progressMsg.id);
+      let filtered = fetched.filter(m => m.author.bot && m.id !== progressMsg?.id);
 
       const twoWeeks = Date.now() - 14 * 24 * 60 * 60 * 1000;
       const deletable = filtered.filter(m => m.createdTimestamp > twoWeeks).first(count);
@@ -36,7 +36,11 @@ module.exports = {
       if (deletable.length === 0) {
         const warnContainer = new ContainerBuilder()
           .addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_WARN} **No bot messages found.**`));
-        return progressMsg.edit({ components: [warnContainer] }).catch(() => {});
+        if (progressMsg) {
+          await progressMsg.edit({ components: [warnContainer] }).catch(() => {});
+          setTimeout(() => safeDelete(progressMsg), 5000);
+        }
+        return;
       }
 
       const deleted = await message.channel.bulkDelete(deletable, true);

@@ -107,6 +107,9 @@ async function safeReply(target, options) {
         return target.followUp(payload);
     }
     if (target.reply) {
+        if (!target.author && target.isRepliable && target.isRepliable()) {
+            payload.fetchReply = true;
+        }
         return target.reply(payload);
     }
     return null;
@@ -119,7 +122,11 @@ async function safeReply(target, options) {
  * @returns {Promise<import('discord.js').Message>}
  */
 async function safeSend(channel, options) {
-    return channel.send(injectSafe(options));
+    const payload = injectSafe(options);
+    if (channel && channel.isDMBased && channel.isDMBased()) {
+        delete payload.flags;
+    }
+    return channel.send(payload);
 }
 
 /**

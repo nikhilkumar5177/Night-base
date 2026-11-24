@@ -8,6 +8,8 @@ const {
   SeparatorBuilder,
   MessageFlags
 } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 const { exec } = require('child_process');
 const { EMOJI_LOADING, EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_OWNER, EMOJI_DOT, FOOTER_TEXT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, safeDelete } = require('../../utils/messageHelper');
@@ -53,11 +55,19 @@ module.exports = {
       fetchReply: isInteraction
     }).catch(() => { });
 
-    const gitCmd = commitId
+    const projectRoot = path.resolve(__dirname, '../../..');
+    const repoUrl = process.env.GIT_REPO || 'https://github.com/nikhilkumar5177/Night-base.git';
+    const hasGit = fs.existsSync(path.join(projectRoot, '.git'));
+
+    let gitCmd = `git config --global --add safe.directory "*" && `;
+    if (!hasGit) {
+      gitCmd += `git init && git remote add origin ${repoUrl} && `;
+    }
+    gitCmd += commitId
       ? `git fetch --all && git reset --hard ${commitId} && git clean -fd`
       : `git fetch --all && git reset --hard origin/main && git clean -fd`;
 
-    exec(gitCmd, async (err, stdout, stderr) => {
+    exec(gitCmd, { cwd: projectRoot }, async (err, stdout, stderr) => {
       if (err) {
         return msg.edit({
           components: [cv2Error(`Git operation failed: ${err.message}`)],

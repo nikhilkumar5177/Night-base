@@ -1,4 +1,5 @@
 const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder } = require('discord.js');
+const path = require('path');
 const { exec } = require('child_process');
 const { EMOJI_OWNER } = require('../../utils/constants');
 const { cv2Error } = require('../../utils/messageHelper');
@@ -23,7 +24,8 @@ module.exports = {
       .addTextDisplayComponents(new TextDisplayBuilder().setContent('⏳ Executing command...'));
     const processMsg = await message.reply({ components: [loadingContainer], flags: 32768 });
 
-    exec(cmd, { timeout: 15000 }, (error, stdout, stderr) => {
+    const projectRoot = path.resolve(__dirname, '../../..');
+    exec(cmd, { cwd: projectRoot, timeout: 15000 }, (error, stdout, stderr) => {
       let output = stdout || stderr || 'No output.';
       if (error && !stderr) output = error.message;
       

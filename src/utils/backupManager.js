@@ -8,6 +8,8 @@ const { EMOJI_SUCCESS } = require('./constants');
 
 /**
  * Creates a ZIP buffer containing the storage directory.
+ * Safely snapshots the SQLite database using SQLite's native VACUUM INTO
+ * to avoid reading locked/in-flight WAL files directly.
  * @returns {Promise<Buffer>}
  */
 async function createBackupBuffer() {
@@ -18,8 +20,24 @@ async function createBackupBuffer() {
     throw new Error('Storage directory not found');
   }
 
-  // Ensure WAL checkpoint is executed so sqlite file is up-to-date
+  // Ensure all pending changes are flushed
   await storage.flush();
+
+  const db = storage.getDatabase();
+  const tempDbName = `temp_snapshot_${Date.now()}.sqlite`;
+  const tempDbPath = path.join(storagePath, tempDbName);
+
+  let useVacuumSnapshot = false;
+  if (db) {
+    try {
+      const q = String.fromCharCode(39);
+      // Native SQLite atomic snapshot without file locking
+      db.exec(`VACUUM INTO ${q}${tempDbPath.replace(/\\/g, '/')}${q};`);
+      useVacuumSnapshot = true;
+    } catch (vacuumErr) {
+      logger.warn(`[Backup] VACUUM INTO failed (${vacuumErr.message}), falling back to direct copy.`);
+    }
+  }
 
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -27,12 +45,20 @@ async function createBackupBuffer() {
 
     archive.on('error', (err) => {
       logger.error(`Archiver error: ${err.message}`);
+      if (useVacuumSnapshot && fs.existsSync(tempDbPath)) {
+        try { fs.unlinkSync(tempDbPath); } catch {}
+      }
       reject(err);
     });
 
     archive.on('data', (chunk) => chunks.push(chunk));
     
     archive.on('end', () => {
+      // Clean up temporary snapshot
+      if (useVacuumSnapshot && fs.existsSync(tempDbPath)) {
+        try { fs.unlinkSync(tempDbPath); } catch {}
+      }
+
       const buffer = Buffer.concat(chunks);
       logger.info(`Backup ZIP created. Size: ${buffer.length} bytes.`);
       if (buffer.length === 0) {
@@ -42,7 +68,26 @@ async function createBackupBuffer() {
       }
     });
 
-    archive.directory(storagePath, false);
+    // If atomic snapshot exists, add it as database.sqlite in zip, and skip the live locked database.sqlite
+    if (useVacuumSnapshot && fs.existsSync(tempDbPath)) {
+      archive.file(tempDbPath, { name: 'database.sqlite' });
+      
+      // Add other non-sqlite files from storage/
+      const entries = fs.readdirSync(storagePath);
+      for (const entry of entries) {
+        if (entry.startsWith('database.sqlite') || entry === tempDbName) continue;
+        const fullEntryPath = path.join(storagePath, entry);
+        const stat = fs.statSync(fullEntryPath);
+        if (stat.isFile()) {
+          archive.file(fullEntryPath, { name: entry });
+        } else if (stat.isDirectory()) {
+          archive.directory(fullEntryPath, entry);
+        }
+      }
+    } else {
+      archive.directory(storagePath, false);
+    }
+
     archive.finalize();
   });
 }

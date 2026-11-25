@@ -30,12 +30,18 @@ async function checkSpam(message, config) {
   const now = Date.now();
 
   // Duplicate Detection
-  if (config.duplicateDetection) {
+  if (config.duplicateDetection && content && content.trim().length > 0) {
     const lastMsg = userLastMsg.get(key);
-    if (lastMsg && lastMsg.content === content && (now - lastMsg.ts < 5000)) {
-      return 'Duplicate Messages';
+    // Trigger if same message sent within 10 seconds or duplicate count >= 2
+    if (lastMsg && lastMsg.content === content && (now - lastMsg.ts < 10000)) {
+      lastMsg.count = (lastMsg.count || 1) + 1;
+      lastMsg.ts = now;
+      if (lastMsg.count >= (config.duplicateLimit || 2)) {
+        return 'Duplicate Messages';
+      }
+    } else {
+      userLastMsg.set(key, { content, ts: now, count: 1 });
     }
-    userLastMsg.set(key, { content, ts: now });
   }
 
   // Rate Limit / Spam

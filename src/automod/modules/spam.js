@@ -20,7 +20,7 @@ setInterval(() => {
  * Handle message spam and duplicate detection.
  * @param {object} message 
  * @param {object} config 
- * @returns {string|boolean} Violation type or false
+ * @returns {string|boolean|object} Violation type or false, or object with violation and messageIds
  */
 async function checkSpam(message, config) {
   if (!config.enabled) return false;
@@ -34,14 +34,19 @@ async function checkSpam(message, config) {
 
   // 1. Rate Limit / Message Flood Spam (e.g. 5 messages within 5-10s window)
   if (!userMessages.has(key)) userMessages.set(key, []);
-  const timestamps = userMessages.get(key);
-  timestamps.push(now);
+  const entries = userMessages.get(key);
+  entries.push({ id: message.id, ts: now });
 
-  const recentTimestamps = timestamps.filter(ts => now - ts < windowMs);
-  userMessages.set(key, recentTimestamps);
+  const recentEntries = entries.filter(e => now - e.ts < windowMs);
+  userMessages.set(key, recentEntries);
 
-  if (recentTimestamps.length >= limit) {
-    return 'Message Spam';
+  if (recentEntries.length >= limit) {
+    const triggerIds = recentEntries.map(e => e.id).filter(Boolean);
+    userMessages.set(key, []); // Reset after trigger
+    return {
+      type: 'Message Spam',
+      messageIds: triggerIds
+    };
   }
 
   // 2. Duplicate & Alternating Repetitive Spam Detection
@@ -55,12 +60,16 @@ async function checkSpam(message, config) {
     
     // Check identical duplicates within recent history
     const exactMatches = cleanHistory.filter(item => item.content.toLowerCase().trim() === content.toLowerCase().trim());
-    cleanHistory.push({ content, ts: now });
+    cleanHistory.push({ id: message.id, content, ts: now });
     userRecentContent.set(key, cleanHistory);
 
     // If the same exact content appeared 2 or more times within the recent window
     if (exactMatches.length >= 1) {
-      return 'Duplicate Messages';
+      const matchIds = [...exactMatches.map(m => m.id), message.id].filter(Boolean);
+      return {
+        type: 'Duplicate Messages',
+        messageIds: matchIds
+      };
     }
   }
 

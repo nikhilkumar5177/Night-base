@@ -36,6 +36,7 @@ async function handleAutoMod(client, message) {
   const modules = config.modules || {};
   let activeViolation = null;
   let activeModule = null;
+  let targetMessageIds = null;
 
   for (const [key, module] of Object.entries(modules)) {
     if (!module || !module.enabled) continue;
@@ -52,45 +53,54 @@ async function handleAutoMod(client, message) {
     }
 
     if (violation) {
-      activeViolation = violation;
+      if (typeof violation === 'object' && violation.type) {
+        activeViolation = violation.type;
+        targetMessageIds = violation.messageIds || null;
+      } else {
+        activeViolation = violation;
+      }
       activeModule = module;
       break;
     }
   }
 
   if (activeViolation && activeModule) {
-    await executeActions(client, message, activeViolation, activeModule);
+    await executeActions(client, message, activeViolation, activeModule, targetMessageIds);
     return true; // Flagged violation
   }
   return false;
 }
 
-async function executeActions(client, message, violation, moduleConfig) {
+async function executeActions(client, message, violation, moduleConfig, targetMessageIds = null) {
   const actions = moduleConfig.actions || [];
   
   try {
     if (actions.includes('delete')) {
-      // If triggered for spam or duplicate messages, purge recent messages sent by this user in this channel
-      if (violation === 'Message Spam' || violation === 'Duplicate Messages') {
+      // If specific messages caused the trigger (e.g. 4 messages in 7s window),
+      // delete ONLY those specific triggering messages
+      if (targetMessageIds && Array.isArray(targetMessageIds) && targetMessageIds.length > 0) {
         try {
+          const idSet = new Set(targetMessageIds);
           const fetched = await message.channel.messages.fetch({ limit: 50 }).catch(() => null);
           if (fetched && fetched.size > 0) {
-            const userMsgs = fetched.filter(m => m.author.id === message.author.id);
-            if (userMsgs.size > 0) {
+            const msgsToDelete = fetched.filter(m => idSet.has(m.id));
+            if (msgsToDelete.size > 0) {
               if (message.channel.bulkDelete) {
-                await message.channel.bulkDelete(userMsgs, true).catch(async () => {
-                  for (const m of userMsgs.values()) {
+                await message.channel.bulkDelete(msgsToDelete, true).catch(async () => {
+                  for (const m of msgsToDelete.values()) {
                     await safeDelete(m).catch(() => {});
                   }
                 });
               } else {
-                for (const m of userMsgs.values()) {
+                for (const m of msgsToDelete.values()) {
                   await safeDelete(m).catch(() => {});
                 }
               }
             }
+          } else {
+            await safeDelete(message);
           }
-        } catch (purgeErr) {
+        } catch (delErr) {
           await safeDelete(message);
         }
       } else {

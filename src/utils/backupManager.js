@@ -1,99 +1,59 @@
 const fs = require('fs');
 const path = require('path');
-const { ZipArchive } = require('archiver');
-const { AttachmentBuilder, MessageFlags } = require('discord.js');
+const { AttachmentBuilder } = require('discord.js');
 const storage = require('./storageManager');
 const logger = require('./logger');
 const { EMOJI_SUCCESS } = require('./constants');
 
 /**
- * Creates a ZIP buffer containing the storage directory.
- * Safely snapshots the SQLite database using SQLite's native VACUUM INTO
- * to avoid reading locked/in-flight WAL files directly.
+ * Creates an atomic database snapshot buffer of database.sqlite.
+ * Uses SQLite's native VACUUM INTO to avoid file locking on active WAL files.
  * @returns {Promise<Buffer>}
  */
-async function createBackupBuffer() {
+async function createDatabaseBackupBuffer() {
   const storagePath = path.join(__dirname, '..', '..', 'storage');
-  
+  const liveDbPath = path.join(storagePath, 'database.sqlite');
+
   if (!fs.existsSync(storagePath)) {
     logger.error(`Backup failed: Storage directory not found at ${storagePath}`);
     throw new Error('Storage directory not found');
   }
 
-  // Ensure all pending changes are flushed
+  // Ensure all pending transactions are flushed to disk
   await storage.flush();
 
   const db = storage.getDatabase();
   const tempDbName = `temp_snapshot_${Date.now()}.sqlite`;
   const tempDbPath = path.join(storagePath, tempDbName);
 
-  let useVacuumSnapshot = false;
   if (db) {
     try {
       const q = String.fromCharCode(39);
-      // Native SQLite atomic snapshot without file locking
       db.exec(`VACUUM INTO ${q}${tempDbPath.replace(/\\/g, '/')}${q};`);
-      useVacuumSnapshot = true;
-    } catch (vacuumErr) {
-      logger.warn(`[Backup] VACUUM INTO failed (${vacuumErr.message}), falling back to direct copy.`);
+      
+      if (fs.existsSync(tempDbPath)) {
+        const buffer = fs.readFileSync(tempDbPath);
+        try { fs.unlinkSync(tempDbPath); } catch {}
+        return buffer;
+      }
+    } catch (err) {
+      logger.warn(`[Backup] VACUUM INTO failed (${err.message}), falling back to direct database read.`);
+      if (fs.existsSync(tempDbPath)) {
+        try { fs.unlinkSync(tempDbPath); } catch {}
+      }
     }
   }
 
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    const archive = new ZipArchive({ zlib: { level: 9 } });
+  // Fallback: Read live database.sqlite if exists
+  if (fs.existsSync(liveDbPath)) {
+    return fs.readFileSync(liveDbPath);
+  }
 
-    archive.on('error', (err) => {
-      logger.error(`Archiver error: ${err.message}`);
-      if (useVacuumSnapshot && fs.existsSync(tempDbPath)) {
-        try { fs.unlinkSync(tempDbPath); } catch {}
-      }
-      reject(err);
-    });
-
-    archive.on('data', (chunk) => chunks.push(chunk));
-    
-    archive.on('end', () => {
-      // Clean up temporary snapshot
-      if (useVacuumSnapshot && fs.existsSync(tempDbPath)) {
-        try { fs.unlinkSync(tempDbPath); } catch {}
-      }
-
-      const buffer = Buffer.concat(chunks);
-      logger.info(`Backup ZIP created. Size: ${buffer.length} bytes.`);
-      if (buffer.length === 0) {
-        reject(new Error('Backup ZIP is empty'));
-      } else {
-        resolve(buffer);
-      }
-    });
-
-    // If atomic snapshot exists, add it as database.sqlite in zip, and skip the live locked database.sqlite
-    if (useVacuumSnapshot && fs.existsSync(tempDbPath)) {
-      archive.file(tempDbPath, { name: 'database.sqlite' });
-      
-      // Add other non-sqlite files from storage/
-      const entries = fs.readdirSync(storagePath);
-      for (const entry of entries) {
-        if (entry.startsWith('database.sqlite') || entry === tempDbName) continue;
-        const fullEntryPath = path.join(storagePath, entry);
-        const stat = fs.statSync(fullEntryPath);
-        if (stat.isFile()) {
-          archive.file(fullEntryPath, { name: entry });
-        } else if (stat.isDirectory()) {
-          archive.directory(fullEntryPath, entry);
-        }
-      }
-    } else {
-      archive.directory(storagePath, false);
-    }
-
-    archive.finalize();
-  });
+  throw new Error('database.sqlite file not found in storage');
 }
 
 /**
- * Sends a database backup to the configured channel.
+ * Sends a standalone database backup to the configured channel.
  * @param {import('discord.js').Client} client 
  */
 async function sendBackup(client) {
@@ -116,25 +76,24 @@ async function sendBackup(client) {
 
     if (!channel) return false;
 
-    // Create the ZIP buffer
-    const buffer = await createBackupBuffer();
+    // Create standalone database buffer
+    const buffer = await createDatabaseBackupBuffer();
     const timestamp = new Date().toLocaleString('en-US', {
       month: 'short', day: 'numeric', year: 'numeric',
       hour: 'numeric', minute: '2-digit', hour12: true
     });
 
     const fileTimestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const attachment = new AttachmentBuilder(buffer, { name: `backup-${fileTimestamp}.zip` });
+    const attachment = new AttachmentBuilder(buffer, { name: `database-${fileTimestamp}.sqlite` });
 
-    // Send only the file with a simple text notification
-    // Explicitly set flags: 0 to bypass any V2 Component defaults
+    // Send only the database.sqlite file with a clean notification
     await channel.send({ 
-      content: `${EMOJI_SUCCESS} **Automated database backup completed.**\n**Timestamp:** ${timestamp}`,
+      content: `${EMOJI_SUCCESS} **Automated database backup completed.**\n**File:** \`database.sqlite\`\n**Timestamp:** ${timestamp}`,
       files: [attachment],
       flags: 0
     });
 
-    logger.info(`Database backup sent to channel ${channelId}.`);
+    logger.info(`Database backup (.sqlite) sent to channel ${channelId}.`);
     return true;
   } catch (error) {
     logger.error(`Failed to send database backup: ${error.message}`);
@@ -142,4 +101,4 @@ async function sendBackup(client) {
   }
 }
 
-module.exports = { createBackupBuffer, sendBackup };
+module.exports = { createDatabaseBackupBuffer, sendBackup };

@@ -70,7 +70,32 @@ async function executeActions(client, message, violation, moduleConfig) {
   
   try {
     if (actions.includes('delete')) {
-      await safeDelete(message);
+      // If triggered for spam or duplicate messages, purge recent messages sent by this user in this channel
+      if (violation === 'Message Spam' || violation === 'Duplicate Messages') {
+        try {
+          const fetched = await message.channel.messages.fetch({ limit: 50 }).catch(() => null);
+          if (fetched && fetched.size > 0) {
+            const userMsgs = fetched.filter(m => m.author.id === message.author.id);
+            if (userMsgs.size > 0) {
+              if (message.channel.bulkDelete) {
+                await message.channel.bulkDelete(userMsgs, true).catch(async () => {
+                  for (const m of userMsgs.values()) {
+                    await safeDelete(m).catch(() => {});
+                  }
+                });
+              } else {
+                for (const m of userMsgs.values()) {
+                  await safeDelete(m).catch(() => {});
+                }
+              }
+            }
+          }
+        } catch (purgeErr) {
+          await safeDelete(message);
+        }
+      } else {
+        await safeDelete(message);
+      }
     }
 
     if (actions.includes('warn')) {

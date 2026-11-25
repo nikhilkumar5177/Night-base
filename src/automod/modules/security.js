@@ -9,11 +9,14 @@ const actionTracker = new Map();
 async function checkSecurity(message, config) {
   if (!config.enabled) return false;
 
-  const { member } = message;
+  const user = message.member?.user || message.author;
+  if (!user) return false;
+
   const { minAccountAge } = config;
 
   if (minAccountAge > 0) {
-    const createdAt = member.user.createdAt;
+    const createdAt = user.createdAt;
+    if (!createdAt) return false;
     const ageInDays = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
     if (ageInDays < minAccountAge) {
       return 'New Account Protection';

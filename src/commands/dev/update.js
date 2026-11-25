@@ -64,8 +64,8 @@ module.exports = {
       gitCmd += `git init && git remote add origin ${repoUrl} && `;
     }
     gitCmd += commitId
-      ? `git fetch --all && git reset --hard ${commitId} && git clean -fd`
-      : `git fetch --all && git reset --hard origin/main && git clean -fd`;
+      ? `git fetch --all && git reset --hard ${commitId}`
+      : `git fetch --all && git reset --hard origin/main`;
 
     exec(gitCmd, { cwd: projectRoot }, async (err, stdout, stderr) => {
       if (err) {

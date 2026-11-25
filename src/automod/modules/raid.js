@@ -31,8 +31,10 @@ async function checkRaid(member, config) {
       await everyone.setPermissions(everyone.permissions.remove('SendMessages'), 'AutoMod: Raid lockdown').catch(() => {});
       
       // Notify owner/logs
-      const owner = await guild.fetchOwner();
-      await owner.send(`⚠️ **RAID DETECTED in ${guild.name}!** The server has been placed in lockdown.`).catch(() => {});
+      const owner = await guild.fetchOwner().catch(() => null);
+      if (owner) {
+        await owner.send(`⚠️ **RAID DETECTED in ${guild.name}!** The server has been placed in lockdown.`).catch(() => {});
+      }
     }
     return true;
   }

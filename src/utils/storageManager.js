@@ -194,10 +194,17 @@ function migrateLegacyData() {
         if (raw) {
           const parsed = JSON.parse(raw);
           const clean = cleanUnnecessaryData(entry, parsed);
-          stmts.setKv.run(entry, JSON.stringify(clean), Date.now());
-          console.log(`[SQLite Migration] Migrated ${entry} into SQLite.`);
+          // Safety: Only insert into SQLite if the key doesn't already exist.
+          // Never overwrite active database state with legacy/default JSON files.
+          const existing = stmts.getKv.get(entry);
+          if (!existing) {
+            stmts.setKv.run(entry, JSON.stringify(clean), Date.now());
+            console.log(`[SQLite Migration] Migrated ${entry} into SQLite.`);
+          } else {
+            console.log(`[SQLite Migration] Skipped ${entry} (already exists in SQLite).`);
+          }
         }
-        // Remove old JSON file after migration
+        // Remove old JSON file after migration check
         fs.unlinkSync(fullPath);
       } catch (err) {
         console.error(`[SQLite Migration] Error migrating ${entry}: ${err.message}`);
@@ -216,9 +223,14 @@ function migrateLegacyData() {
           const filePath = path.join(automodDir, file);
           try {
             const content = fs.readFileSync(filePath, 'utf-8');
-            stmts.setAutomod.run(guildId, content, Date.now());
+            const existing = stmts.getAutomod.get(guildId);
+            if (!existing) {
+              stmts.setAutomod.run(guildId, content, Date.now());
+              console.log(`[SQLite Migration] Migrated automod config for guild ${guildId} into SQLite.`);
+            } else {
+              console.log(`[SQLite Migration] Skipped automod config for guild ${guildId} (already in SQLite).`);
+            }
             fs.unlinkSync(filePath);
-            console.log(`[SQLite Migration] Migrated automod config for guild ${guildId} into SQLite.`);
           } catch (e) {
             console.error(`[SQLite Migration] Failed to migrate automod file ${file}:`, e.message);
           }
@@ -323,12 +335,12 @@ function resetAutomodConfig(guildId) {
 }
 
 /**
- * Passive WAL flush / checkpoint
+ * Flush WAL changes to SQLite disk database
  */
 async function flush() {
   if (db) {
     try {
-      db.exec('PRAGMA wal_checkpoint(PASSIVE);');
+      db.exec('PRAGMA wal_checkpoint(FULL);');
     } catch {}
   }
 }

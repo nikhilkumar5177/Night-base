@@ -11,8 +11,9 @@ async function checkContent(message, config) {
   const lowerContent = content.toLowerCase();
 
   // Blocked Words (Whole Word)
-  const { blockedWords } = config;
+  const blockedWords = Array.isArray(config.blockedWords) ? config.blockedWords : [];
   for (const word of blockedWords) {
+    if (!word || typeof word !== 'string') continue;
     const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
     if (regex.test(content)) {
       return 'Blocked Word';
@@ -20,12 +21,11 @@ async function checkContent(message, config) {
   }
 
   // Blocked Words (Partial/Substring)
-  const { partialBlockedWords } = config;
-  if (partialBlockedWords && Array.isArray(partialBlockedWords)) {
-    for (const word of partialBlockedWords) {
-      if (lowerContent.includes(word.toLowerCase())) {
-        return 'Blocked Word (Partial)';
-      }
+  const partialBlockedWords = Array.isArray(config.partialBlockedWords) ? config.partialBlockedWords : [];
+  for (const word of partialBlockedWords) {
+    if (!word || typeof word !== 'string') continue;
+    if (lowerContent.includes(word.toLowerCase())) {
+      return 'Blocked Word (Partial)';
     }
   }
 

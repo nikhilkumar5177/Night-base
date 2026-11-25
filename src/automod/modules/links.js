@@ -13,9 +13,13 @@ const GIF_REGEX = /(tenor\.com|giphy\.com|.+\.gif)/i;
 async function checkLinks(message, config) {
   if (!config.enabled) return false;
 
-  const content = message.content;
-  const allowedLinks = config.allowedLinks.map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
-  const allowedGifs = (config.allowedGifs || []).map(l => l.trim().toLowerCase().replace(/^https?:\/\//, ''));
+  const content = message.content || '';
+  const allowedLinks = Array.isArray(config.allowedLinks)
+    ? config.allowedLinks.map(l => (typeof l === 'string' ? l.trim().toLowerCase().replace(/^https?:\/\//, '') : '')).filter(Boolean)
+    : [];
+  const allowedGifs = Array.isArray(config.allowedGifs)
+    ? config.allowedGifs.map(l => (typeof l === 'string' ? l.trim().toLowerCase().replace(/^https?:\/\//, '') : '')).filter(Boolean)
+    : [];
 
   // 1. Gather all potential links (Standard URLs + Discord Invites + Raw Domains)
   const standardLinks = content.match(LINK_REGEX) || [];
@@ -53,7 +57,7 @@ async function checkLinks(message, config) {
 
     // 4. Anti-GIF (Only if not whitelisted)
     if (config.antiGifs && GIF_REGEX.test(link)) {
-      const hasGifRole = config.exemptGifsRoles?.some(roleId => message.member.roles.cache.has(roleId));
+      const hasGifRole = config.exemptGifsRoles?.some(roleId => message.member?.roles?.cache?.has(roleId));
       if (hasGifRole) continue;
 
       let isGifWhitelisted = false;

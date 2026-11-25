@@ -13,23 +13,34 @@ const warningCooldowns = new Map();
  * Handle AutoMod logic for every message.
  */
 async function handleAutoMod(client, message) {
-  if (!message.guild || message.author.bot) return;
+  if (!message.guild || message.author?.bot) return;
 
   const config = await getConfig(message.guild.id);
-  if (!config.enabled) return;
+  if (!config || !config.enabled) return;
 
-  if (message.member.permissions.has('Administrator')) return;
-  if (config.bypassRoles.some(roleId => message.member.roles.cache.has(roleId))) return;
-  if (config.bypassUsers.includes(message.author.id)) return;
+  // Safe member resolution (handling uncached members)
+  let member = message.member;
+  if (!member && message.guild.members) {
+    member = await message.guild.members.fetch(message.author.id).catch(() => null);
+  }
+  if (!member) return;
 
-  const modules = config.modules;
+  if (member.permissions?.has('Administrator')) return;
+
+  const bypassRoles = Array.isArray(config.bypassRoles) ? config.bypassRoles : [];
+  if (bypassRoles.some(roleId => member.roles?.cache?.has(roleId))) return;
+
+  const bypassUsers = Array.isArray(config.bypassUsers) ? config.bypassUsers : [];
+  if (bypassUsers.includes(message.author.id)) return;
+
+  const modules = config.modules || {};
   let activeViolation = null;
   let activeModule = null;
 
   for (const [key, module] of Object.entries(modules)) {
-    if (!module.enabled) continue;
-    if (module.exemptRoles?.some(roleId => message.member.roles.cache.has(roleId))) continue;
-    if (module.exemptChannels?.includes(message.channel.id)) continue;
+    if (!module || !module.enabled) continue;
+    if (module.exemptRoles?.some(roleId => member.roles?.cache?.has(roleId))) continue;
+    if (module.exemptChannels?.includes(message.channel?.id)) continue;
     if (module.exemptUsers?.includes(message.author.id)) continue;
 
     let violation = null;
@@ -110,8 +121,11 @@ async function executeActions(client, message, violation, moduleConfig) {
       await message.author.send({ embeds: [dmEmbed] }).catch(() => {});
     }
 
-    if (actions.includes('mute')) await message.member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {});
-    if (actions.includes('kick')) await message.member.kick(`AutoMod: ${violation}`).catch(() => {});
+    const member = message.member || (message.guild.members ? await message.guild.members.fetch(message.author.id).catch(() => null) : null);
+    if (member) {
+      if (actions.includes('mute')) await member.timeout(60 * 60 * 1000, `AutoMod: ${violation}`).catch(() => {});
+      if (actions.includes('kick')) await member.kick(`AutoMod: ${violation}`).catch(() => {});
+    }
     if (actions.includes('ban')) await message.guild.members.ban(message.author.id, { reason: `AutoMod: ${violation}` }).catch(() => {});
 
     await logToChannel(client, message, { violation, actions });

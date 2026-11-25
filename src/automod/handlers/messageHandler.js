@@ -25,8 +25,8 @@ async function handleAutoMod(client, message) {
   }
   if (!member) return;
 
-  if (member.permissions?.has('Administrator')) return;
-
+  // Strict whitelist checks: Everyone (including Admins/Server Owner) is treated equally
+  // unless explicitly granted a whitelist/bypass role or user ID.
   const bypassRoles = Array.isArray(config.bypassRoles) ? config.bypassRoles : [];
   if (bypassRoles.some(roleId => member.roles?.cache?.has(roleId))) return;
 

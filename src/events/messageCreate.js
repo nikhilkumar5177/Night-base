@@ -397,38 +397,45 @@ module.exports = {
       const aliasConfig = triggerMap.get(firstWord);
 
       if (aliasConfig && !message.content.startsWith(client.config.prefix)) {
-        const hasManageRoles = message.member.permissions.has(PermissionsBitField.Flags.ManageRoles);
+        // Safe member resolution
+        const member = message.member || (message.guild.members ? await message.guild.members.fetch(message.author.id).catch(() => null) : null);
+        if (!member) return;
 
-        if (!isDev && !hasManageRoles) return;
+        const hasManageRoles = member.permissions.has(PermissionsBitField.Flags.ManageRoles);
+        if (!isDev && !isOwner && !hasManageRoles && aliasConfig.requiredRole) {
+          if (!member.roles.cache.has(aliasConfig.requiredRole)) return;
+        } else if (!isDev && !isOwner && !hasManageRoles && !aliasConfig.requiredRole) {
+          // If no requiredRole specified on alias, user must have ManageRoles permission
+          return;
+        }
 
-        if (!aliasConfig.requiredRole || message.member.roles.cache.has(aliasConfig.requiredRole)) {
-          const role = message.guild.roles.cache.get(aliasConfig.roleId);
-          if (role) {
-            try {
-              const targetInput = parts[1];
-              const target = message.mentions.members.first() ||
-                (targetInput ? await resolver.resolveMember(message.guild, targetInput) : message.member);
+        const role = message.guild.roles.cache.get(aliasConfig.roleId) || await message.guild.roles.fetch(aliasConfig.roleId).catch(() => null);
+        if (role) {
+          try {
+            const targetInput = parts[1];
+            const target = message.mentions.members.first() ||
+              (targetInput ? await resolver.resolveMember(message.guild, targetInput) : member);
 
-              if (!target) return;
+            if (!target) return;
 
-              if (role.position >= message.guild.members.me.roles.highest.position) {
-                return message.reply({ components: [cv2Error(`My role is not high enough to manage **${role.name}**.`)] });
-              }
-
-              const container = new ContainerBuilder().addSeparatorComponents(new SeparatorBuilder());
-              if (target.roles.cache.has(role.id)) {
-                await target.roles.remove(role, `Alias Role: ${aliasConfig.key}`);
-                container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Removed **${role.name}** from **${target.user.tag}**`));
-                await safeReply(message, { components: [container] }).catch(() => { });
-              } else {
-                await target.roles.add(role, `Alias Role: ${aliasConfig.key}`);
-                container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Added **${role.name}** to **${target.user.tag}**`));
-                await safeReply(message, { components: [container] }).catch(() => { });
-              }
-              return;
-            } catch (err) {
-              logger.error(`Alias Role Toggle Error: ${err.message}`);
+            const botMember = message.guild.members.me || await message.guild.members.fetchMe().catch(() => null);
+            if (botMember && role.position >= botMember.roles.highest.position) {
+              return message.reply({ components: [cv2Error(`My role is not high enough to manage **${role.name}**.`)] });
             }
+
+            const container = new ContainerBuilder().addSeparatorComponents(new SeparatorBuilder());
+            if (target.roles.cache.has(role.id)) {
+              await target.roles.remove(role, `Alias Role: ${aliasConfig.key}`);
+              container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Removed **${role.name}** from **${target.user.tag}**`));
+              await safeReply(message, { components: [container] }).catch(() => { });
+            } else {
+              await target.roles.add(role, `Alias Role: ${aliasConfig.key}`);
+              container.addTextDisplayComponents(new TextDisplayBuilder().setContent(`${EMOJI_SUCCESS} Added **${role.name}** to **${target.user.tag}**`));
+              await safeReply(message, { components: [container] }).catch(() => { });
+            }
+            return;
+          } catch (err) {
+            logger.error(`Alias Role Toggle Error: ${err.message}`);
           }
         }
       }

@@ -29,13 +29,34 @@ async function checkContent(message, config) {
     }
   }
 
-  // Caps Limit
-  if (content.length > 10) {
-    const capsCount = content.replace(/[^A-Z]/g, '').length;
-    const capsPercentage = (capsCount / content.length) * 100;
-    if (capsPercentage > config.capsLimit) {
+  // Clean content of links, mentions, and custom emojis before checking caps/length
+  const strippedForCaps = content
+    .replace(/https?:\/\/[^\s]+/gi, '')
+    .replace(/<a?:[a-zA-Z0-9_]+:\d+>/g, '') // Custom discord emojis
+    .replace(/<@!?\d+>/g, '') // User mentions
+    .replace(/<@&\d+>/g, '') // Role mentions
+    .replace(/<#\d+>/g, '') // Channel mentions
+    .trim();
+
+  // Caps Lock / Excessive Caps Detection
+  // Only evaluate alphabetic letters so spaces, digits, and punctuation don't distort percentage
+  const alphaChars = strippedForCaps.replace(/[^a-zA-Z]/g, '');
+  const capsLimit = config.capsLimit !== undefined ? config.capsLimit : 70;
+  if (alphaChars.length >= 6) {
+    const capsCount = alphaChars.replace(/[^A-Z]/g, '').length;
+    const capsPercentage = (capsCount / alphaChars.length) * 100;
+    if (capsPercentage >= capsLimit) {
       return 'Excessive Caps';
     }
+  }
+
+  // Emoji Limit
+  const customEmojiCount = (content.match(/<a?:[a-zA-Z0-9_]+:\d+>/g) || []).length;
+  const unicodeEmojiRegex = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu;
+  const unicodeEmojiCount = (content.match(unicodeEmojiRegex) || []).length;
+  const totalEmojis = customEmojiCount + unicodeEmojiCount;
+  if (config.emojiLimit && totalEmojis > config.emojiLimit) {
+    return 'Excessive Emojis';
   }
 
   // Line Limit
@@ -45,7 +66,7 @@ async function checkContent(message, config) {
   }
 
   // Mass Mention
-  if (message.mentions.users.size > 5 || message.mentions.roles.size > 5) {
+  if ((message.mentions?.users?.size || 0) > 5 || (message.mentions?.roles?.size || 0) > 5) {
     return 'Mass Mention';
   }
 

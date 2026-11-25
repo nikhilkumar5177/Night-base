@@ -152,7 +152,11 @@ module.exports = {
       return;
     }
 
-    // 2. ULTRA-FAST COMMAND DISPATCH PATH (< 1ms execution)
+    // 2. Run AutoMod Check (Applies to all messages, including command spam)
+    const isAutoModFlagged = await handleAutoMod(client, message);
+    if (isAutoModFlagged) return;
+
+    // 3. ULTRA-FAST COMMAND DISPATCH PATH (< 1ms execution)
     let isCommand = false;
     let content = message.content;
     let isNoPrefixUser = false;
@@ -310,9 +314,6 @@ module.exports = {
       } catch (e) { console.error('[Vouch Error]', e); }
       return;
     }
-
-    // Run AutoMod for Chat Messages
-    await handleAutoMod(client, message);
 
     // AFK Check (Auto-Remove on chat)
     const afkData = storage.read('afk.json');

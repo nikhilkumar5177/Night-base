@@ -60,7 +60,9 @@ async function handleAutoMod(client, message) {
 
   if (activeViolation && activeModule) {
     await executeActions(client, message, activeViolation, activeModule);
+    return true; // Flagged violation
   }
+  return false;
 }
 
 async function executeActions(client, message, violation, moduleConfig) {

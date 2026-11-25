@@ -1,5 +1,5 @@
 const userMessages = new Map();
-const userLastMsg = new Map();
+const userRecentContent = new Map();
 
 // Periodic cleanup to prevent memory leaks
 setInterval(() => {
@@ -9,9 +9,9 @@ setInterval(() => {
       userMessages.delete(key);
     }
   }
-  for (const [key, data] of userLastMsg.entries()) {
-    if (now - data.ts > 60000) {
-      userLastMsg.delete(key);
+  for (const [key, history] of userRecentContent.entries()) {
+    if (history.length === 0 || now - history[history.length - 1].ts > 60000) {
+      userRecentContent.delete(key);
     }
   }
 }, 600000); // Cleanup every 10 minutes
@@ -29,34 +29,39 @@ async function checkSpam(message, config) {
   const key = `${guild.id}-${author.id}`;
   const now = Date.now();
 
-  // Duplicate Detection
-  if (config.duplicateDetection && content && content.trim().length > 0) {
-    const lastMsg = userLastMsg.get(key);
-    // Trigger if same message sent within 10 seconds or duplicate count >= 2
-    if (lastMsg && lastMsg.content === content && (now - lastMsg.ts < 10000)) {
-      lastMsg.count = (lastMsg.count || 1) + 1;
-      lastMsg.ts = now;
-      if (lastMsg.count >= (config.duplicateLimit || 2)) {
-        return 'Duplicate Messages';
-      }
-    } else {
-      userLastMsg.set(key, { content, ts: now, count: 1 });
-    }
-  }
+  const windowMs = (config.window || 5) * 1000;
+  const limit = config.limit || 5;
 
-  // Rate Limit / Spam
-  const windowMs = config.window * 1000;
+  // 1. Rate Limit / Message Flood Spam (e.g. 5 messages within 5-10s window)
   if (!userMessages.has(key)) userMessages.set(key, []);
-
   const timestamps = userMessages.get(key);
   timestamps.push(now);
 
   const recentTimestamps = timestamps.filter(ts => now - ts < windowMs);
   userMessages.set(key, recentTimestamps);
 
-  if (recentTimestamps.length > config.limit) {
-    userMessages.set(key, []);
+  if (recentTimestamps.length >= limit) {
     return 'Message Spam';
+  }
+
+  // 2. Duplicate & Alternating Repetitive Spam Detection
+  // Tracks recent messages in the window (e.g. 'w', 'ww', 'w', 'ww')
+  if (config.duplicateDetection && content && content.trim().length > 0) {
+    if (!userRecentContent.has(key)) userRecentContent.set(key, []);
+    const history = userRecentContent.get(key);
+    
+    // Clean old history beyond 15 seconds
+    const cleanHistory = history.filter(item => now - item.ts < 15000);
+    
+    // Check identical duplicates within recent history
+    const exactMatches = cleanHistory.filter(item => item.content.toLowerCase().trim() === content.toLowerCase().trim());
+    cleanHistory.push({ content, ts: now });
+    userRecentContent.set(key, cleanHistory);
+
+    // If the same exact content appeared 2 or more times within the recent window
+    if (exactMatches.length >= 1) {
+      return 'Duplicate Messages';
+    }
   }
 
   return false;

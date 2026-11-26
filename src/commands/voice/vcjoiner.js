@@ -1,13 +1,17 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, ChannelType, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelSelectMenuBuilder, StringSelectMenuBuilder, ChannelType } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { joinRandomVC, leaveVC, joinSpecificVC } = require('../../utils/vcJoiner');
 const { EMOJI_SUCCESS, EMOJI_ARROW, EMOJI_DOT } = require('../../utils/constants');
 const { cv2Error, safeReply, safeUpdate, safeEdit } = require('../../utils/messageHelper');
 
 function buildDashboard(guild, guildConfig) {
-  let blacklistStr = guildConfig.blacklistedCategories.length > 0 
-    ? guildConfig.blacklistedCategories.map(id => `\`${id}\``).join(', ') 
-    : 'None';
+  let blacklistStr = 'None';
+  if (guildConfig.blacklistedCategories && guildConfig.blacklistedCategories.length > 0) {
+    blacklistStr = guildConfig.blacklistedCategories.map(id => {
+      const ch = guild.channels.cache.get(id);
+      return ch ? `\`#${ch.name}\`` : `\`${id}\``;
+    }).join(', ');
+  }
   
   let currentCh = 'None';
   if (guildConfig.currentChannelId) {
@@ -21,26 +25,49 @@ function buildDashboard(guild, guildConfig) {
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(
       `${EMOJI_DOT} **Status:** ${guildConfig.enabled ? '\`● Enabled\`' : '\`○ Disabled\`'}\n` +
       `${EMOJI_DOT} **Current VC:** \`${currentCh}\`\n` +
-      `${EMOJI_DOT} **Blacklisted IDs:** ${blacklistStr}`
+      `${EMOJI_DOT} **Blacklisted Channels/Categories:** ${blacklistStr}`
     ));
+
+  const rows = [];
 
   const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('vj_toggle').setLabel(guildConfig.enabled ? 'Disable Auto-Join' : 'Enable Auto-Join').setStyle(guildConfig.enabled ? ButtonStyle.Danger : ButtonStyle.Success)
   );
+  rows.push(row1);
 
   const row2 = new ActionRowBuilder().addComponents(
-    new ChannelSelectMenuBuilder().setCustomId('vj_join_chan').setPlaceholder('Select VC to Join').addChannelTypes(ChannelType.GuildVoice)
+    new ChannelSelectMenuBuilder().setCustomId('vj_join_chan').setPlaceholder('Select VC to Join Now').addChannelTypes(ChannelType.GuildVoice)
   );
+  rows.push(row2);
 
+  // Add to Blacklist: ChannelSelectMenu showing all available voice channels and categories
   const row3 = new ActionRowBuilder().addComponents(
     new ChannelSelectMenuBuilder().setCustomId('vj_add_bl_chan').setPlaceholder('Select VC/Category to Blacklist').addChannelTypes(ChannelType.GuildVoice, ChannelType.GuildCategory)
   );
+  rows.push(row3);
 
-  const row4 = new ActionRowBuilder().addComponents(
-    new ChannelSelectMenuBuilder().setCustomId('vj_rem_bl_chan').setPlaceholder('Select VC/Category to Un-Blacklist').addChannelTypes(ChannelType.GuildVoice, ChannelType.GuildCategory)
-  );
+  // Deselect / Remove from Blacklist: StringSelectMenu showing ONLY the currently selected/blacklisted channels/categories
+  if (guildConfig.blacklistedCategories && guildConfig.blacklistedCategories.length > 0) {
+    const removeMenu = new StringSelectMenuBuilder()
+      .setCustomId('vj_rem_bl_chan')
+      .setPlaceholder('Select Blacklisted Item to Remove');
 
-  container.addActionRowComponents(row1, row2, row3, row4);
+    for (const id of guildConfig.blacklistedCategories) {
+      const ch = guild.channels.cache.get(id);
+      const label = ch ? (ch.type === ChannelType.GuildCategory ? `📁 ${ch.name}` : `🔊 ${ch.name}`) : `ID: ${id}`;
+      removeMenu.addOptions({
+        label: label.slice(0, 100),
+        value: id,
+        description: `Remove ${id} from blacklist`
+      });
+    }
+
+    if (removeMenu.options.length > 0) {
+      rows.push(new ActionRowBuilder().addComponents(removeMenu));
+    }
+  }
+
+  container.addActionRowComponents(...rows);
   return container;
 }
 
@@ -117,18 +144,22 @@ module.exports = {
           return safeEdit(target, { components: [buildDashboard(guild, vcData[guild.id])] });
         }
 
-        if (customId === 'vj_add_bl_chan' || customId === 'vj_rem_bl_chan') {
-          const isAdd = customId === 'vj_add_bl_chan';
+        if (customId === 'vj_add_bl_chan') {
           const targetId = target.values[0];
-
-          if (isAdd) {
-            if (!guildConfig.blacklistedCategories.includes(targetId)) {
-              guildConfig.blacklistedCategories.push(targetId);
-            }
-          } else {
-            guildConfig.blacklistedCategories = guildConfig.blacklistedCategories.filter(id => id !== targetId);
+          if (!guildConfig.blacklistedCategories.includes(targetId)) {
+            guildConfig.blacklistedCategories.push(targetId);
+            storage.write('vcjoiner.json', vcData);
           }
-          
+          return safeUpdate(target, { components: [buildDashboard(guild, guildConfig)] });
+        }
+      }
+
+      if (isInteraction && target.isStringSelectMenu && target.isStringSelectMenu()) {
+        const customId = target.customId;
+
+        if (customId === 'vj_rem_bl_chan') {
+          const targetId = target.values[0];
+          guildConfig.blacklistedCategories = guildConfig.blacklistedCategories.filter(id => id !== targetId);
           storage.write('vcjoiner.json', vcData);
           return safeUpdate(target, { components: [buildDashboard(guild, guildConfig)] });
         }

@@ -36,7 +36,8 @@ const DEFAULT_FILES = {
   'vcjoiner.json': {},
   'voiceroles.json': {},
   'afk.json': {},
-  'staff.json': {}
+  'staff.json': {},
+  'shipConfig.json': {}
 };
 
 // Prepared statement references

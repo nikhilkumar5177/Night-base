@@ -1,4 +1,6 @@
-const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
+const storage = require('../../utils/storageManager');
+const { cv2Error, sendAutoDelete } = require('../../utils/messageHelper');
 
 let sharp;
 try {
@@ -79,6 +81,23 @@ module.exports = {
   enabled: true,
   execute: async (client, message, args) => {
     try {
+      // Check if a dedicated ship channel is set for this guild
+      const shipData = storage.read('shipConfig.json') || {};
+      const dedicatedChannelId = shipData[message.guild.id];
+
+      if (dedicatedChannelId && message.channel.id !== dedicatedChannelId) {
+        return sendAutoDelete(
+          message,
+          {
+            components: [
+              cv2Error(`The \`?ship\` command can only be used in <#${dedicatedChannelId}>!`)
+            ],
+            flags: MessageFlags.IsComponentsV2
+          },
+          7000
+        );
+      }
+
       if (!sharp) {
         return message.reply({ content: '❌ The `sharp` library is missing on this host! Please run `npm install sharp` in the console to fix this.' });
       }

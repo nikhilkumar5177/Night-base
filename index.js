@@ -121,10 +121,6 @@ client.on('debug', (info) => {
   if (
     info.includes('429') ||
     info.includes('rate limit') ||
-    info.includes('[WS =>') ||
-    info.includes('Heartbeat') ||
-    info.includes('Session') ||
-    info.includes('Identifying') ||
     info.includes('Disallowed')
   ) {
     console.log(`[Gateway Debug] ${info}`);

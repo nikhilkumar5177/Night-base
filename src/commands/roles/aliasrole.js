@@ -126,6 +126,7 @@ module.exports = {
           if (guildAliases[trigger]) {
             delete guildAliases[trigger];
             storage.write('aliases.json', aliasData);
+            await storage.flushFile('aliases.json').catch(() => {});
           }
           return safeUpdate(target, { components: [buildDashboard(guild, guildAliases)] });
         }
@@ -137,13 +138,13 @@ module.exports = {
         if (customId.startsWith('al_modal_create_')) {
           const roleId = customId.split('_')[3];
           const trigger = target.fields.getTextInputValue('trigger').trim().toLowerCase();
-          const requiredRoleId = target.fields.getTextInputValue('requiredRoleId').trim() || null;
-          const extraTriggers = target.fields.getTextInputValue('extraTriggers').trim().toLowerCase();
+          const requiredRoleId = target.fields.getTextInputValue('requiredRoleId')?.trim() || null;
+          const extraTriggers = target.fields.getTextInputValue('extraTriggers')?.trim().toLowerCase() || '';
 
-          const role = guild.roles.cache.get(roleId);
-          if (!role) return safeReply(target, { components: [cv2Error('Role ID to toggle not found on this server.')], ephemeral: true });
+          const role = guild.roles.cache.get(roleId) || await guild.roles.fetch(roleId).catch(() => null);
+          if (!role) return safeReply(target, { components: [cv2Error('Role to toggle was not found on this server.')], ephemeral: true });
 
-          if (requiredRoleId && !guild.roles.cache.has(requiredRoleId)) {
+          if (requiredRoleId && !guild.roles.cache.has(requiredRoleId) && !(await guild.roles.fetch(requiredRoleId).catch(() => null))) {
             return safeReply(target, { components: [cv2Error('Required Role ID not found on this server.')], ephemeral: true });
           }
 
@@ -154,7 +155,8 @@ module.exports = {
 
           guildAliases[trigger] = { roleId: role.id, requiredRole: requiredRoleId, aliases: aliasesArray, timestamp: Date.now() };
           storage.write('aliases.json', aliasData);
-          return safeUpdate(target, { components: [buildDashboard(guild, guildAliases)] });
+          await storage.flushFile('aliases.json').catch(() => {});
+          return safeReply(target, { components: [buildDashboard(guild, guildAliases)] });
         }
 
         if (customId === 'al_modal_delete') {
@@ -166,7 +168,8 @@ module.exports = {
 
           delete guildAliases[trigger];
           storage.write('aliases.json', aliasData);
-          return safeUpdate(target, { components: [buildDashboard(guild, guildAliases)] });
+          await storage.flushFile('aliases.json').catch(() => {});
+          return safeReply(target, { components: [buildDashboard(guild, guildAliases)] });
         }
       }
 

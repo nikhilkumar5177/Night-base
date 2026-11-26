@@ -17,7 +17,7 @@ const PHISHING_REGEX = /(steamcommunity\.com\.login|free-nitro|gift-nitro|discor
 function getGuildTriggerMap(aliasData, guild) {
   const guildId = guild.id;
 
-  // If aliasData reference changed (a write happened), invalidate the cache
+  // Invalidate cache if aliasData reference changed
   if (aliasData !== _aliasCacheRef) {
     _aliasCacheRef = aliasData;
     _aliasCacheByGuild.clear();
@@ -26,17 +26,30 @@ function getGuildTriggerMap(aliasData, guild) {
   if (_aliasCacheByGuild.has(guildId)) return _aliasCacheByGuild.get(guildId);
 
   const guildAliases = aliasData[guildId] || {};
-  const merged = { ...guildAliases };
+  const triggerMap = new Map();
+
+  for (const [aliasKey, config] of Object.entries(guildAliases)) {
+    if (!config || typeof config !== 'object' || !config.roleId) continue;
+    const triggers = [aliasKey, ...(config.aliases || [])];
+    for (const t of triggers) {
+      if (typeof t === 'string' && t.trim()) {
+        triggerMap.set(t.trim().toLowerCase(), { ...config, key: aliasKey });
+      }
+    }
+  }
+
+  // Also support legacy flat configs if any exist
   for (const [key, cfg] of Object.entries(aliasData)) {
     if (key === guildId || typeof cfg !== 'object' || cfg === null || Array.isArray(cfg)) continue;
     if (!cfg.roleId) continue;
-    if (guild.roles.cache.has(cfg.roleId) && !merged[key]) merged[key] = cfg;
-  }
-
-  const triggerMap = new Map();
-  for (const [aliasKey, config] of Object.entries(merged)) {
-    const triggers = [aliasKey, ...(config.aliases || [])];
-    for (const t of triggers) triggerMap.set(t.toLowerCase(), { ...config, key: aliasKey });
+    if (guild.roles.cache.has(cfg.roleId) && !triggerMap.has(key.toLowerCase())) {
+      const triggers = [key, ...(cfg.aliases || [])];
+      for (const t of triggers) {
+        if (typeof t === 'string' && t.trim() && !triggerMap.has(t.trim().toLowerCase())) {
+          triggerMap.set(t.trim().toLowerCase(), { ...cfg, key });
+        }
+      }
+    }
   }
 
   _aliasCacheByGuild.set(guildId, triggerMap);
@@ -390,13 +403,15 @@ module.exports = {
       const aliasData = storage.read('aliases.json');
       const triggerMap = getGuildTriggerMap(aliasData, message.guild);
 
-      const chatContent = message.content.toLowerCase().trim();
+      const chatContent = message.content.trim();
       const parts = chatContent.split(/\s+/);
-      const firstWord = parts[0];
+      const firstWord = parts[0]?.toLowerCase();
 
-      const aliasConfig = triggerMap.get(firstWord);
+      // Check if word triggers an alias (e.g. "vip @user" or "?vip @user")
+      const rawTrigger = firstWord?.startsWith(prefix) ? firstWord.slice(prefix.length) : firstWord;
+      const aliasConfig = triggerMap.get(firstWord) || (rawTrigger ? triggerMap.get(rawTrigger) : null);
 
-      if (aliasConfig && !message.content.startsWith(client.config.prefix)) {
+      if (aliasConfig) {
         // Safe member resolution
         const member = message.member || (message.guild.members ? await message.guild.members.fetch(message.author.id).catch(() => null) : null);
         if (!member) return;
@@ -413,8 +428,19 @@ module.exports = {
         if (role) {
           try {
             const targetInput = parts[1];
-            const target = message.mentions.members.first() ||
-              (targetInput ? await resolver.resolveMember(message.guild, targetInput) : member);
+            let target = null;
+            if (message.mentions?.members?.first) {
+              target = message.mentions.members.first();
+            } else if (message.mentions?.users?.first) {
+              const u = message.mentions.users.first();
+              target = message.guild.members.cache.get(u.id) || await message.guild.members.fetch(u.id).catch(() => null);
+            }
+            if (!target && targetInput) {
+              target = await resolver.resolveMember(message.guild, targetInput);
+            }
+            if (!target && !targetInput) {
+              target = member;
+            }
 
             if (!target) return;
 

@@ -1,4 +1,4 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, RoleSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, RoleSelectMenuBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { EMOJI_SUCCESS, EMOJI_ERROR, EMOJI_INFO, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
@@ -38,14 +38,36 @@ function buildDashboard(guild, guildAliases) {
     .addSeparatorComponents(new SeparatorBuilder())
     .addTextDisplayComponents(new TextDisplayBuilder().setContent(listStr));
 
-  const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('al_delete').setLabel('Delete Alias').setStyle(ButtonStyle.Danger)
-  );
-  const row2 = new ActionRowBuilder().addComponents(
+  const rows = [];
+
+  // Add: Role Select Menu showing all server roles
+  const rowCreate = new ActionRowBuilder().addComponents(
     new RoleSelectMenuBuilder().setCustomId('al_create_role').setPlaceholder('Select Role to Create Alias')
   );
+  rows.push(rowCreate);
 
-  container.addActionRowComponents(row, row2);
+  // Delete / Remove: Show ONLY currently created alias roles
+  if (entries.length > 0) {
+    const deleteMenu = new StringSelectMenuBuilder()
+      .setCustomId('al_delete_select')
+      .setPlaceholder('Select Configured Alias to Delete');
+
+    for (const [name, cfg] of entries.slice(0, 25)) {
+      const role = guild.roles.cache.get(cfg.roleId);
+      const roleName = role ? role.name : cfg.roleId;
+      deleteMenu.addOptions({
+        label: name.slice(0, 100),
+        value: name,
+        description: `Role: @${roleName}`.slice(0, 100)
+      });
+    }
+
+    if (deleteMenu.options.length > 0) {
+      rows.push(new ActionRowBuilder().addComponents(deleteMenu));
+    }
+  }
+
+  container.addActionRowComponents(...rows);
   return container;
 }
 
@@ -94,6 +116,18 @@ module.exports = {
           const triggerInput = new TextInputBuilder().setCustomId('trigger').setLabel('Primary Trigger Word to delete').setStyle(TextInputStyle.Short).setRequired(true);
           modal.addComponents(new ActionRowBuilder().addComponents(triggerInput));
           return target.showModal(modal);
+        }
+      }
+
+      if (isInteraction && target.isStringSelectMenu && target.isStringSelectMenu()) {
+        const customId = target.customId;
+        if (customId === 'al_delete_select') {
+          const trigger = target.values[0];
+          if (guildAliases[trigger]) {
+            delete guildAliases[trigger];
+            storage.write('aliases.json', aliasData);
+          }
+          return safeUpdate(target, { components: [buildDashboard(guild, guildAliases)] });
         }
       }
 

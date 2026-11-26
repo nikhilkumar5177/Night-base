@@ -1,4 +1,4 @@
-const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, UserSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, UserSelectMenuBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const storage = require('../../utils/storageManager');
 const { EMOJI_INFO, EMOJI_WARN, EMOJI_SUCCESS, EMOJI_DOT, EMOJI_ARROW } = require('../../utils/constants');
 const { cv2Error, safeReply, safeUpdate } = require('../../utils/messageHelper');
@@ -14,18 +14,45 @@ function buildDashboard(client, configData) {
       `${EMOJI_DOT} *Use the menus below to manage access, or click the button to view the list.*`
     ));
 
+  const rows = [];
+
   const btnRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId('np_view_list').setLabel('View Access List').setStyle(ButtonStyle.Primary).setDisabled(users.length === 0)
   );
+  rows.push(btnRow);
 
+  // Add: Search from all users
   const row1 = new ActionRowBuilder().addComponents(
     new UserSelectMenuBuilder().setCustomId('np_add_user').setPlaceholder('Search User to Grant Access')
   );
-  const row2 = new ActionRowBuilder().addComponents(
-    new UserSelectMenuBuilder().setCustomId('np_remove_user').setPlaceholder('Search User to Revoke Access')
-  );
+  rows.push(row1);
+
+  // Revoke: Show ONLY users who currently have access
+  if (users.length > 0) {
+    const removeMenu = new StringSelectMenuBuilder()
+      .setCustomId('np_remove_user')
+      .setPlaceholder('Select User to Revoke Access');
+
+    for (const entry of users.slice(0, 25)) {
+      const isLegacy = typeof entry === 'string';
+      const id = isLegacy ? entry : entry.id;
+      const user = client.users.cache.get(id);
+      const name = user ? user.tag : `User ID: ${id}`;
+      const status = isLegacy || entry.permanent ? 'Permanent' : 'Temporary';
+
+      removeMenu.addOptions({
+        label: name.slice(0, 100),
+        value: id,
+        description: `Access: ${status}`
+      });
+    }
+
+    if (removeMenu.options.length > 0) {
+      rows.push(new ActionRowBuilder().addComponents(removeMenu));
+    }
+  }
   
-  container.addActionRowComponents(btnRow, row1, row2);
+  container.addActionRowComponents(...rows);
   return container;
 }
 
@@ -117,6 +144,10 @@ module.exports = {
           modal.addComponents(new ActionRowBuilder().addComponents(durationInput));
           return target.showModal(modal);
         }
+      }
+
+      if (isInteraction && target.isStringSelectMenu && target.isStringSelectMenu()) {
+        const customId = target.customId;
 
         if (customId === 'np_remove_user') {
           const inputId = target.values[0];

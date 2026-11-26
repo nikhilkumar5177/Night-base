@@ -296,9 +296,17 @@ function createGlobalModal(config) {
 
   const logChannelInput = new TextInputBuilder()
     .setCustomId('global_log_channel')
-    .setLabel('Log Channel ID')
-    .setPlaceholder('Enter channel ID (e.g. 123456789...)')
+    .setLabel('AutoMod Log Channel ID')
+    .setPlaceholder('Enter log channel ID (e.g. 123456789...)')
     .setValue(config.logChannel || '')
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false);
+
+  const ghostPingChannelInput = new TextInputBuilder()
+    .setCustomId('global_ghostping_channel')
+    .setLabel('Dedicated Ghost Ping Channel ID')
+    .setPlaceholder('Leave blank to use Log Channel or chat channel')
+    .setValue(config.ghostPingChannel || config.modules?.content?.ghostPingChannel || '')
     .setStyle(TextInputStyle.Short)
     .setRequired(false);
 
@@ -320,6 +328,7 @@ function createGlobalModal(config) {
 
   modal.addComponents(
     new ActionRowBuilder().addComponents(logChannelInput),
+    new ActionRowBuilder().addComponents(ghostPingChannelInput),
     new ActionRowBuilder().addComponents(bypassRolesInput),
     new ActionRowBuilder().addComponents(bypassUsersInput)
   );

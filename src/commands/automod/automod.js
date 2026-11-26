@@ -200,9 +200,13 @@ module.exports = {
         }
 
         if (interaction.customId === 'automod_modal_global') {
-          config.logChannel = interaction.fields.getTextInputValue('global_log_channel') || null;
-          config.bypassRoles = interaction.fields.getTextInputValue('global_bypass_roles').split('\n').filter(id => id.trim() !== '');
-          config.bypassUsers = interaction.fields.getTextInputValue('global_bypass_users').split('\n').filter(id => id.trim() !== '');
+          config.logChannel = interaction.fields.getTextInputValue('global_log_channel')?.trim() || null;
+          config.ghostPingChannel = interaction.fields.getTextInputValue('global_ghostping_channel')?.trim() || null;
+          if (config.modules?.content) {
+            config.modules.content.ghostPingChannel = config.ghostPingChannel;
+          }
+          config.bypassRoles = interaction.fields.getTextInputValue('global_bypass_roles').split('\n').map(id => id.trim()).filter(id => id !== '');
+          config.bypassUsers = interaction.fields.getTextInputValue('global_bypass_users').split('\n').map(id => id.trim()).filter(id => id !== '');
 
           await saveConfig(guildId, config);
           const dashboard = createDashboard(config);

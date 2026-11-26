@@ -4,6 +4,7 @@ const { EMOJI_ERROR } = require('../utils/constants');
 const DEFAULT_CONFIG = {
   enabled: false,
   logChannel: null,
+  ghostPingChannel: null,
   bypassRoles: [],
   bypassUsers: [],
   modules: {

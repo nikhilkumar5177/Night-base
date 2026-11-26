@@ -51,8 +51,20 @@ async function handleGhostPing(client, message, config, rootConfig) {
       `**Content:** ${message.content || '*[Embed/Attachment only]*'}`
     ));
 
+  // Determine target channel: dedicated ghost ping channel > automod logChannel > channel where deleted
+  const ghostChannelId = root?.ghostPingChannel || contentConfig?.ghostPingChannel;
   const logChannelId = root?.logChannel || contentConfig?.logChannel;
-  const targetChannel = (logChannelId ? (message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null)) : null) || message.channel;
+
+  let targetChannel = null;
+  if (ghostChannelId) {
+    targetChannel = message.guild.channels.cache.get(ghostChannelId) || await message.guild.channels.fetch(ghostChannelId).catch(() => null);
+  }
+  if (!targetChannel && logChannelId) {
+    targetChannel = message.guild.channels.cache.get(logChannelId) || await message.guild.channels.fetch(logChannelId).catch(() => null);
+  }
+  if (!targetChannel) {
+    targetChannel = message.channel;
+  }
 
   if (targetChannel && targetChannel.send) {
     await targetChannel.send({ components: [container], flags: MessageFlags.IsComponentsV2 }).catch(() => {});

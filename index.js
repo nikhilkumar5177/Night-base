@@ -79,4 +79,33 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-client.login(process.env.TOKEN);
+// Startup validation for cloud / VPS environments
+if (!process.env.TOKEN || !process.env.TOKEN.trim()) {
+  console.error('\n' + '='.repeat(60));
+  console.error('❌ FATAL ERROR: No bot TOKEN was found in your environment!');
+  console.error('If you are using Pterodactyl/VPS/Railway/Heroku/Render:');
+  console.error('1. Make sure your .env file is uploaded or TOKEN environment variable is configured.');
+  console.error('2. TOKEN must look like: TOKEN=MTAy...\n' + '='.repeat(60) + '\n');
+  process.exit(1);
+}
+
+console.log(`[Host Startup] Running on Node.js ${process.version}`);
+console.log(`[Host Startup] Logging in to Discord Gateway...`);
+
+client.login(process.env.TOKEN).catch((err) => {
+  console.error('\n' + '='.repeat(60));
+  console.error(`❌ FAILED TO LOG IN TO DISCORD: ${err.message}`);
+  if (err.message.includes('TOKEN_INVALID') || err.message.includes('An invalid token')) {
+    console.error('👉 The Discord bot TOKEN provided is invalid. Please reset it in Discord Developer Portal.');
+  } else if (err.message.includes('Disallowed intent') || err.message.includes('DISALLOWED_INTENTS')) {
+    console.error('👉 Privileged Gateway Intents are disabled! In https://discord.com/developers/applications:');
+    console.error('   Under "Bot", enable:');
+    console.error('   - Presence Intent');
+    console.error('   - Server Members Intent');
+    console.error('   - Message Content Intent');
+  } else if (err.message.includes('ENOTFOUND') || err.message.includes('ETIMEDOUT') || err.message.includes('ECONNREFUSED')) {
+    console.error('👉 Network Error: The host cannot reach discord.com. Check firewall, DNS, or proxy settings.');
+  }
+  console.error('='.repeat(60) + '\n');
+  process.exit(1);
+});

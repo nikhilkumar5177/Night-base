@@ -16,6 +16,7 @@
     "@discordjs/voice": "^0.19.2",
     "archiver": "^8.0.0",
     "axios": "^1.15.2",
+    "better-sqlite3": "^11.8.1",
     "discord.js": "^14.26.3",
     "dotenv": "^17.4.2",
     "sharp": "^0.34.5"
